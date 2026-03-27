@@ -12,10 +12,14 @@
 
     {{ content_for_header }}
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
     {{ 'base.css' | asset_url | stylesheet_tag }}
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
   </head>
-  <body>
+  <body class="template-{{ template | replace: '.', '-' | handle }}">
     <a class="skip-link" href="#main-content">Aller au contenu</a>
 
     {% section 'header' %}

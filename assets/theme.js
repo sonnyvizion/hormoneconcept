@@ -11,12 +11,16 @@
     const imageEl = sectionRoot.querySelector('.video-hero__image');
     const transitionEl = sectionRoot.querySelector('.video-hero__transition');
     const placeholderEl = sectionRoot.querySelector('.video-hero__placeholder');
+    const nextTriggerEl = sectionRoot.querySelector('[data-next-trigger]');
+    const stepEls = Array.from(sectionRoot.querySelectorAll('[data-jump-index]'));
+
     const breakpoint = Number(sectionRoot.dataset.mobileBreakpoint || 768);
     const mediaQuery = window.matchMedia(`(max-width: ${breakpoint}px)`);
 
     let activeIndex = 0;
     let isTransitioning = false;
     let activeTransitionCleanup = null;
+    let transitionNonce = 0;
 
     const parseSlideData = (slide) => ({
       imageDesktop: (slide.dataset.imageDesktop || '').trim(),
@@ -37,7 +41,7 @@
         ? (data.imageMobile || data.imageDesktop)
         : (data.imageDesktop || data.imageMobile);
 
-      const transitionUrl = mediaQuery.matches
+      const transitionNextUrl = mediaQuery.matches
         ? (data.transitionMobile || data.transitionDesktop)
         : (data.transitionDesktop || data.transitionMobile);
 
@@ -47,10 +51,26 @@
 
       return {
         imageUrl,
-        transitionUrl,
+        transitionNextUrl,
         transitionPrevUrl,
         alt: data.alt
       };
+    };
+
+    const resetTransition = () => {
+      if (!transitionEl) return;
+      transitionEl.pause();
+      transitionEl.classList.remove('is-visible');
+      transitionEl.removeAttribute('src');
+      transitionEl.load();
+    };
+
+    const updateNextTriggerState = () => {
+      if (!nextTriggerEl) return;
+      const isLast = activeIndex >= slides.length - 1;
+      nextTriggerEl.disabled = isLast;
+      nextTriggerEl.setAttribute('aria-disabled', isLast ? 'true' : 'false');
+      nextTriggerEl.classList.toggle('is-disabled', isLast);
     };
 
     const setSlideState = (index) => {
@@ -58,19 +78,23 @@
       slides.forEach((slide, i) => {
         slide.classList.toggle('is-active', i === index);
       });
+      stepEls.forEach((stepEl, i) => {
+        stepEl.classList.toggle('is-active', i === index);
+        stepEl.setAttribute('aria-selected', i === index ? 'true' : 'false');
+      });
+      updateNextTriggerState();
     };
 
     const showImage = (index, withFade = false, keepTransitionVisible = false) => {
       if (!imageEl || !placeholderEl || !transitionEl) return;
       const media = getMediaForSlide(index);
+
       if (!media || !media.imageUrl) {
         imageEl.classList.remove('is-visible', 'is-fading');
         placeholderEl.classList.add('is-visible');
         if (!keepTransitionVisible) {
-          transitionEl.classList.remove('is-visible');
+          resetTransition();
         }
-        transitionEl.pause();
-        transitionEl.removeAttribute('src');
         return;
       }
 
@@ -78,34 +102,42 @@
         imageEl.setAttribute('src', media.imageUrl);
       }
       imageEl.setAttribute('alt', media.alt || '');
-
       placeholderEl.classList.remove('is-visible');
+
       if (!keepTransitionVisible) {
-        transitionEl.classList.remove('is-visible');
-        transitionEl.pause();
+        resetTransition();
       }
 
       if (withFade) {
         imageEl.classList.remove('is-fading');
         void imageEl.offsetWidth;
         imageEl.classList.add('is-fading');
-        window.setTimeout(() => imageEl.classList.remove('is-fading'), 240);
+        window.setTimeout(() => imageEl.classList.remove('is-fading'), 260);
       }
 
       imageEl.classList.add('is-visible');
     };
 
-    const playTransitionTo = (targetIndex, direction = 'next') => {
+    const resolveTransitionUrl = (fromIndex, targetIndex, direction) => {
+      const fromMedia = getMediaForSlide(fromIndex);
+      const targetMedia = getMediaForSlide(targetIndex);
+
+      if (direction === 'next') {
+        return (fromMedia && fromMedia.transitionNextUrl) || (targetMedia && targetMedia.transitionPrevUrl) || '';
+      }
+
+      return (fromMedia && fromMedia.transitionPrevUrl) || (targetMedia && targetMedia.transitionNextUrl) || '';
+    };
+
+    const playTransitionTo = (targetIndex, direction) => {
       if (!transitionEl) {
         setSlideState(targetIndex);
         showImage(targetIndex, true);
         return;
       }
 
-      const currentMedia = getMediaForSlide(activeIndex);
-      const transitionUrl = currentMedia
-        ? (direction === 'prev' ? currentMedia.transitionPrevUrl : currentMedia.transitionUrl)
-        : '';
+      const transitionUrl = resolveTransitionUrl(activeIndex, targetIndex, direction);
+
       if (!transitionUrl) {
         setSlideState(targetIndex);
         showImage(targetIndex, true);
@@ -117,69 +149,92 @@
       }
 
       isTransitioning = true;
-      transitionEl.classList.add('is-visible');
-      transitionEl.setAttribute('src', transitionUrl);
-      transitionEl.currentTime = 0;
-      transitionEl.muted = true;
-      transitionEl.load();
+      const currentNonce = ++transitionNonce;
 
       let isDone = false;
       let timeoutId = 0;
-      const finish = (applyTarget = true) => {
+      const onEnd = () => finish(true);
+      const onError = () => finish(true);
+
+      const finish = (applyTarget = true, invalidate = false) => {
         if (isDone) return;
+        if (currentNonce !== transitionNonce && !invalidate) return;
         isDone = true;
+        if (invalidate) transitionNonce += 1;
+
         if (timeoutId) {
           window.clearTimeout(timeoutId);
           timeoutId = 0;
         }
+
+        transitionEl.removeEventListener('ended', onEnd);
+        transitionEl.removeEventListener('error', onError);
+        isTransitioning = false;
+        activeTransitionCleanup = null;
+
         if (applyTarget) {
           setSlideState(targetIndex);
           showImage(targetIndex, false, true);
-          requestAnimationFrame(() => {
-            transitionEl.classList.remove('is-visible');
-            transitionEl.pause();
-          });
-        } else {
-          transitionEl.classList.remove('is-visible');
-          transitionEl.pause();
         }
-        transitionEl.removeEventListener('ended', finish);
-        transitionEl.removeEventListener('error', finish);
-        isTransitioning = false;
-        activeTransitionCleanup = null;
+        resetTransition();
       };
-      activeTransitionCleanup = finish;
 
-      transitionEl.addEventListener('ended', finish, { once: true });
-      transitionEl.addEventListener('error', finish, { once: true });
-      timeoutId = window.setTimeout(() => finish(true), 5000);
+      activeTransitionCleanup = (applyTarget = false) => finish(applyTarget, true);
+      transitionEl.addEventListener('ended', onEnd, { once: true });
+      transitionEl.addEventListener('error', onError, { once: true });
+      timeoutId = window.setTimeout(() => finish(true), 6000);
 
-      transitionEl.play().catch(() => {
-        finish(true);
-      });
+      transitionEl.classList.add('is-visible');
+      if (transitionEl.getAttribute('src') !== transitionUrl) {
+        transitionEl.setAttribute('src', transitionUrl);
+      }
+      transitionEl.muted = true;
+      transitionEl.load();
+      try {
+        transitionEl.currentTime = 0;
+      } catch (_error) {
+        // Some browsers block seeking before metadata is loaded.
+      }
+      transitionEl.play().catch(() => finish(true));
     };
 
-    sectionRoot.addEventListener('click', (event) => {
-      const nav = event.target.closest('[data-nav]');
-      if (!nav) return;
+    const goToIndex = (targetIndex) => {
+      if (targetIndex < 0 || targetIndex >= slides.length || targetIndex === activeIndex) return;
 
-      if (nav.dataset.nav === 'next') {
-        if (isTransitioning) return;
+      if (isTransitioning && activeTransitionCleanup) {
+        activeTransitionCleanup(false);
+      }
+
+      if (targetIndex === activeIndex + 1) {
+        playTransitionTo(targetIndex, 'next');
+        return;
+      }
+
+      if (targetIndex === activeIndex - 1) {
+        playTransitionTo(targetIndex, 'prev');
+        return;
+      }
+
+      setSlideState(targetIndex);
+      showImage(targetIndex, true);
+    };
+
+    if (nextTriggerEl) {
+      nextTriggerEl.addEventListener('click', () => {
         const target = activeIndex + 1;
         if (target < slides.length) {
-          playTransitionTo(target, 'next');
+          goToIndex(target);
         }
-      }
+      });
+    }
 
-      if (nav.dataset.nav === 'prev') {
-        if (isTransitioning && activeTransitionCleanup) {
-          activeTransitionCleanup(false);
+    stepEls.forEach((stepEl) => {
+      stepEl.addEventListener('click', () => {
+        const target = Number(stepEl.dataset.jumpIndex);
+        if (Number.isInteger(target)) {
+          goToIndex(target);
         }
-        const target = activeIndex - 1;
-        if (target >= 0) {
-          playTransitionTo(target, 'prev');
-        }
-      }
+      });
     });
 
     const syncForViewport = () => {

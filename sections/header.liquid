@@ -1,8 +1,11 @@
 <header class="site-header">
-  <div class="container header-inner">
-    <a class="logo" href="{{ routes.root_url }}">{{ settings.brand_name | default: shop.name }}</a>
+  <div class="site-header-frame container">
+    <a class="header-cell header-brand" href="{{ routes.root_url }}">
+      <span class="brand-main">{{ section.settings.brand_main }}</span>
+      <span class="brand-sub">{{ section.settings.brand_sub }}</span>
+    </a>
 
-    <nav class="main-nav" aria-label="Menu principal">
+    <nav class="header-cell header-menu" aria-label="Menu principal">
       <ul>
         {% for link in section.settings.menu.links %}
           <li><a href="{{ link.url }}">{{ link.title }}</a></li>
@@ -10,10 +13,9 @@
       </ul>
     </nav>
 
-    <div class="header-actions">
-      <a class="account-link" href="{{ routes.account_url }}">Compte</a>
-      <a class="cart-link" href="{{ routes.cart_url }}">Panier ({{ cart.item_count }})</a>
-    </div>
+    <a class="header-cell header-link header-link--search" href="{{ routes.search_url }}">RECHERCHER</a>
+    <a class="header-cell header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
+    <a class="header-cell header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
   </div>
 </header>
 
@@ -26,6 +28,18 @@
       "id": "menu",
       "label": "Menu",
       "default": "main-menu"
+    },
+    {
+      "type": "text",
+      "id": "brand_main",
+      "label": "Marque (ligne 1)",
+      "default": "HORMONE"
+    },
+    {
+      "type": "text",
+      "id": "brand_sub",
+      "label": "Marque (ligne 2)",
+      "default": "CONCEPT"
     }
   ]
 }
