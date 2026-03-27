@@ -1,0 +1,19 @@
+<footer class="site-footer">
+  <div class="container">
+    <p>{{ section.settings.text }}</p>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Texte",
+      "default": "© 2026 Hormone Concept"
+    }
+  ]
+}
+{% endschema %}

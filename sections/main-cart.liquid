@@ -1,0 +1,57 @@
+<section class="main-cart">
+  <div class="container">
+    <h1>Panier</h1>
+
+    {% if cart.item_count == 0 %}
+      <p>Votre panier est vide.</p>
+      <a class="button" href="{{ routes.all_products_collection_url }}">Continuer vos achats</a>
+    {% else %}
+      {% form 'cart', cart %}
+        <div class="cart-table-wrap">
+          <table class="cart-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Prix</th>
+                <th>Quantite</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cart.items %}
+                <tr>
+                  <td>
+                    <a href="{{ item.url }}">{{ item.product.title }}</a>
+                  </td>
+                  <td>{{ item.final_price | money }}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      name="updates[]"
+                      value="{{ item.quantity }}"
+                      aria-label="Quantite {{ item.product.title }}"
+                    >
+                  </td>
+                  <td>{{ item.final_line_price | money }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="cart-actions">
+          <button class="button button-secondary" type="submit" name="update">Mettre a jour</button>
+          <button class="button" type="submit" name="checkout">Paiement</button>
+        </div>
+      {% endform %}
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Main cart",
+  "settings": []
+}
+{% endschema %}

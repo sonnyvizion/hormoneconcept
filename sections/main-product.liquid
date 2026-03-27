@@ -1,0 +1,50 @@
+<section class="main-product">
+  <div class="container product-layout">
+    <div class="product-media">
+      {% if product.featured_image %}
+        {{ product.featured_image | image_url: width: 1200 | image_tag: loading: 'eager', alt: product.title }}
+      {% else %}
+        <div class="ph-img"></div>
+      {% endif %}
+    </div>
+
+    <div class="product-info">
+      <h1>{{ product.title }}</h1>
+      <p class="product-price">{{ product.selected_or_first_available_variant.price | money }}</p>
+
+      {% form 'product', product %}
+        {% if product.has_only_default_variant == false %}
+          {% for option in product.options_with_values %}
+            <label class="field-label" for="Option-{{ option.position }}">{{ option.name }}</label>
+            <select id="Option-{{ option.position }}" name="options[{{ option.name | escape }}]">
+              {% for value in option.values %}
+                <option value="{{ value | escape }}" {% if option.selected_value == value %}selected{% endif %}>
+                  {{ value }}
+                </option>
+              {% endfor %}
+            </select>
+          {% endfor %}
+        {% endif %}
+
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+
+        <button class="button" type="submit" {% unless product.available %}disabled{% endunless %}>
+          {% if product.available %}Ajouter au panier{% else %}Rupture de stock{% endif %}
+        </button>
+      {% endform %}
+
+      {% if product.description != blank %}
+        <div class="rte product-description">
+          {{ product.description }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Main product",
+  "settings": []
+}
+{% endschema %}

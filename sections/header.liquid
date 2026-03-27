@@ -1,0 +1,32 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="{{ routes.root_url }}">{{ settings.brand_name | default: shop.name }}</a>
+
+    <nav class="main-nav" aria-label="Menu principal">
+      <ul>
+        {% for link in section.settings.menu.links %}
+          <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <a class="account-link" href="{{ routes.account_url }}">Compte</a>
+      <a class="cart-link" href="{{ routes.cart_url }}">Panier ({{ cart.item_count }})</a>
+    </div>
+  </div>
+</header>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menu",
+      "default": "main-menu"
+    }
+  ]
+}
+{% endschema %}

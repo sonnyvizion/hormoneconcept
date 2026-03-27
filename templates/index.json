@@ -1,0 +1,49 @@
+{
+  "sections": {
+    "video_hero": {
+      "type": "video-hero-slider",
+      "blocks": {
+        "pair_1": {
+          "type": "pair",
+          "settings": {
+            "title": "Air Force 1",
+            "subtitle": "Silhouette iconique, ligne propre, usage quotidien.",
+            "cta_label": "Voir Air Force 1",
+            "cta_link": "/collections/all"
+          }
+        },
+        "pair_2": {
+          "type": "pair",
+          "settings": {
+            "title": "Yeezy",
+            "subtitle": "Volume contemporain, confort haut niveau.",
+            "cta_label": "Voir Yeezy",
+            "cta_link": "/collections/all"
+          }
+        },
+        "pair_3": {
+          "type": "pair",
+          "settings": {
+            "title": "Hoka x Marni",
+            "subtitle": "Design expressif et performance.",
+            "cta_label": "Voir Hoka x Marni",
+            "cta_link": "/collections/all"
+          }
+        }
+      },
+      "block_order": ["pair_1", "pair_2", "pair_3"],
+      "settings": {
+        "mobile_breakpoint": 768
+      }
+    },
+    "featured_collection": {
+      "type": "featured-collection",
+      "settings": {
+        "title": "Nouveautes",
+        "collection": "",
+        "products_to_show": 8
+      }
+    }
+  },
+  "order": ["video_hero", "featured_collection"]
+}

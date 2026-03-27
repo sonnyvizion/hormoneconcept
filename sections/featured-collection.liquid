@@ -1,0 +1,55 @@
+<section class="featured-collection">
+  <div class="container">
+    <h2>{{ section.settings.title }}</h2>
+
+    {% assign coll = collections[section.settings.collection] %}
+    <div class="product-grid">
+      {% if coll != blank %}
+        {% for product in coll.products limit: section.settings.products_to_show %}
+          {% render 'product-card', product: product %}
+        {% endfor %}
+      {% else %}
+        {% for i in (1..4) %}
+          <article class="product-card placeholder">
+            <div class="ph-img"></div>
+            <h3>Produit exemple {{ i }}</h3>
+            <p>{{ 4900 | money }}</p>
+          </article>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Featured collection",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "Nouveautes"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Nombre de produits",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 8
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured collection"
+    }
+  ]
+}
+{% endschema %}

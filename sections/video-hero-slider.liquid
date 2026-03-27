@@ -1,0 +1,214 @@
+<section class="video-hero" data-video-hero data-mobile-breakpoint="{{ section.settings.mobile_breakpoint }}">
+  <div class="video-hero__media">
+    <img class="video-hero__image" alt="" loading="eager" width="2200" height="1300">
+    <video class="video-hero__transition" muted playsinline preload="metadata"></video>
+    <div class="video-hero__placeholder"></div>
+  </div>
+
+  <div class="video-hero__overlay">
+    <div class="container">
+      <div class="video-hero__panel">
+        {% if section.blocks.size > 0 %}
+          {% for block in section.blocks %}
+            {% liquid
+              assign transition_desktop_url = ''
+              assign transition_mobile_url = ''
+              assign transition_prev_desktop_url = ''
+              assign transition_prev_mobile_url = ''
+
+              if block.settings.transition_desktop != blank
+                for source in block.settings.transition_desktop.sources
+                  if source.format == 'mp4'
+                    assign transition_desktop_url = source.url
+                    break
+                  endif
+                endfor
+              endif
+
+              if block.settings.transition_mobile != blank
+                for source in block.settings.transition_mobile.sources
+                  if source.format == 'mp4'
+                    assign transition_mobile_url = source.url
+                    break
+                  endif
+                endfor
+              endif
+
+              if block.settings.transition_prev_desktop != blank
+                for source in block.settings.transition_prev_desktop.sources
+                  if source.format == 'mp4'
+                    assign transition_prev_desktop_url = source.url
+                    break
+                  endif
+                endfor
+              endif
+
+              if block.settings.transition_prev_mobile != blank
+                for source in block.settings.transition_prev_mobile.sources
+                  if source.format == 'mp4'
+                    assign transition_prev_mobile_url = source.url
+                    break
+                  endif
+                endfor
+              endif
+            %}
+
+            <article
+              class="video-hero__slide {% if forloop.first %}is-active{% endif %}"
+              data-slide
+              data-index="{{ forloop.index0 }}"
+              data-image-desktop="{% if block.settings.image_desktop != blank %}{{ block.settings.image_desktop | image_url: width: 2200 }}{% endif %}"
+              data-image-mobile="{% if block.settings.image_mobile != blank %}{{ block.settings.image_mobile | image_url: width: 1200 }}{% endif %}"
+              data-transition-desktop="{{ transition_desktop_url }}"
+              data-transition-mobile="{{ transition_mobile_url }}"
+              data-transition-prev-desktop="{{ transition_prev_desktop_url }}"
+              data-transition-prev-mobile="{{ transition_prev_mobile_url }}"
+              data-image-alt="{{ block.settings.title | escape }}"
+              {{ block.shopify_attributes }}
+            >
+              <p class="video-hero__eyebrow">Paire {{ forloop.index }}</p>
+              <h1>{{ block.settings.title }}</h1>
+              {% if block.settings.subtitle != blank %}
+                <p class="video-hero__subtitle">{{ block.settings.subtitle }}</p>
+              {% endif %}
+
+              <div class="video-hero__actions">
+                {% if forloop.first == false %}
+                  <button type="button" class="video-hero__nav" data-nav="prev" aria-label="Voir la paire precedente">
+                    <span aria-hidden="true">←</span>
+                  </button>
+                {% endif %}
+
+                {% if block.settings.cta_label != blank and block.settings.cta_link != blank %}
+                  <a class="button" href="{{ block.settings.cta_link }}">{{ block.settings.cta_label }}</a>
+                {% endif %}
+
+                {% if forloop.last == false %}
+                  <button type="button" class="video-hero__nav" data-nav="next" aria-label="Voir la paire suivante">
+                    <span aria-hidden="true">→</span>
+                  </button>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <article class="video-hero__slide is-active" data-slide data-index="0" data-image-desktop="" data-image-mobile="" data-transition-desktop="" data-transition-mobile="" data-transition-prev-desktop="" data-transition-prev-mobile="" data-image-alt="Hero">
+            <p class="video-hero__eyebrow">Paire 1</p>
+            <h1>Nom de la paire</h1>
+            <p class="video-hero__subtitle">Ajoute des blocs pour configurer ton hero.</p>
+          </article>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Video hero slider",
+  "settings": [
+    {
+      "type": "range",
+      "id": "mobile_breakpoint",
+      "label": "Breakpoint mobile (px)",
+      "min": 480,
+      "max": 1024,
+      "step": 16,
+      "default": 768
+    }
+  ],
+  "blocks": [
+    {
+      "type": "pair",
+      "name": "Paire",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titre",
+          "default": "Nom de la paire"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Description",
+          "default": "Description courte de la paire."
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "Texte CTA",
+          "default": "Voir le produit"
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "Lien CTA"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_desktop",
+          "label": "Photo desktop"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_mobile",
+          "label": "Photo mobile"
+        },
+        {
+          "type": "video",
+          "id": "transition_desktop",
+          "label": "Transition vers la paire suivante (desktop)"
+        },
+        {
+          "type": "video",
+          "id": "transition_mobile",
+          "label": "Transition vers la paire suivante (mobile)"
+        },
+        {
+          "type": "video",
+          "id": "transition_prev_desktop",
+          "label": "Transition vers la paire precedente (desktop)"
+        },
+        {
+          "type": "video",
+          "id": "transition_prev_mobile",
+          "label": "Transition vers la paire precedente (mobile)"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [
+    {
+      "name": "Video hero slider",
+      "blocks": [
+        {
+          "type": "pair",
+          "settings": {
+            "title": "Air Force 1",
+            "subtitle": "Silhouette iconique, ligne propre, usage quotidien.",
+            "cta_label": "Voir Air Force 1"
+          }
+        },
+        {
+          "type": "pair",
+          "settings": {
+            "title": "Yeezy",
+            "subtitle": "Volume contemporain, confort haut niveau.",
+            "cta_label": "Voir Yeezy"
+          }
+        },
+        {
+          "type": "pair",
+          "settings": {
+            "title": "Hoka x Marni",
+            "subtitle": "Design expressif et performance.",
+            "cta_label": "Voir Hoka x Marni"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
