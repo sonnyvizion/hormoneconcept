@@ -11,6 +11,7 @@
     const imageEl = sectionRoot.querySelector('.video-hero__image');
     const transitionEl = sectionRoot.querySelector('.video-hero__transition');
     const placeholderEl = sectionRoot.querySelector('.video-hero__placeholder');
+    const prevTriggerEl = sectionRoot.querySelector('[data-prev-trigger]');
     const nextTriggerEl = sectionRoot.querySelector('[data-next-trigger]');
     const stepEls = Array.from(sectionRoot.querySelectorAll('[data-jump-index]'));
 
@@ -65,12 +66,23 @@
       transitionEl.load();
     };
 
-    const updateNextTriggerState = () => {
-      if (!nextTriggerEl) return;
-      const isLast = activeIndex >= slides.length - 1;
-      nextTriggerEl.disabled = isLast;
-      nextTriggerEl.setAttribute('aria-disabled', isLast ? 'true' : 'false');
-      nextTriggerEl.classList.toggle('is-disabled', isLast);
+    const updateNavigationTriggerState = () => {
+      const hasPrev = activeIndex > 0;
+      const hasNext = activeIndex < slides.length - 1;
+
+      if (prevTriggerEl) {
+        prevTriggerEl.hidden = !hasPrev;
+        prevTriggerEl.disabled = !hasPrev;
+        prevTriggerEl.setAttribute('aria-disabled', hasPrev ? 'false' : 'true');
+        prevTriggerEl.classList.toggle('is-disabled', !hasPrev);
+      }
+
+      if (nextTriggerEl) {
+        nextTriggerEl.hidden = !hasNext;
+        nextTriggerEl.disabled = !hasNext;
+        nextTriggerEl.setAttribute('aria-disabled', hasNext ? 'false' : 'true');
+        nextTriggerEl.classList.toggle('is-disabled', !hasNext);
+      }
     };
 
     const setSlideState = (index) => {
@@ -82,7 +94,7 @@
         stepEl.classList.toggle('is-active', i === index);
         stepEl.setAttribute('aria-selected', i === index ? 'true' : 'false');
       });
-      updateNextTriggerState();
+      updateNavigationTriggerState();
     };
 
     const showImage = (index, withFade = false, keepTransitionVisible = false) => {
@@ -218,6 +230,15 @@
       setSlideState(targetIndex);
       showImage(targetIndex, true);
     };
+
+    if (prevTriggerEl) {
+      prevTriggerEl.addEventListener('click', () => {
+        const target = activeIndex - 1;
+        if (target >= 0) {
+          goToIndex(target);
+        }
+      });
+    }
 
     if (nextTriggerEl) {
       nextTriggerEl.addEventListener('click', () => {

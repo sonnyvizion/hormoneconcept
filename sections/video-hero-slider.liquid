@@ -103,7 +103,10 @@
 
         {% if section.blocks.size > 0 %}
           <div class="video-hero__footer">
-            <button class="video-hero__next" type="button" data-next-trigger>{{ section.settings.next_label }}</button>
+            <div class="video-hero__controls" role="group" aria-label="Navigation produits">
+              <button class="video-hero__prev" type="button" data-prev-trigger hidden>{{ section.settings.prev_label }}</button>
+              <button class="video-hero__next" type="button" data-next-trigger>{{ section.settings.next_label }}</button>
+            </div>
             <div class="video-hero__steps" role="tablist" aria-label="Navigation paires">
               {% for block in section.blocks %}
                 <button
@@ -141,8 +144,14 @@
     {
       "type": "text",
       "id": "next_label",
-      "label": "Label navigation bas",
+      "label": "Label navigation bas (suivant)",
       "default": "PRODUIT SUIVANT"
+    },
+    {
+      "type": "text",
+      "id": "prev_label",
+      "label": "Label navigation bas (precedent)",
+      "default": "PRODUIT PRECEDENT"
     }
   ],
   "blocks": [

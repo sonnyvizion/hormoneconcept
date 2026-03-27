@@ -346,6 +346,15 @@ a { color: inherit; text-decoration: none; }
   gap: 12px;
 }
 
+.video-hero__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3vw, 42px);
+  min-height: 1.5em;
+}
+
+.video-hero__prev,
 .video-hero__next {
   border: 0;
   padding: 0;
@@ -360,14 +369,20 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer;
 }
 
+.video-hero__prev:hover,
 .video-hero__next:hover {
   opacity: .82;
 }
 
+.video-hero__prev.is-disabled,
 .video-hero__next.is-disabled {
   opacity: .35;
   cursor: default;
   pointer-events: none;
+}
+
+.video-hero__controls [hidden] {
+  display: none !important;
 }
 
 .video-hero__steps {
