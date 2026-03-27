@@ -1,5 +1,6 @@
 (() => {
   document.documentElement.classList.add('js');
+  const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
   const initVideoHero = (sectionRoot) => {
     if (!sectionRoot || sectionRoot.dataset.videoHeroInit === 'true') return;
@@ -17,11 +18,13 @@
 
     const breakpoint = Number(sectionRoot.dataset.mobileBreakpoint || 768);
     const mediaQuery = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     let activeIndex = 0;
     let isTransitioning = false;
     let activeTransitionCleanup = null;
     let transitionNonce = 0;
+    let copyAnimationNonce = 0;
 
     const parseSlideData = (slide) => ({
       imageDesktop: (slide.dataset.imageDesktop || '').trim(),
@@ -64,6 +67,91 @@
       transitionEl.classList.remove('is-visible');
       transitionEl.removeAttribute('src');
       transitionEl.load();
+    };
+
+    const normalizeText = (value) => value.replace(/\s+/g, ' ').trim();
+
+    const prepareCopyElements = () => {
+      slides.forEach((slide) => {
+        slide
+          .querySelectorAll('.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid p, .video-hero__copy-grid .video-hero__availability')
+          .forEach((element) => {
+            const finalText = normalizeText(element.textContent || '');
+            element.dataset.copyFinal = finalText;
+            element.textContent = finalText;
+          });
+      });
+    };
+
+    const scrambleText = (element, runNonce, delayMs = 0) => {
+      const finalText = element.dataset.copyFinal || '';
+      if (!finalText) return;
+
+      const preserveChar = (char) => /[\s\[\](),.:;'’/\-]/.test(char);
+
+      window.setTimeout(() => {
+        if (runNonce !== copyAnimationNonce) return;
+        const totalSteps = 12;
+        let step = 0;
+
+        const timer = window.setInterval(() => {
+          if (runNonce !== copyAnimationNonce) {
+            window.clearInterval(timer);
+            element.textContent = finalText;
+            return;
+          }
+
+          step += 1;
+          if (step >= totalSteps) {
+            window.clearInterval(timer);
+            element.textContent = finalText;
+            return;
+          }
+
+          const revealIndex = Math.floor((step / totalSteps) * finalText.length);
+          let output = '';
+
+          for (let i = 0; i < finalText.length; i += 1) {
+            const finalChar = finalText[i];
+            if (i <= revealIndex || preserveChar(finalChar)) {
+              output += finalChar;
+            } else {
+              output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+            }
+          }
+
+          element.textContent = output;
+        }, 28);
+      }, delayMs);
+    };
+
+    const animateSlideCopy = (index) => {
+      const slide = slides[index];
+      if (!slide) return;
+
+      const copyElements = Array.from(
+        slide.querySelectorAll('.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid p, .video-hero__copy-grid .video-hero__availability')
+      );
+      if (!copyElements.length) return;
+
+      slide.classList.remove('is-copy-animating');
+      if (reduceMotionQuery.matches) {
+        copyElements.forEach((element) => {
+          element.textContent = element.dataset.copyFinal || '';
+        });
+        return;
+      }
+
+      const runNonce = ++copyAnimationNonce;
+      slide.classList.add('is-copy-animating');
+      window.setTimeout(() => {
+        if (runNonce !== copyAnimationNonce) return;
+        slide.classList.remove('is-copy-animating');
+      }, 460);
+
+      copyElements.forEach((element, idx) => {
+        scrambleText(element, runNonce, idx * 55);
+      });
     };
 
     const updateNavigationTriggerState = () => {
@@ -153,6 +241,7 @@
       if (!transitionUrl) {
         setSlideState(targetIndex);
         showImage(targetIndex, true);
+        animateSlideCopy(targetIndex);
         return;
       }
 
@@ -187,6 +276,7 @@
         if (applyTarget) {
           setSlideState(targetIndex);
           showImage(targetIndex, false, true);
+          animateSlideCopy(targetIndex);
         }
         resetTransition();
       };
@@ -229,6 +319,7 @@
 
       setSlideState(targetIndex);
       showImage(targetIndex, true);
+      animateSlideCopy(targetIndex);
     };
 
     if (prevTriggerEl) {
@@ -269,6 +360,7 @@
       mediaQuery.addListener(syncForViewport);
     }
 
+    prepareCopyElements();
     setSlideState(0);
     showImage(0, false);
   };
