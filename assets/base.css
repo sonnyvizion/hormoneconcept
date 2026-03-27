@@ -293,6 +293,10 @@ a { color: inherit; text-decoration: none; }
   animation: heroCopyGlitch .44s ease;
 }
 
+.video-hero__slide.is-copy-leaving .video-hero__copy-grid > * {
+  animation: heroCopyOutGlitch .22s ease forwards;
+}
+
 @keyframes heroCopyGlitch {
   0% {
     opacity: .45;
@@ -308,6 +312,24 @@ a { color: inherit; text-decoration: none; }
     opacity: 1;
     filter: blur(0);
     transform: translateY(0);
+  }
+}
+
+@keyframes heroCopyOutGlitch {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+  35% {
+    opacity: .9;
+    filter: blur(.9px);
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(2.8px);
+    transform: translateY(-10px);
   }
 }
 

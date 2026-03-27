@@ -1,6 +1,7 @@
 (() => {
   document.documentElement.classList.add('js');
   const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const COPY_OUT_DURATION_MS = 220;
 
   const initVideoHero = (sectionRoot) => {
     if (!sectionRoot || sectionRoot.dataset.videoHeroInit === 'true') return;
@@ -25,6 +26,7 @@
     let activeTransitionCleanup = null;
     let transitionNonce = 0;
     let copyAnimationNonce = 0;
+    let copyHideTimer = 0;
 
     const parseSlideData = (slide) => ({
       imageDesktop: (slide.dataset.imageDesktop || '').trim(),
@@ -71,6 +73,35 @@
 
     const setCopyHidden = (isHidden) => {
       sectionRoot.classList.toggle('is-copy-hidden', isHidden);
+    };
+
+    const clearCopyLeaveState = () => {
+      if (copyHideTimer) {
+        window.clearTimeout(copyHideTimer);
+        copyHideTimer = 0;
+      }
+      slides.forEach((slide) => slide.classList.remove('is-copy-leaving'));
+    };
+
+    const hideCopyWithEffect = () => {
+      clearCopyLeaveState();
+      copyAnimationNonce += 1;
+
+      const currentSlide = slides[activeIndex];
+      if (!currentSlide || reduceMotionQuery.matches) {
+        setCopyHidden(true);
+        return;
+      }
+
+      currentSlide.classList.remove('is-copy-animating');
+      currentSlide.classList.add('is-copy-leaving');
+      setCopyHidden(false);
+
+      copyHideTimer = window.setTimeout(() => {
+        currentSlide.classList.remove('is-copy-leaving');
+        setCopyHidden(true);
+        copyHideTimer = 0;
+      }, COPY_OUT_DURATION_MS);
     };
 
     const normalizeText = (value) => value.replace(/\s+/g, ' ').trim();
@@ -159,6 +190,7 @@
     };
 
     const revealCopyWithEffect = (index) => {
+      clearCopyLeaveState();
       setCopyHidden(false);
       requestAnimationFrame(() => animateSlideCopy(index));
     };
@@ -248,7 +280,7 @@
 
       const transitionUrl = resolveTransitionUrl(activeIndex, targetIndex, direction);
 
-      setCopyHidden(true);
+      hideCopyWithEffect();
 
       if (!transitionUrl) {
         setSlideState(targetIndex);
@@ -290,6 +322,7 @@
           showImage(targetIndex, false, true);
           revealCopyWithEffect(targetIndex);
         } else {
+          clearCopyLeaveState();
           setCopyHidden(false);
         }
         resetTransition();
