@@ -181,9 +181,10 @@ a { color: inherit; text-decoration: none; }
 
 .video-hero {
   position: relative;
+  height: 80vh;
   min-height: 80vh;
   max-height: 80vh;
-  margin: 12px;
+  margin: 0 12px;
   padding: 8px;
   background: #111a24;
   color: #f2f7fd;
@@ -193,7 +194,8 @@ a { color: inherit; text-decoration: none; }
 
 .video-hero__media-frame {
   position: relative;
-  min-height: inherit;
+  height: 100%;
+  min-height: 0;
   border: 1px solid rgba(227, 237, 247, .32);
   box-shadow: inset 0 0 0 1px rgba(227, 237, 247, .12);
   overflow: hidden;
@@ -244,9 +246,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .video-hero__overlay {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
-  min-height: inherit;
   display: flex;
   align-items: stretch;
   padding: 174px 0 26px;
@@ -255,7 +257,8 @@ a { color: inherit; text-decoration: none; }
 
 .video-hero__content-wrap {
   width: 100%;
-  min-height: inherit;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -625,9 +628,10 @@ a { color: inherit; text-decoration: none; }
   }
 
   .video-hero {
+    height: 80vh;
     min-height: 80vh;
     max-height: 80vh;
-    margin: 10px;
+    margin: 0 10px;
     padding: 7px;
   }
 
@@ -709,9 +713,10 @@ a { color: inherit; text-decoration: none; }
   }
 
   .video-hero {
+    height: 80vh;
     min-height: 80vh;
     max-height: 80vh;
-    margin: 6px;
+    margin: 0 6px;
     padding: 6px;
   }
 
