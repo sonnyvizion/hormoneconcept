@@ -69,6 +69,10 @@
       transitionEl.load();
     };
 
+    const setCopyHidden = (isHidden) => {
+      sectionRoot.classList.toggle('is-copy-hidden', isHidden);
+    };
+
     const normalizeText = (value) => value.replace(/\s+/g, ' ').trim();
 
     const prepareCopyElements = () => {
@@ -154,6 +158,11 @@
       });
     };
 
+    const revealCopyWithEffect = (index) => {
+      setCopyHidden(false);
+      requestAnimationFrame(() => animateSlideCopy(index));
+    };
+
     const updateNavigationTriggerState = () => {
       const hasPrev = activeIndex > 0;
       const hasNext = activeIndex < slides.length - 1;
@@ -233,15 +242,18 @@
       if (!transitionEl) {
         setSlideState(targetIndex);
         showImage(targetIndex, true);
+        revealCopyWithEffect(targetIndex);
         return;
       }
 
       const transitionUrl = resolveTransitionUrl(activeIndex, targetIndex, direction);
 
+      setCopyHidden(true);
+
       if (!transitionUrl) {
         setSlideState(targetIndex);
         showImage(targetIndex, true);
-        animateSlideCopy(targetIndex);
+        revealCopyWithEffect(targetIndex);
         return;
       }
 
@@ -276,7 +288,9 @@
         if (applyTarget) {
           setSlideState(targetIndex);
           showImage(targetIndex, false, true);
-          animateSlideCopy(targetIndex);
+          revealCopyWithEffect(targetIndex);
+        } else {
+          setCopyHidden(false);
         }
         resetTransition();
       };
@@ -319,7 +333,7 @@
 
       setSlideState(targetIndex);
       showImage(targetIndex, true);
-      animateSlideCopy(targetIndex);
+      revealCopyWithEffect(targetIndex);
     };
 
     if (prevTriggerEl) {
@@ -361,6 +375,7 @@
     }
 
     prepareCopyElements();
+    setCopyHidden(false);
     setSlideState(0);
     showImage(0, false);
   };
