@@ -183,6 +183,7 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   --hero-top-safe: 126px;
   --hero-bottom-safe: 24px;
+  --hero-inline-safe: 44px;
   height: 80vh;
   min-height: 80vh;
   max-height: 80vh;
@@ -263,7 +264,7 @@ a { color: inherit; text-decoration: none; }
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: var(--hero-top-safe) 0 var(--hero-bottom-safe);
+  padding: var(--hero-top-safe) var(--hero-inline-safe) var(--hero-bottom-safe);
   justify-content: flex-end;
 }
 
@@ -324,8 +325,8 @@ a { color: inherit; text-decoration: none; }
 
 .video-hero__availability {
   display: inline-block;
-  font-size: clamp(1.75rem, 2.6vw, 2.7rem);
-  letter-spacing: .08em;
+  font-size: clamp(1.24rem, 1.95vw, 1.95rem);
+  letter-spacing: .06em;
   text-transform: uppercase;
   text-decoration: underline;
   text-underline-offset: .14em;
@@ -593,6 +594,7 @@ a { color: inherit; text-decoration: none; }
   .video-hero {
     --hero-top-safe: 118px;
     --hero-bottom-safe: 20px;
+    --hero-inline-safe: 34px;
   }
 
   .video-hero__copy-left h2,
@@ -636,6 +638,7 @@ a { color: inherit; text-decoration: none; }
   .video-hero {
     --hero-top-safe: 96px;
     --hero-bottom-safe: 16px;
+    --hero-inline-safe: 24px;
     height: 80vh;
     min-height: 80vh;
     max-height: 80vh;
@@ -659,7 +662,7 @@ a { color: inherit; text-decoration: none; }
   }
 
   .video-hero__availability {
-    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-size: clamp(1.08rem, 3.9vw, 1.46rem);
   }
 
   .video-hero__step.is-active {
@@ -719,6 +722,7 @@ a { color: inherit; text-decoration: none; }
   .video-hero {
     --hero-top-safe: 64px;
     --hero-bottom-safe: 12px;
+    --hero-inline-safe: 14px;
     height: 80vh;
     min-height: 80vh;
     max-height: 80vh;
