@@ -184,6 +184,10 @@ a { color: inherit; text-decoration: none; }
   --hero-top-safe: 126px;
   --hero-bottom-safe: 24px;
   --hero-inline-safe: 44px;
+  --hero-title-size: clamp(2rem, 5.1vw, 4.2rem);
+  --hero-subtitle-size: clamp(.56rem, .9vw, .82rem);
+  --hero-cta-size: clamp(1.05rem, 2.15vw, 1.95rem);
+  --hero-next-size: clamp(.66rem, .95vw, .94rem);
   height: 80vh;
   min-height: 80vh;
   max-height: 80vh;
@@ -295,7 +299,7 @@ a { color: inherit; text-decoration: none; }
 .video-hero__copy-left h2,
 .video-hero__copy-right h3 {
   margin: 0;
-  font-size: clamp(2.6rem, 4.6vw, 4.2rem);
+  font-size: var(--hero-title-size);
   font-weight: 500;
   line-height: .92;
   letter-spacing: .015em;
@@ -306,7 +310,7 @@ a { color: inherit; text-decoration: none; }
 .video-hero__copy-left p,
 .video-hero__copy-right p {
   margin: 8px 0 0;
-  font-size: .78rem;
+  font-size: var(--hero-subtitle-size);
   letter-spacing: .48em;
   text-transform: uppercase;
   color: rgba(241, 248, 255, .86);
@@ -325,7 +329,7 @@ a { color: inherit; text-decoration: none; }
 
 .video-hero__availability {
   display: inline-block;
-  font-size: clamp(1.24rem, 1.95vw, 1.95rem);
+  font-size: var(--hero-cta-size);
   letter-spacing: .06em;
   text-transform: uppercase;
   text-decoration: underline;
@@ -348,7 +352,7 @@ a { color: inherit; text-decoration: none; }
   background: transparent;
   color: #f2f7ff;
   font-family: inherit;
-  font-size: .94rem;
+  font-size: var(--hero-next-size);
   letter-spacing: .2em;
   text-transform: uppercase;
   text-decoration: underline;
@@ -597,10 +601,6 @@ a { color: inherit; text-decoration: none; }
     --hero-inline-safe: 34px;
   }
 
-  .video-hero__copy-left h2,
-  .video-hero__copy-right h3 {
-    font-size: clamp(2.25rem, 4.8vw, 3.5rem);
-  }
 }
 
 @media (max-width: 980px) {
@@ -659,10 +659,6 @@ a { color: inherit; text-decoration: none; }
   .video-hero__copy-left p,
   .video-hero__copy-right p {
     letter-spacing: .34em;
-  }
-
-  .video-hero__availability {
-    font-size: clamp(1.08rem, 3.9vw, 1.46rem);
   }
 
   .video-hero__step.is-active {
@@ -730,20 +726,10 @@ a { color: inherit; text-decoration: none; }
     padding: 6px;
   }
 
-  .video-hero__copy-left h2,
-  .video-hero__copy-right h3 {
-    font-size: clamp(2rem, 12vw, 2.7rem);
-  }
-
   .video-hero__copy-left p,
   .video-hero__copy-right p {
     margin-top: 6px;
-    font-size: .62rem;
     letter-spacing: .24em;
-  }
-
-  .video-hero__next {
-    font-size: .72rem;
   }
 
   .video-hero__step {
