@@ -1,21 +1,32 @@
 <header class="site-header">
-  <div class="site-header-frame container">
-    <a class="header-cell header-brand" href="{{ routes.root_url }}">
-      <span class="brand-main">{{ section.settings.brand_main }}</span>
-      <span class="brand-sub">{{ section.settings.brand_sub }}</span>
-    </a>
+  <div class="site-header-shell">
+    <div class="site-header-frame">
+      <a class="header-cell header-brand" href="{{ routes.root_url }}">
+        {% if section.settings.logo_image != blank %}
+          {% assign logo_style = '--header-logo-width: ' | append: section.settings.logo_width | append: 'px;' %}
+          {{
+            section.settings.logo_image
+            | image_url: width: section.settings.logo_width | image_tag:
+              class: 'header-brand__logo',
+              alt: shop.name,
+              loading: 'eager',
+              style: logo_style
+          }}
+        {% endif %}
+      </a>
 
-    <nav class="header-cell header-menu" aria-label="Menu principal">
-      <ul>
-        {% for link in section.settings.menu.links %}
-          <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-        {% endfor %}
-      </ul>
-    </nav>
+      <nav class="header-cell header-menu" aria-label="Menu principal">
+        <ul>
+          {% for link in section.settings.menu.links %}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
 
-    <a class="header-cell header-link header-link--search" href="{{ routes.search_url }}">RECHERCHER</a>
-    <a class="header-cell header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
-    <a class="header-cell header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
+      <a class="header-cell header-link header-link--search" href="{{ routes.search_url }}">RECHERCHER</a>
+      <a class="header-cell header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
+      <a class="header-cell header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
+    </div>
   </div>
 </header>
 
@@ -30,16 +41,19 @@
       "default": "main-menu"
     },
     {
-      "type": "text",
-      "id": "brand_main",
-      "label": "Marque (ligne 1)",
-      "default": "HORMONE"
+      "type": "image_picker",
+      "id": "logo_image",
+      "label": "Logo"
     },
     {
-      "type": "text",
-      "id": "brand_sub",
-      "label": "Marque (ligne 2)",
-      "default": "CONCEPT"
+      "type": "range",
+      "id": "logo_width",
+      "label": "Largeur du logo",
+      "min": 80,
+      "max": 260,
+      "step": 10,
+      "default": 180,
+      "unit": "px"
     }
   ]
 }

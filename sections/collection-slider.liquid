@@ -1,0 +1,133 @@
+{% liquid
+  assign coll = collections[section.settings.collection]
+  assign slider_title = section.settings.title
+
+  if slider_title == blank and coll != blank
+    assign slider_title = coll.title
+  endif
+
+  assign intro_video_url = ''
+  if section.settings.intro_video != blank
+    for source in section.settings.intro_video.sources
+      if source.format == 'mp4'
+        assign intro_video_url = source.url
+        break
+      endif
+    endfor
+  endif
+%}
+
+<section class="collection-slider">
+  <div class="collection-slider__inner">
+    <div class="collection-slider__track">
+      <article class="collection-slider__panel collection-slider__panel--intro">
+        <div class="collection-slider__intro-head">
+          <h2>{{ slider_title | default: 'Nouvelles arrivees' }}</h2>
+        </div>
+
+        {% if intro_video_url != blank %}
+          <div class="collection-slider__intro-media">
+            <video
+              class="collection-slider__intro-video"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              style="mix-blend-mode: {{ section.settings.video_blend_mode }};"
+            >
+              <source src="{{ intro_video_url }}" type="video/mp4">
+            </video>
+          </div>
+        {% endif %}
+      </article>
+
+      {% if coll != blank %}
+        {% for product in coll.products limit: section.settings.products_to_show %}
+          <article class="collection-slider__panel collection-slider__panel--product">
+            <a class="collection-slider__product-link" href="{{ product.url }}">
+              {% if product.featured_image %}
+                {{
+                  product.featured_image
+                  | image_url: width: 1200
+                  | image_tag:
+                    loading: 'lazy',
+                    alt: product.title,
+                    class: 'collection-slider__product-image'
+                }}
+              {% else %}
+                <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+              {% endif %}
+              <div class="collection-slider__product-meta">
+                <h3>{{ product.title }}</h3>
+                <p>{{ product.price | money }}</p>
+              </div>
+            </a>
+          </article>
+        {% endfor %}
+      {% else %}
+        {% for i in (1..4) %}
+          <article class="collection-slider__panel collection-slider__panel--product">
+            <div class="collection-slider__product-link">
+              <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+              <div class="collection-slider__product-meta">
+                <h3>Produit exemple {{ i }}</h3>
+                <p>{{ 4900 | money }}</p>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collection slider",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "Nouvelles arrivees"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "video",
+      "id": "intro_video",
+      "label": "Video intro"
+    },
+    {
+      "type": "select",
+      "id": "video_blend_mode",
+      "label": "Mode de fusion video",
+      "default": "normal",
+      "options": [
+        { "value": "normal", "label": "Normal" },
+        { "value": "screen", "label": "Screen" },
+        { "value": "lighten", "label": "Lighten" },
+        { "value": "plus-lighter", "label": "Plus lighter" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Nombre de produits",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 6
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection slider"
+    }
+  ]
+}
+{% endschema %}

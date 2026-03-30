@@ -77,7 +77,11 @@
 
                   <div class="video-hero__copy-center">
                     {% if block.settings.cta_label != blank and block.settings.cta_link != blank %}
-                      <a class="video-hero__availability" href="{{ block.settings.cta_link }}">[ {{ block.settings.cta_label }} ]</a>
+                      <a class="video-hero__availability" href="{{ block.settings.cta_link }}">
+                        <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                        <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
+                        <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                      </a>
                     {% endif %}
                   </div>
 
@@ -94,7 +98,13 @@
             <article class="video-hero__slide is-active" data-slide data-index="0" data-image-desktop="" data-image-mobile="" data-transition-desktop="" data-transition-mobile="" data-transition-prev-desktop="" data-transition-prev-mobile="" data-image-alt="Hero">
               <div class="video-hero__copy-grid">
                 <div class="video-hero__copy-left"><h2>Nom de la paire</h2><p>[ Sous-titre ]</p></div>
-                <div class="video-hero__copy-center"><span class="video-hero__availability">[ DISPONIBLE ]</span></div>
+                <div class="video-hero__copy-center">
+                  <span class="video-hero__availability">
+                    <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                    <span class="video-hero__availability-label">DISPONIBLE</span>
+                    <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                  </span>
+                </div>
                 <div class="video-hero__copy-right"><h3>Modele</h3><p>[ DISPONIBLE ]</p></div>
               </div>
             </article>
