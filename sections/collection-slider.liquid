@@ -1,84 +1,275 @@
 {% liquid
-  assign coll = collections[section.settings.collection]
-  assign slider_title = section.settings.title
-
-  if slider_title == blank and coll != blank
-    assign slider_title = coll.title
-  endif
-
-  assign intro_video_url = ''
-  if section.settings.intro_video != blank
-    for source in section.settings.intro_video.sources
-      if source.format == 'mp4'
-        assign intro_video_url = source.url
-        break
-      endif
-    endfor
-  endif
+  assign loop_products_limit = 10
+  assign fallback_view_all_url = routes.all_products_collection_url
 %}
 
-<section class="collection-slider">
+<section
+  class="collection-slider"
+  data-collection-stacks
+  style="
+    --collection-slider-bg: {{ section.settings.bg_color }};
+    --collection-slider-cell-bg: #D8DBDD;
+    --collection-slider-ticker-bg: {{ section.settings.ticker_bg_color }};
+    --collection-slider-meta-bg: {{ section.settings.meta_bg_color }};
+    --collection-slider-card-separator: {{ section.settings.card_separator_color }};
+    --collection-slider-row-height: {{ section.settings.row_height }}px;
+    --collection-slider-card-width: {{ section.settings.card_width }}px;
+    --collection-slider-ticker-duration: {{ section.settings.ticker_duration }}s;
+  "
+>
   <div class="collection-slider__inner">
-    <div class="collection-slider__track">
-      <article class="collection-slider__panel collection-slider__panel--intro">
-        <div class="collection-slider__intro-head">
-          <h2>{{ slider_title | default: 'Nouvelles arrivees' }}</h2>
-        </div>
+    {% if section.blocks.size > 0 %}
+      {% for block in section.blocks %}
+        {% liquid
+          assign coll = collections[block.settings.collection]
 
-        {% if intro_video_url != blank %}
-          <div class="collection-slider__intro-media">
-            <video
-              class="collection-slider__intro-video"
-              autoplay
-              muted
-              loop
-              playsinline
-              preload="metadata"
-              style="mix-blend-mode: {{ section.settings.video_blend_mode }};"
-            >
-              <source src="{{ intro_video_url }}" type="video/mp4">
-            </video>
-          </div>
-        {% endif %}
-      </article>
+          assign row_label = block.settings.row_label
+          if row_label == blank
+            if coll != blank
+              assign row_label = coll.title
+            else
+              assign row_label = 'Drop New'
+            endif
+          endif
 
-      {% if coll != blank %}
-        {% for product in coll.products limit: section.settings.products_to_show %}
-          <article class="collection-slider__panel collection-slider__panel--product">
-            <a class="collection-slider__product-link" href="{{ product.url }}">
-              {% if product.featured_image %}
-                {{
-                  product.featured_image
-                  | image_url: width: 1200
-                  | image_tag:
-                    loading: 'lazy',
-                    alt: product.title,
-                    class: 'collection-slider__product-image'
-                }}
-              {% else %}
-                <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
-              {% endif %}
-              <div class="collection-slider__product-meta">
-                <h3>{{ product.title }}</h3>
-                <p>{{ product.price | money }}</p>
-              </div>
-            </a>
-          </article>
-        {% endfor %}
-      {% else %}
-        {% for i in (1..4) %}
-          <article class="collection-slider__panel collection-slider__panel--product">
-            <div class="collection-slider__product-link">
-              <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
-              <div class="collection-slider__product-meta">
-                <h3>Produit exemple {{ i }}</h3>
-                <p>{{ 4900 | money }}</p>
+          assign row_label = row_label | strip | upcase
+
+          assign view_all_label = block.settings.view_all_label | strip
+          if view_all_label == blank
+            assign view_all_label = 'TOUT VOIR'
+          endif
+          assign view_all_label = view_all_label | upcase
+
+          assign view_all_url = block.settings.view_all_url
+          if view_all_url == blank and coll != blank
+            assign view_all_url = coll.url
+          endif
+          if view_all_url == blank
+            assign view_all_url = fallback_view_all_url
+          endif
+        %}
+
+        <article class="collection-slider__row" {{ block.shopify_attributes }}>
+          <div class="collection-slider__overlay">
+            <div class="collection-slider__badge collection-slider__badge--title">
+              <div class="collection-slider__ticker" aria-hidden="true">
+                <span class="collection-slider__ticker-track">
+                  <span>{{ row_label }} - {{ row_label }} - {{ row_label }} - {{ row_label }} -</span>
+                  <span>{{ row_label }} - {{ row_label }} - {{ row_label }} - {{ row_label }} -</span>
+                </span>
               </div>
             </div>
-          </article>
-        {% endfor %}
-      {% endif %}
-    </div>
+
+            <div class="collection-slider__overlay-right">
+              <div class="collection-slider__badge collection-slider__badge--controls">
+                <button class="collection-slider__control" type="button" data-stack-prev aria-label="Produits precedents">
+                  <span aria-hidden="true">&lt;</span>
+                </button>
+                <button class="collection-slider__control" type="button" data-stack-next aria-label="Produits suivants">
+                  <span aria-hidden="true">&gt;</span>
+                </button>
+              </div>
+
+              <a class="collection-slider__badge collection-slider__badge--view-all" href="{{ view_all_url }}">
+                <div class="collection-slider__ticker collection-slider__ticker--reverse" aria-hidden="true">
+                  <span class="collection-slider__ticker-track">
+                    <span>{{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} -</span>
+                    <span>{{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} -</span>
+                  </span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <div class="collection-slider__fixed-quick-adds" aria-hidden="false">
+            {% for slot in (1..5) %}
+              <button
+                class="collection-slider__fixed-quick-add-button"
+                type="button"
+                data-fixed-quick-add-slot="{{ forloop.index0 }}"
+                aria-label="Ajouter au panier"
+              >
+                <span aria-hidden="true">+</span>
+              </button>
+            {% endfor %}
+          </div>
+
+          <div class="collection-slider__viewport" data-stack-viewport>
+            <div class="collection-slider__track" data-stack-track data-loop-size="{{ loop_products_limit }}">
+              {% if coll != blank %}
+                {% for pass in (1..3) %}
+                  {% assign rendered_count = 0 %}
+                  {% for product in coll.products limit: loop_products_limit %}
+                    {% liquid
+                      assign quick_variant = product.selected_or_first_available_variant
+                      assign rendered_count = rendered_count | plus: 1
+                    %}
+                    <article class="collection-slider__card" data-product-card>
+                      {% if quick_variant != blank %}
+                        <form class="collection-slider__quick-add" data-quick-add-form>
+                          <input type="hidden" name="id" value="{{ quick_variant.id }}">
+                          <button
+                            class="collection-slider__quick-add-button"
+                            type="submit"
+                            aria-label="Ajouter {{ product.title }} au panier"
+                            {% unless quick_variant.available %}disabled{% endunless %}
+                          >
+                            <span aria-hidden="true">+</span>
+                          </button>
+                        </form>
+                      {% endif %}
+
+                      <a class="collection-slider__product-link" href="{{ product.url }}">
+                        <div class="collection-slider__media">
+                          {% if product.featured_image %}
+                            {{
+                              product.featured_image
+                              | image_url: width: 1200
+                              | image_tag:
+                                loading: 'lazy',
+                                alt: product.title,
+                                class: 'collection-slider__product-image'
+                            }}
+                          {% else %}
+                            <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+                          {% endif %}
+                        </div>
+                        <div class="collection-slider__meta">
+                          <p class="collection-slider__brand">{{ product.vendor | default: 'Original' | upcase }}</p>
+                          <h3>{{ product.title | upcase }}</h3>
+                          <p class="collection-slider__price">{{ product.price | money }}</p>
+                        </div>
+                      </a>
+                    </article>
+                  {% endfor %}
+
+                  {% liquid
+                    assign missing_cards = loop_products_limit | minus: rendered_count
+                  %}
+                  {% if missing_cards > 0 %}
+                    {% for i in (1..missing_cards) %}
+                      <article class="collection-slider__card" data-product-card>
+                        <div class="collection-slider__quick-add">
+                          <button class="collection-slider__quick-add-button" type="button" disabled aria-hidden="true">
+                            <span aria-hidden="true">+</span>
+                          </button>
+                        </div>
+                        <div class="collection-slider__product-link">
+                          <div class="collection-slider__media">
+                            <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+                          </div>
+                          <div class="collection-slider__meta">
+                            <p class="collection-slider__brand">ORIGINAL</p>
+                            <h3>PRODUIT EXEMPLE {{ i }}</h3>
+                            <p class="collection-slider__price">{{ 12000 | money }}</p>
+                          </div>
+                        </div>
+                      </article>
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                {% for pass in (1..3) %}
+                  {% for i in (1..loop_products_limit) %}
+                    <article class="collection-slider__card" data-product-card>
+                      <div class="collection-slider__quick-add">
+                        <button class="collection-slider__quick-add-button" type="button" disabled aria-hidden="true">
+                          <span aria-hidden="true">+</span>
+                        </button>
+                      </div>
+                      <div class="collection-slider__product-link">
+                        <div class="collection-slider__media">
+                          <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+                        </div>
+                        <div class="collection-slider__meta">
+                          <p class="collection-slider__brand">ORIGINAL</p>
+                          <h3>PRODUIT EXEMPLE {{ i }}</h3>
+                          <p class="collection-slider__price">{{ 12000 | money }}</p>
+                        </div>
+                      </div>
+                    </article>
+                  {% endfor %}
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      {% for i in (1..2) %}
+        <article class="collection-slider__row">
+          <div class="collection-slider__overlay">
+            <div class="collection-slider__badge collection-slider__badge--title">
+              <div class="collection-slider__ticker" aria-hidden="true">
+                <span class="collection-slider__ticker-track">
+                  <span>DROP NEW - DROP NEW - DROP NEW - DROP NEW -</span>
+                  <span>DROP NEW - DROP NEW - DROP NEW - DROP NEW -</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="collection-slider__overlay-right">
+              <div class="collection-slider__badge collection-slider__badge--controls">
+                <button class="collection-slider__control" type="button" data-stack-prev aria-label="Produits precedents">
+                  <span aria-hidden="true">&lt;</span>
+                </button>
+                <button class="collection-slider__control" type="button" data-stack-next aria-label="Produits suivants">
+                  <span aria-hidden="true">&gt;</span>
+                </button>
+              </div>
+
+              <a class="collection-slider__badge collection-slider__badge--view-all" href="{{ fallback_view_all_url }}">
+                <div class="collection-slider__ticker collection-slider__ticker--reverse" aria-hidden="true">
+                  <span class="collection-slider__ticker-track">
+                    <span>TOUT VOIR - TOUT VOIR - TOUT VOIR - TOUT VOIR -</span>
+                    <span>TOUT VOIR - TOUT VOIR - TOUT VOIR - TOUT VOIR -</span>
+                  </span>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <div class="collection-slider__fixed-quick-adds" aria-hidden="false">
+            {% for slot in (1..5) %}
+              <button
+                class="collection-slider__fixed-quick-add-button"
+                type="button"
+                data-fixed-quick-add-slot="{{ forloop.index0 }}"
+                aria-label="Ajouter au panier"
+              >
+                <span aria-hidden="true">+</span>
+              </button>
+            {% endfor %}
+          </div>
+
+          <div class="collection-slider__viewport" data-stack-viewport>
+            <div class="collection-slider__track" data-stack-track data-loop-size="{{ loop_products_limit }}">
+              {% for pass in (1..3) %}
+                {% for j in (1..loop_products_limit) %}
+                  <article class="collection-slider__card" data-product-card>
+                    <div class="collection-slider__quick-add">
+                      <button class="collection-slider__quick-add-button" type="button" disabled aria-hidden="true">
+                        <span aria-hidden="true">+</span>
+                      </button>
+                    </div>
+                    <div class="collection-slider__product-link">
+                      <div class="collection-slider__media">
+                        <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+                      </div>
+                      <div class="collection-slider__meta">
+                        <p class="collection-slider__brand">ORIGINAL</p>
+                        <h3>PRODUIT EXEMPLE {{ j }}</h3>
+                        <p class="collection-slider__price">{{ 12000 | money }}</p>
+                      </div>
+                    </div>
+                  </article>
+                {% endfor %}
+              {% endfor %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    {% endif %}
   </div>
 </section>
 
@@ -87,46 +278,113 @@
   "name": "Collection slider",
   "settings": [
     {
-      "type": "text",
-      "id": "title",
-      "label": "Titre",
-      "default": "Nouvelles arrivees"
+      "type": "color",
+      "id": "bg_color",
+      "label": "Fond section",
+      "default": "#E9EBEB"
     },
     {
-      "type": "collection",
-      "id": "collection",
-      "label": "Collection"
+      "type": "color",
+      "id": "cell_bg_color",
+      "label": "Fond zone produits",
+      "default": "#D8DBDD"
     },
     {
-      "type": "video",
-      "id": "intro_video",
-      "label": "Video intro"
+      "type": "color",
+      "id": "ticker_bg_color",
+      "label": "Fond cadres ticker",
+      "default": "#EFF0F0"
     },
     {
-      "type": "select",
-      "id": "video_blend_mode",
-      "label": "Mode de fusion video",
-      "default": "normal",
-      "options": [
-        { "value": "normal", "label": "Normal" },
-        { "value": "screen", "label": "Screen" },
-        { "value": "lighten", "label": "Lighten" },
-        { "value": "plus-lighter", "label": "Plus lighter" }
-      ]
+      "type": "color",
+      "id": "meta_bg_color",
+      "label": "Fond meta produit",
+      "default": "#EFF0F0"
+    },
+    {
+      "type": "color",
+      "id": "card_separator_color",
+      "label": "Couleur separateur cartes",
+      "default": "#EFF0F0"
     },
     {
       "type": "range",
-      "id": "products_to_show",
-      "label": "Nombre de produits",
-      "min": 2,
-      "max": 12,
+      "id": "row_height",
+      "label": "Hauteur d'un etage",
+      "min": 280,
+      "max": 520,
+      "step": 10,
+      "default": 380,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "card_width",
+      "label": "Largeur d'une carte produit",
+      "min": 180,
+      "max": 340,
+      "step": 10,
+      "default": 260,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "products_per_row",
+      "label": "Produits par etage",
+      "min": 5,
+      "max": 14,
       "step": 1,
-      "default": 6
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "ticker_duration",
+      "label": "Vitesse texte defilant",
+      "min": 16,
+      "max": 80,
+      "step": 2,
+      "default": 34,
+      "unit": "s"
+    }
+  ],
+  "max_blocks": 2,
+  "blocks": [
+    {
+      "type": "collection_row",
+      "name": "Etage collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "text",
+          "id": "row_label",
+          "label": "Texte defilant gauche (optionnel)",
+          "default": "DROP NEW"
+        },
+        {
+          "type": "text",
+          "id": "view_all_label",
+          "label": "Texte defilant droite",
+          "default": "TOUT VOIR"
+        },
+        {
+          "type": "url",
+          "id": "view_all_url",
+          "label": "Lien tout voir (optionnel)"
+        }
+      ]
     }
   ],
   "presets": [
     {
-      "name": "Collection slider"
+      "name": "Collection slider",
+      "blocks": [
+        { "type": "collection_row" },
+        { "type": "collection_row" }
+      ]
     }
   ]
 }

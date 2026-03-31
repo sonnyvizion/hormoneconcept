@@ -1,0 +1,3 @@
+# Preserve Theme Editor configuration on remote theme during push
+config/settings_data.json
+templates/*.json

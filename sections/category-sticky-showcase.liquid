@@ -1,0 +1,229 @@
+{% liquid
+  assign total_blocks = section.blocks.size
+  if total_blocks == 0
+    assign total_blocks = 2
+  endif
+%}
+
+<section
+  class="category-sticky"
+  data-category-sticky
+  style="
+    --category-scroll-span: {{ section.settings.scroll_span }}vh;
+    --category-overlay-opacity: {{ section.settings.overlay_opacity | times: 0.01 }};
+  "
+>
+  <div class="category-sticky__stack">
+    {% if section.blocks.size > 0 %}
+      {% for block in section.blocks %}
+        {% liquid
+          assign current_index = forloop.index0
+          assign image_alt = block.settings.text | default: block.settings.cta_label | default: 'Categorie'
+          assign desktop_image = block.settings.image_desktop | default: block.settings.image_mobile
+        %}
+
+        <article class="category-sticky__item" data-category-item data-index="{{ current_index }}" {{ block.shopify_attributes }}>
+          <div class="category-sticky__panel">
+            <div class="category-sticky__media">
+              {% if desktop_image != blank %}
+                <picture class="category-sticky__picture">
+                  {% if block.settings.image_mobile != blank %}
+                    <source media="(max-width: 640px)" srcset="{{ block.settings.image_mobile | image_url: width: 1400 }}">
+                  {% endif %}
+                  {{
+                    desktop_image
+                    | image_url: width: 2600
+                    | image_tag:
+                      loading: 'lazy',
+                      alt: image_alt,
+                      class: 'category-sticky__image'
+                  }}
+                </picture>
+              {% else %}
+                <div class="category-sticky__placeholder"></div>
+              {% endif %}
+            </div>
+
+            <div class="category-sticky__overlay">
+              <div class="category-sticky__side-progress video-hero__side-progress" aria-hidden="true">
+                <span class="video-hero__side-plus">+</span>
+                <div class="video-hero__side-track">
+                  {% for i in (1..total_blocks) %}
+                    {% assign step_index = i | minus: 1 %}
+                    <span class="video-hero__side-step{% if step_index < current_index %} is-past{% elsif step_index == current_index %} is-active{% endif %}">
+                      <span class="video-hero__side-step-fill"></span>
+                    </span>
+                  {% endfor %}
+                </div>
+                <span class="video-hero__side-plus">+</span>
+              </div>
+
+              <div class="category-sticky__tech-frame video-hero__tech-frame" aria-hidden="true">
+                <span class="video-hero__tech-frame-grain"></span>
+              </div>
+
+              <div class="container category-sticky__content-wrap">
+                <div class="category-sticky__copy">
+                  {% if block.settings.text != blank %}
+                    <p class="category-sticky__eyebrow">{{ block.settings.text }}</p>
+                  {% endif %}
+
+                  {% if block.settings.cta_label != blank %}
+                    {% if block.settings.cta_link != blank %}
+                      <a class="category-sticky__cta video-hero__availability" href="{{ block.settings.cta_link }}">
+                        <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                        <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
+                        <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                      </a>
+                    {% else %}
+                      <span class="category-sticky__cta video-hero__availability">
+                        <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                        <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
+                        <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                      </span>
+                    {% endif %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      {% for i in (1..2) %}
+        {% liquid
+          assign current_index = forloop.index0
+        %}
+        <article class="category-sticky__item" data-category-item data-index="{{ current_index }}">
+          <div class="category-sticky__panel">
+            <div class="category-sticky__media">
+              <div class="category-sticky__placeholder"></div>
+            </div>
+
+            <div class="category-sticky__overlay">
+              <div class="category-sticky__side-progress video-hero__side-progress" aria-hidden="true">
+                <span class="video-hero__side-plus">+</span>
+                <div class="video-hero__side-track">
+                  {% for j in (1..2) %}
+                    {% assign step_index = j | minus: 1 %}
+                    <span class="video-hero__side-step{% if step_index < current_index %} is-past{% elsif step_index == current_index %} is-active{% endif %}">
+                      <span class="video-hero__side-step-fill"></span>
+                    </span>
+                  {% endfor %}
+                </div>
+                <span class="video-hero__side-plus">+</span>
+              </div>
+
+              <div class="category-sticky__tech-frame video-hero__tech-frame" aria-hidden="true">
+                <span class="video-hero__tech-frame-grain"></span>
+              </div>
+
+              <div class="container category-sticky__content-wrap">
+                <div class="category-sticky__copy">
+                  {% if current_index == 0 %}
+                    <p class="category-sticky__eyebrow">Collection Capsule</p>
+                    <span class="category-sticky__cta video-hero__availability">
+                      <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                      <span class="video-hero__availability-label">MODE HOMME</span>
+                      <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                    </span>
+                  {% else %}
+                    <p class="category-sticky__eyebrow">Collection Signature</p>
+                    <span class="category-sticky__cta video-hero__availability">
+                      <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                      <span class="video-hero__availability-label">MODE FEMME</span>
+                      <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Category sticky showcase",
+  "settings": [
+    {
+      "type": "range",
+      "id": "scroll_span",
+      "label": "Distance de transition entre categories (vh)",
+      "min": 18,
+      "max": 90,
+      "step": 2,
+      "default": 42
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay sombre (%)",
+      "min": 0,
+      "max": 70,
+      "step": 1,
+      "default": 12
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Categorie",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Texte",
+          "default": "Collection capsule"
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "Texte CTA",
+          "default": "MODE HOMME"
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "Lien CTA"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_desktop",
+          "label": "Image desktop"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_mobile",
+          "label": "Image mobile"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 3,
+  "presets": [
+    {
+      "name": "Category sticky showcase",
+      "blocks": [
+        {
+          "type": "category",
+          "settings": {
+            "text": "Collection capsule",
+            "cta_label": "MODE HOMME"
+          }
+        },
+        {
+          "type": "category",
+          "settings": {
+            "text": "Collection signature",
+            "cta_label": "MODE FEMME"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

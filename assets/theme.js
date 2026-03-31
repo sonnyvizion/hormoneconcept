@@ -1,6 +1,9 @@
 (() => {
   document.documentElement.classList.add('js');
   const HERO_AUTOPLAY_DELAY_MS = 7000;
+  const NAV_CONTROL_ENTER_MS = 360;
+  const NAV_CONTROL_LEAVE_MS = 300;
+  const NAV_CONTROL_PULSE_MS = 320;
   const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const COPY_OUT_DURATION_MS = 400;
   const COPY_ELEMENT_SELECTOR = '.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid p, .video-hero__copy-grid .video-hero__availability-label';
@@ -85,9 +88,16 @@
     }
   };
 
-  const runInteractiveScramble = (element) => {
+  const runInteractiveScramble = (element, options = {}) => {
     const textTarget = getInteractiveTextTarget(element);
     if (!textTarget) return;
+
+    const scrambleDirection = options.direction === 'out' ? 'out' : 'in';
+    const totalSteps = Number.isFinite(options.totalSteps)
+      ? options.totalSteps
+      : (scrambleDirection === 'out' ? 8 : 10);
+    const intervalMs = Number.isFinite(options.intervalMs) ? options.intervalMs : 28;
+    const restoreFinalText = options.restoreFinalText !== false;
 
     const finalText = getInteractiveFinalText(textTarget);
     if (!finalText) return;
@@ -99,7 +109,7 @@
     const widthLockState = existingState?.widthLockState || lockInteractiveWidth(lockTarget);
 
     let step = 0;
-    const totalSteps = 10;
+    let lastOutput = finalText;
     textTarget.textContent = finalText;
 
     const intervalId = window.setInterval(() => {
@@ -110,22 +120,36 @@
 
       for (let i = 0; i < finalText.length; i += 1) {
         const finalChar = finalText[i];
-        if (preserveScrambleChar(finalChar) || i <= revealIndex) {
+        if (preserveScrambleChar(finalChar)) {
+          output += finalChar;
+        } else if (scrambleDirection === 'out') {
+          output += i <= revealIndex
+            ? SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+            : finalChar;
+        } else if (i <= revealIndex) {
           output += finalChar;
         } else {
           output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
         }
       }
 
+      lastOutput = output;
       textTarget.textContent = output;
 
       if (step >= totalSteps) {
         window.clearInterval(intervalId);
-        textTarget.textContent = finalText;
+        if (restoreFinalText) {
+          textTarget.textContent = finalText;
+        } else {
+          textTarget.textContent = lastOutput;
+        }
         unlockInteractiveWidth(lockTarget, widthLockState);
         interactiveScrambleState.delete(textTarget);
+        if (typeof options.onComplete === 'function') {
+          options.onComplete();
+        }
       }
-    }, 28);
+    }, intervalMs);
 
     interactiveScrambleState.set(textTarget, {
       intervalId,
@@ -161,9 +185,93 @@
     });
   };
 
+  const tickerScrambleState = new WeakMap();
+
+  const initCollectionTickerScramble = (root = document) => {
+    root.querySelectorAll('.collection-slider__badge--title, .collection-slider__badge--view-all').forEach((badgeEl) => {
+      if (badgeEl.dataset.tickerScrambleInit === 'true') return;
+
+      const textTargets = Array.from(badgeEl.querySelectorAll('.collection-slider__ticker-track > span'));
+      if (!textTargets.length) return;
+
+      badgeEl.dataset.tickerScrambleInit = 'true';
+
+      textTargets.forEach((target) => {
+        const finalText = normalizeText(target.textContent || '');
+        target.dataset.tickerFinal = finalText;
+        target.textContent = finalText;
+      });
+
+      const trigger = () => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (tickerScrambleState.get(badgeEl)) return;
+
+        let step = 0;
+        const totalSteps = 10;
+
+        const intervalId = window.setInterval(() => {
+          step += 1;
+
+          textTargets.forEach((target) => {
+            const finalText = target.dataset.tickerFinal || '';
+            if (!finalText) return;
+
+            if (step >= totalSteps) {
+              target.textContent = finalText;
+              return;
+            }
+
+            const revealIndex = Math.floor((step / totalSteps) * finalText.length);
+            let output = '';
+
+            for (let i = 0; i < finalText.length; i += 1) {
+              const finalChar = finalText[i];
+              if (preserveScrambleChar(finalChar) || i <= revealIndex) {
+                output += finalChar;
+              } else {
+                output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+              }
+            }
+
+            target.textContent = output;
+          });
+
+          if (step >= totalSteps) {
+            window.clearInterval(intervalId);
+            tickerScrambleState.delete(badgeEl);
+          }
+        }, 28);
+
+        tickerScrambleState.set(badgeEl, intervalId);
+      };
+
+      badgeEl.addEventListener('mouseenter', trigger);
+      badgeEl.addEventListener('focusin', trigger);
+    });
+  };
+
   const initVideoHero = (sectionRoot) => {
     if (!sectionRoot || sectionRoot.dataset.videoHeroInit === 'true') return;
     sectionRoot.dataset.videoHeroInit = 'true';
+
+    const heroSectionWrapper = sectionRoot.closest('.shopify-section');
+    if (heroSectionWrapper && heroSectionWrapper.dataset.videoHeroStickyInit !== 'true') {
+      heroSectionWrapper.dataset.videoHeroStickyInit = 'true';
+      heroSectionWrapper.classList.add('shopify-section--video-hero-sticky');
+
+      let isFirstAboveSection = true;
+      let siblingSection = heroSectionWrapper.nextElementSibling;
+      while (siblingSection) {
+        if (siblingSection.classList?.contains('shopify-section')) {
+          siblingSection.classList.add('shopify-section--above-video-hero');
+          if (isFirstAboveSection) {
+            siblingSection.classList.add('shopify-section--above-video-hero-first');
+            isFirstAboveSection = false;
+          }
+        }
+        siblingSection = siblingSection.nextElementSibling;
+      }
+    }
 
     const slides = Array.from(sectionRoot.querySelectorAll('[data-slide]'));
     if (!slides.length) return;
@@ -171,9 +279,11 @@
     const imageEl = sectionRoot.querySelector('.video-hero__image');
     const transitionEl = sectionRoot.querySelector('.video-hero__transition');
     const placeholderEl = sectionRoot.querySelector('.video-hero__placeholder');
+    const techFrameEl = sectionRoot.querySelector('.video-hero__tech-frame');
     const prevTriggerEl = sectionRoot.querySelector('[data-prev-trigger]');
     const nextTriggerEl = sectionRoot.querySelector('[data-next-trigger]');
     const stepEls = Array.from(sectionRoot.querySelectorAll('[data-jump-index]'));
+    const sideStepEls = Array.from(sectionRoot.querySelectorAll('[data-side-step]'));
 
     const breakpoint = Number(sectionRoot.dataset.mobileBreakpoint || 768);
     const mediaQuery = window.matchMedia(`(max-width: ${breakpoint}px)`);
@@ -190,6 +300,8 @@
     let autoplayTimer = 0;
     let autoplayDirection = 1;
     const imagePreloadCache = new Map();
+    const navControlAnimationState = new WeakMap();
+    let hasInitializedNavigation = false;
 
     const parseSlideData = (slide) => ({
       imageDesktop: (slide.dataset.imageDesktop || '').trim(),
@@ -516,23 +628,203 @@
       requestAnimationFrame(() => animateSlideCopy(index));
     };
 
+    const clearNavigationControlAnimation = (controlEl) => {
+      if (!controlEl) return null;
+      const state = navControlAnimationState.get(controlEl);
+      if (!state) return null;
+
+      if (state.hideTimer) {
+        window.clearTimeout(state.hideTimer);
+        state.hideTimer = 0;
+      }
+
+      if (state.classTimer) {
+        window.clearTimeout(state.classTimer);
+        state.classTimer = 0;
+      }
+
+      if (state.pulseTimer) {
+        window.clearTimeout(state.pulseTimer);
+        state.pulseTimer = 0;
+      }
+
+      return state;
+    };
+
+    const applyNavigationControlState = (controlEl, isVisible) => {
+      if (!controlEl) return;
+      clearNavigationControlAnimation(controlEl);
+      clearInteractiveScramble(controlEl);
+      controlEl.classList.remove('is-nav-entering', 'is-nav-leaving', 'is-nav-pulsing');
+      controlEl.hidden = !isVisible;
+      controlEl.disabled = !isVisible;
+      controlEl.setAttribute('aria-disabled', isVisible ? 'false' : 'true');
+      controlEl.classList.toggle('is-disabled', !isVisible);
+    };
+
+    const animateNavigationControlState = (controlEl, isVisible) => {
+      if (!controlEl) return;
+
+      let state = clearNavigationControlAnimation(controlEl);
+      if (!state) {
+        state = {
+          nonce: 0,
+          hideTimer: 0,
+          classTimer: 0,
+          pulseTimer: 0
+        };
+      }
+
+      state.nonce += 1;
+      navControlAnimationState.set(controlEl, state);
+      const runNonce = state.nonce;
+
+      clearInteractiveScramble(controlEl);
+      controlEl.classList.remove('is-nav-entering', 'is-nav-leaving', 'is-nav-pulsing');
+
+      if (reduceMotionQuery.matches) {
+        applyNavigationControlState(controlEl, isVisible);
+        return;
+      }
+
+      const isCurrentlyVisible = !controlEl.hidden;
+      const isCurrentlyAnimating = controlEl.classList.contains('is-nav-entering') || controlEl.classList.contains('is-nav-leaving');
+      if (isVisible === isCurrentlyVisible && !isCurrentlyAnimating) {
+        controlEl.disabled = !isVisible;
+        controlEl.setAttribute('aria-disabled', isVisible ? 'false' : 'true');
+        controlEl.classList.toggle('is-disabled', !isVisible);
+        return;
+      }
+
+      if (isVisible) {
+        controlEl.hidden = false;
+        controlEl.disabled = false;
+        controlEl.setAttribute('aria-disabled', 'false');
+        controlEl.classList.remove('is-disabled');
+
+        void controlEl.offsetWidth;
+        controlEl.classList.add('is-nav-entering');
+        runInteractiveScramble(controlEl, { direction: 'in' });
+
+        state.classTimer = window.setTimeout(() => {
+          const currentState = navControlAnimationState.get(controlEl);
+          if (!currentState || currentState.nonce !== runNonce) return;
+          controlEl.classList.remove('is-nav-entering');
+          currentState.classTimer = 0;
+        }, NAV_CONTROL_ENTER_MS);
+        return;
+      }
+
+      if (controlEl.hidden) {
+        controlEl.disabled = true;
+        controlEl.setAttribute('aria-disabled', 'true');
+        controlEl.classList.add('is-disabled');
+        return;
+      }
+
+      controlEl.disabled = true;
+      controlEl.setAttribute('aria-disabled', 'true');
+      controlEl.classList.remove('is-disabled');
+      controlEl.classList.add('is-nav-leaving');
+      runInteractiveScramble(controlEl, {
+        direction: 'out',
+        restoreFinalText: false
+      });
+
+      state.hideTimer = window.setTimeout(() => {
+        const currentState = navControlAnimationState.get(controlEl);
+        if (!currentState || currentState.nonce !== runNonce) return;
+        controlEl.hidden = true;
+        controlEl.classList.remove('is-nav-leaving');
+        controlEl.classList.add('is-disabled');
+        clearInteractiveScramble(controlEl);
+        currentState.hideTimer = 0;
+      }, NAV_CONTROL_LEAVE_MS);
+    };
+
+    const pulseNavigationControl = (controlEl) => {
+      if (!controlEl || controlEl.hidden || reduceMotionQuery.matches) return;
+      if (controlEl.classList.contains('is-nav-entering') || controlEl.classList.contains('is-nav-leaving')) return;
+
+      let state = navControlAnimationState.get(controlEl);
+      if (!state) {
+        state = {
+          nonce: 0,
+          hideTimer: 0,
+          classTimer: 0,
+          pulseTimer: 0
+        };
+        navControlAnimationState.set(controlEl, state);
+      }
+
+      if (state.pulseTimer) {
+        window.clearTimeout(state.pulseTimer);
+        state.pulseTimer = 0;
+      }
+
+      clearInteractiveScramble(controlEl);
+      controlEl.classList.remove('is-nav-pulsing');
+      void controlEl.offsetWidth;
+      controlEl.classList.add('is-nav-pulsing');
+      runInteractiveScramble(controlEl, { direction: 'in' });
+
+      state.pulseTimer = window.setTimeout(() => {
+        const currentState = navControlAnimationState.get(controlEl);
+        if (!currentState) return;
+        controlEl.classList.remove('is-nav-pulsing');
+        currentState.pulseTimer = 0;
+      }, NAV_CONTROL_PULSE_MS);
+    };
+
     const updateNavigationTriggerState = () => {
       const hasPrev = activeIndex > 0;
       const hasNext = activeIndex < slides.length - 1;
+      const shouldPulseControls = hasInitializedNavigation;
 
       if (prevTriggerEl) {
-        prevTriggerEl.hidden = !hasPrev;
-        prevTriggerEl.disabled = !hasPrev;
-        prevTriggerEl.setAttribute('aria-disabled', hasPrev ? 'false' : 'true');
-        prevTriggerEl.classList.toggle('is-disabled', !hasPrev);
+        if (hasInitializedNavigation) {
+          animateNavigationControlState(prevTriggerEl, hasPrev);
+        } else {
+          applyNavigationControlState(prevTriggerEl, hasPrev);
+        }
       }
 
       if (nextTriggerEl) {
-        nextTriggerEl.hidden = !hasNext;
-        nextTriggerEl.disabled = !hasNext;
-        nextTriggerEl.setAttribute('aria-disabled', hasNext ? 'false' : 'true');
-        nextTriggerEl.classList.toggle('is-disabled', !hasNext);
+        if (hasInitializedNavigation) {
+          animateNavigationControlState(nextTriggerEl, hasNext);
+        } else {
+          applyNavigationControlState(nextTriggerEl, hasNext);
+        }
       }
+
+      hasInitializedNavigation = true;
+
+      if (shouldPulseControls) {
+        pulseNavigationControl(prevTriggerEl);
+        pulseNavigationControl(nextTriggerEl);
+      }
+    };
+
+    const alignTechFrameToCopyGrid = () => {
+      if (!techFrameEl) return;
+      const activeSlide = slides[activeIndex];
+      if (!activeSlide) return;
+
+      const activeCopyGrid = activeSlide.querySelector('.video-hero__copy-grid');
+      const overlayRect = techFrameEl.parentElement?.getBoundingClientRect();
+      if (!activeCopyGrid || !overlayRect) {
+        sectionRoot.style.removeProperty('--tech-frame-center-y');
+        return;
+      }
+
+      const copyRect = activeCopyGrid.getBoundingClientRect();
+      const copyCenterY = copyRect.top + (copyRect.height / 2) - overlayRect.top;
+      sectionRoot.style.setProperty('--tech-frame-center-y', `${copyCenterY}px`);
+    };
+
+    const queueTechFrameAlignment = () => {
+      if (!techFrameEl) return;
+      window.requestAnimationFrame(alignTechFrameToCopyGrid);
     };
 
     const setSlideState = (index) => {
@@ -544,7 +836,12 @@
         stepEl.classList.toggle('is-active', i === index);
         stepEl.setAttribute('aria-selected', i === index ? 'true' : 'false');
       });
+      sideStepEls.forEach((stepEl, i) => {
+        stepEl.classList.toggle('is-active', i === index);
+        stepEl.classList.toggle('is-past', i < index);
+      });
       updateNavigationTriggerState();
+      queueTechFrameAlignment();
     };
 
     const showImage = (index, withFade = false, keepTransitionVisible = false) => {
@@ -818,6 +1115,7 @@
     const syncForViewport = () => {
       if (isTransitioning) return;
       showImage(activeIndex, false);
+      queueTechFrameAlignment();
       queueAutoplay();
     };
 
@@ -836,6 +1134,7 @@
       mediaQuery.addListener(syncForViewport);
     }
 
+    window.addEventListener('resize', queueTechFrameAlignment);
     sectionRoot.addEventListener('wheel', handleHorizontalWheel, { passive: false });
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -844,17 +1143,622 @@
     setCopyHidden(false);
     setSlideState(0);
     showImage(0, false);
+    queueTechFrameAlignment();
     queueAutoplay();
+  };
+
+  const initCollectionStacks = (sectionRoot) => {
+    if (!sectionRoot || sectionRoot.dataset.collectionStacksInit === 'true') return;
+    sectionRoot.dataset.collectionStacksInit = 'true';
+
+    const rows = Array.from(sectionRoot.querySelectorAll('.collection-slider__row'));
+    if (!rows.length) return;
+
+    const quickAddForms = Array.from(sectionRoot.querySelectorAll('[data-quick-add-form]'));
+    const desktopQuery = window.matchMedia('(min-width: 981px)');
+
+    const getScrollStep = (track) => {
+      if (!track) return 0;
+      const firstCard = track.querySelector('[data-product-card]');
+      if (!firstCard) return 0;
+      const styles = window.getComputedStyle(track);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || '0') || 0;
+      const width = firstCard.getBoundingClientRect().width;
+      return width + gap;
+    };
+
+    const getNumericVar = (name, fallbackValue) => {
+      const raw = window.getComputedStyle(sectionRoot).getPropertyValue(name);
+      const parsed = Number.parseFloat(raw);
+      return Number.isFinite(parsed) ? parsed : fallbackValue;
+    };
+
+    const syncDesktopCardFormat = () => {
+      if (!desktopQuery.matches) {
+        sectionRoot.style.removeProperty('--collection-slider-card-width-current');
+        sectionRoot.style.removeProperty('--collection-slider-row-height-current');
+        return;
+      }
+
+      const firstViewport = rows[0]?.querySelector('[data-stack-viewport]');
+      if (!firstViewport) return;
+
+      const viewportWidth = firstViewport.clientWidth || firstViewport.getBoundingClientRect().width;
+      if (!viewportWidth) return;
+
+      const minCardWidth = getNumericVar('--collection-slider-card-width', 260);
+      const minRowHeight = getNumericVar('--collection-slider-row-height', 380);
+      const baseCardWidth = Math.max(minCardWidth, viewportWidth / 4);
+      const computedCardWidth = baseCardWidth;
+      const computedRowHeight = Math.max(minRowHeight, (computedCardWidth * 5) / 4);
+
+      sectionRoot.style.setProperty('--collection-slider-card-width-current', `${computedCardWidth}px`);
+      sectionRoot.style.setProperty('--collection-slider-row-height-current', `${computedRowHeight}px`);
+    };
+
+    rows.forEach((row) => {
+      const viewport = row.querySelector('[data-stack-viewport]');
+      const track = row.querySelector('[data-stack-track]');
+      const prevButton = row.querySelector('[data-stack-prev]');
+      const nextButton = row.querySelector('[data-stack-next]');
+      const loopSize = Number.parseInt(track?.dataset.loopSize || '0', 10);
+      const hasInfiniteLoop = Number.isInteger(loopSize) && loopSize > 0;
+
+      if (!viewport || !track || !prevButton || !nextButton) return;
+
+      const fixedQuickAddButtons = Array.from(row.querySelectorAll('[data-fixed-quick-add-slot]'));
+      const productCards = Array.from(track.querySelectorAll('[data-product-card]'));
+      const fixedQuickAddTargets = new WeakMap();
+      let isProgrammaticScroll = false;
+      let hasManualScroll = false;
+      let dragPointerId = null;
+      let dragLastX = 0;
+      let dragAccumDelta = 0;
+      let suppressClick = false;
+      let wheelAccumDelta = 0;
+      let wheelResetTimer = null;
+      let scrollEndTimer = null;
+      let scrollAnimFrame = 0;
+      let scrollAnimToken = 0;
+      let programmaticTargetLeft = null;
+      let viewportRealignFrame = 0;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const getMaxScroll = () => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      const clampScroll = (value, min = 0, max = getMaxScroll()) => Math.min(Math.max(value, min), max);
+      const getReferenceScrollLeft = () => {
+        if (isProgrammaticScroll && Number.isFinite(programmaticTargetLeft)) {
+          return programmaticTargetLeft;
+        }
+        return viewport.scrollLeft;
+      };
+      const getLoopWidth = (step) => {
+        if (!hasInfiniteLoop || !step) return 0;
+        return step * loopSize;
+      };
+
+      const withProgrammaticScroll = (targetLeft, options = {}) => {
+        const { instant = false } = options;
+        const clampedTarget = clampScroll(targetLeft);
+        const startLeft = viewport.scrollLeft;
+        const delta = clampedTarget - startLeft;
+        if (scrollEndTimer) {
+          window.clearTimeout(scrollEndTimer);
+          scrollEndTimer = null;
+        }
+
+        if (scrollAnimFrame) {
+          window.cancelAnimationFrame(scrollAnimFrame);
+          scrollAnimFrame = 0;
+        }
+
+        scrollAnimToken += 1;
+        const currentToken = scrollAnimToken;
+        isProgrammaticScroll = true;
+        programmaticTargetLeft = clampedTarget;
+
+        if (instant || prefersReducedMotion || Math.abs(delta) < 1) {
+          viewport.scrollLeft = clampedTarget;
+          window.requestAnimationFrame(() => {
+            if (currentToken !== scrollAnimToken) return;
+            normalizeInfinitePosition();
+            isProgrammaticScroll = false;
+            programmaticTargetLeft = null;
+            updateControls();
+          });
+          return;
+        }
+
+        const duration = Math.min(520, Math.max(260, Math.abs(delta) * 0.7));
+        const startTime = window.performance.now();
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+        const animate = (now) => {
+          if (currentToken !== scrollAnimToken) return;
+
+          const progress = Math.min(1, (now - startTime) / duration);
+          const eased = easeOutCubic(progress);
+          viewport.scrollLeft = startLeft + (delta * eased);
+          updateControls();
+
+          if (progress < 1) {
+            scrollAnimFrame = window.requestAnimationFrame(animate);
+            return;
+          }
+
+          scrollAnimFrame = 0;
+          viewport.scrollLeft = clampedTarget;
+          normalizeInfinitePosition();
+          isProgrammaticScroll = false;
+          programmaticTargetLeft = null;
+          updateControls();
+        };
+
+        scrollAnimFrame = window.requestAnimationFrame(animate);
+      };
+
+      const getBaseOffset = (step) => {
+        if (!step) return 0;
+        if (hasInfiniteLoop) {
+          const loopBase = getLoopWidth(step);
+          return desktopQuery.matches ? loopBase + (step * 0.5) : loopBase;
+        }
+        if (!desktopQuery.matches) return 0;
+        return step * 0.5;
+      };
+      const getPositiveIndex = (value, size) => {
+        if (!size) return 0;
+        return ((value % size) + size) % size;
+      };
+      const getCurrentStepIndex = () => {
+        const step = getScrollStep(track);
+        if (!step) return 0;
+
+        const baseOffset = getBaseOffset(step);
+        const rawIndex = Math.round((getReferenceScrollLeft() - baseOffset) / step);
+        if (hasInfiniteLoop) {
+          return getPositiveIndex(rawIndex, loopSize);
+        }
+        return Math.max(0, rawIndex);
+      };
+      const alignToStepIndex = (index, options = {}) => {
+        const { instant = true } = options;
+        const step = getScrollStep(track);
+        if (!step) return;
+
+        const baseOffset = getBaseOffset(step);
+        let targetIndex = Number.isFinite(index) ? index : 0;
+
+        if (hasInfiniteLoop) {
+          targetIndex = getPositiveIndex(targetIndex, loopSize);
+        } else {
+          const maxIndex = Math.max(0, Math.round((getMaxScroll() - baseOffset) / step));
+          targetIndex = Math.max(0, Math.min(maxIndex, targetIndex));
+        }
+
+        const targetLeft = baseOffset + (targetIndex * step);
+        withProgrammaticScroll(targetLeft, { instant });
+      };
+      const realignAfterViewportChange = () => {
+        const anchorIndex = getCurrentStepIndex();
+
+        syncDesktopCardFormat();
+        syncFixedGrid();
+
+        window.requestAnimationFrame(() => {
+          alignToStepIndex(anchorIndex, { instant: true });
+          window.requestAnimationFrame(() => {
+            syncFixedGrid();
+            updateControls();
+          });
+        });
+      };
+      const queueViewportRealign = () => {
+        if (viewportRealignFrame) return;
+        viewportRealignFrame = window.requestAnimationFrame(() => {
+          viewportRealignFrame = 0;
+          realignAfterViewportChange();
+        });
+      };
+      const setFixedQuickAddTarget = (buttonEl, formEl) => {
+        if (!buttonEl) return;
+
+        fixedQuickAddTargets.set(buttonEl, formEl || null);
+
+        const sourceButton = formEl?.querySelector('button[type="submit"]');
+        const canSubmit = Boolean(formEl && sourceButton && !sourceButton.disabled);
+
+        buttonEl.disabled = !canSubmit;
+        buttonEl.classList.toggle('is-disabled', !canSubmit);
+        buttonEl.setAttribute('aria-disabled', canSubmit ? 'false' : 'true');
+
+        const label = canSubmit
+          ? sourceButton.getAttribute('aria-label') || 'Ajouter au panier'
+          : 'Ajouter au panier';
+        buttonEl.setAttribute('aria-label', label);
+      };
+      const syncFixedQuickAddButtons = () => {
+        if (!fixedQuickAddButtons.length) return;
+
+        const step = getScrollStep(track);
+        if (!step) {
+          fixedQuickAddButtons.forEach((buttonEl) => {
+            setFixedQuickAddTarget(buttonEl, null);
+          });
+          return;
+        }
+
+        const baseOffset = getBaseOffset(step);
+        const normalizedBaseOffset = ((baseOffset % step) + step) % step;
+        const currentIndex = Math.round((viewport.scrollLeft - baseOffset) / step);
+        const leftInset = 14;
+
+        fixedQuickAddButtons.forEach((buttonEl, slotIndex) => {
+          const slotStartX = normalizedBaseOffset + (slotIndex * step);
+          buttonEl.style.left = `${slotStartX + leftInset}px`;
+
+          if (!productCards.length) {
+            setFixedQuickAddTarget(buttonEl, null);
+            return;
+          }
+
+          const productIndex = getPositiveIndex(currentIndex + slotIndex, productCards.length);
+          const cardEl = productCards[productIndex];
+          const formEl = cardEl?.querySelector('[data-quick-add-form]') || null;
+          setFixedQuickAddTarget(buttonEl, formEl);
+        });
+      };
+      const normalizeInfinitePosition = () => {
+        if (!hasInfiniteLoop) return;
+
+        const step = getScrollStep(track);
+        if (!step) return;
+
+        const loopWidth = getLoopWidth(step);
+        if (!loopWidth) return;
+
+        const baseOffset = getBaseOffset(step);
+        const minAnchor = baseOffset - (loopWidth * 0.5);
+        const maxAnchor = baseOffset + (loopWidth * 0.5);
+        let adjusted = viewport.scrollLeft;
+
+        while (adjusted < minAnchor) adjusted += loopWidth;
+        while (adjusted > maxAnchor) adjusted -= loopWidth;
+
+        adjusted = clampScroll(adjusted);
+
+        if (Math.abs(adjusted - viewport.scrollLeft) > 0.5) {
+          viewport.scrollLeft = adjusted;
+          if (isProgrammaticScroll && Number.isFinite(programmaticTargetLeft)) {
+            programmaticTargetLeft = adjusted;
+          }
+        }
+      };
+      const syncFixedGrid = () => {
+        const step = getScrollStep(track);
+        if (!step) {
+          row.style.removeProperty('--collection-slider-grid-offset');
+          row.style.removeProperty('--collection-slider-grid-step');
+          return;
+        }
+
+        const baseOffset = getBaseOffset(step);
+        const normalizedOffset = ((baseOffset % step) + step) % step;
+        row.style.setProperty('--collection-slider-grid-offset', `${normalizedOffset}px`);
+        row.style.setProperty('--collection-slider-grid-step', `${step}px`);
+      };
+
+      const applyDesktopPeekOffset = (force = false) => {
+        const step = getScrollStep(track);
+        if (!step) return;
+
+        const targetOffset = getBaseOffset(step);
+        syncFixedGrid();
+
+        if (!force && hasManualScroll) return;
+        if (Math.abs(viewport.scrollLeft - targetOffset) < 1) return;
+
+        withProgrammaticScroll(targetOffset);
+      };
+
+      const updateControls = () => {
+        if (hasInfiniteLoop) {
+          const step = getScrollStep(track);
+          const canLoop = Boolean(step) && loopSize > 1 && getMaxScroll() > 2;
+          prevButton.classList.toggle('is-disabled', !canLoop);
+          nextButton.classList.toggle('is-disabled', !canLoop);
+          syncFixedQuickAddButtons();
+          return;
+        }
+
+        const maxScroll = getMaxScroll();
+        const step = getScrollStep(track);
+        const baseOffset = getBaseOffset(step);
+        const isAtStart = viewport.scrollLeft <= baseOffset + 2;
+        const isAtEnd = viewport.scrollLeft >= maxScroll - 2;
+
+        prevButton.classList.toggle('is-disabled', isAtStart);
+        nextButton.classList.toggle('is-disabled', isAtEnd || maxScroll <= 2);
+        syncFixedQuickAddButtons();
+      };
+
+      const scrollByStep = (direction) => {
+        const step = getScrollStep(track) || viewport.clientWidth * 0.75;
+        if (!step) return;
+
+        if (hasInfiniteLoop) {
+          const baseOffset = getBaseOffset(step);
+          const currentIndex = Math.round((getReferenceScrollLeft() - baseOffset) / step);
+          const target = baseOffset + ((currentIndex + direction) * step);
+          withProgrammaticScroll(target);
+          return;
+        }
+
+        const maxScroll = getMaxScroll();
+        const baseOffset = getBaseOffset(step);
+        const currentIndex = Math.round((getReferenceScrollLeft() - baseOffset) / step);
+        const target = clampScroll(baseOffset + ((currentIndex + direction) * step), baseOffset, maxScroll);
+
+        withProgrammaticScroll(target);
+      };
+
+      const snapToNearestStep = (options = {}) => {
+        const { instant = false } = options;
+        const step = getScrollStep(track);
+        if (!step) return;
+
+        const maxScroll = getMaxScroll();
+        const baseOffset = getBaseOffset(step);
+        const rawIndex = Math.round((viewport.scrollLeft - baseOffset) / step);
+        const maxIndex = Math.max(0, Math.round((maxScroll - baseOffset) / step));
+        const targetIndex = hasInfiniteLoop ? rawIndex : Math.max(0, Math.min(maxIndex, rawIndex));
+        const minTarget = hasInfiniteLoop ? 0 : baseOffset;
+        const targetLeft = clampScroll(baseOffset + (targetIndex * step), minTarget, maxScroll);
+
+        withProgrammaticScroll(targetLeft, { instant });
+      };
+
+      prevButton.addEventListener('click', () => {
+        if (prevButton.classList.contains('is-disabled')) return;
+        hasManualScroll = true;
+        scrollByStep(-1);
+      });
+
+      nextButton.addEventListener('click', () => {
+        if (nextButton.classList.contains('is-disabled')) return;
+        hasManualScroll = true;
+        scrollByStep(1);
+      });
+
+      fixedQuickAddButtons.forEach((buttonEl) => {
+        if (!buttonEl || buttonEl.dataset.fixedQuickAddInit === 'true') return;
+        buttonEl.dataset.fixedQuickAddInit = 'true';
+
+        buttonEl.addEventListener('click', (event) => {
+          event.preventDefault();
+
+          const targetForm = fixedQuickAddTargets.get(buttonEl);
+          const submitButton = targetForm?.querySelector('button[type="submit"]');
+          if (!targetForm || !submitButton || submitButton.disabled) return;
+
+          if (typeof targetForm.requestSubmit === 'function') {
+            targetForm.requestSubmit(submitButton);
+            return;
+          }
+
+          submitButton.click();
+        });
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!desktopQuery.matches) return;
+        if (getMaxScroll() <= 2) return;
+
+        const horizontalIntent = event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+        if (!horizontalIntent) return;
+
+        const dominantDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
+        if (Math.abs(dominantDelta) < 1) return;
+
+        event.preventDefault();
+        hasManualScroll = true;
+        wheelAccumDelta += dominantDelta;
+
+        if (Math.abs(wheelAccumDelta) >= 38) {
+          scrollByStep(wheelAccumDelta > 0 ? 1 : -1);
+          wheelAccumDelta = 0;
+        }
+
+        if (wheelResetTimer) window.clearTimeout(wheelResetTimer);
+        wheelResetTimer = window.setTimeout(() => {
+          wheelAccumDelta = 0;
+        }, 120);
+      }, { passive: false });
+
+      track.addEventListener('click', (event) => {
+        if (!suppressClick) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressClick = false;
+      }, true);
+
+      viewport.addEventListener('pointerdown', (event) => {
+        const isMousePointer = event.pointerType === 'mouse';
+        if (isMousePointer && event.button !== 0) return;
+        if (!isMousePointer && !desktopQuery.matches) return;
+
+        event.preventDefault();
+        if (scrollEndTimer) {
+          window.clearTimeout(scrollEndTimer);
+          scrollEndTimer = null;
+        }
+
+        if (scrollAnimFrame) {
+          window.cancelAnimationFrame(scrollAnimFrame);
+          scrollAnimFrame = 0;
+        }
+        scrollAnimToken += 1;
+        isProgrammaticScroll = false;
+        programmaticTargetLeft = null;
+
+        dragPointerId = event.pointerId;
+        dragLastX = event.clientX;
+        dragAccumDelta = 0;
+        suppressClick = false;
+        viewport.classList.add('is-dragging');
+
+        if (viewport.setPointerCapture) {
+          viewport.setPointerCapture(event.pointerId);
+        }
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (dragPointerId === null || event.pointerId !== dragPointerId) return;
+
+        const deltaX = event.clientX - dragLastX;
+        dragLastX = event.clientX;
+        if (Math.abs(deltaX) < 0.01) return;
+
+        hasManualScroll = true;
+        dragAccumDelta += Math.abs(deltaX);
+        viewport.scrollLeft = clampScroll(viewport.scrollLeft - deltaX);
+        if (hasInfiniteLoop) {
+          normalizeInfinitePosition();
+        }
+
+        if (dragAccumDelta > 4) {
+          suppressClick = true;
+        }
+
+        updateControls();
+      });
+
+      const endDrag = (event) => {
+        if (dragPointerId === null || event.pointerId !== dragPointerId) return;
+
+        if (viewport.releasePointerCapture && viewport.hasPointerCapture?.(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+
+        dragPointerId = null;
+        if (dragAccumDelta > 0.5) {
+          snapToNearestStep();
+        } else {
+          updateControls();
+        }
+        dragAccumDelta = 0;
+        viewport.classList.remove('is-dragging');
+      };
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+
+      viewport.addEventListener('scroll', () => {
+        if (!isProgrammaticScroll) {
+          hasManualScroll = true;
+          normalizeInfinitePosition();
+          if (scrollEndTimer) window.clearTimeout(scrollEndTimer);
+          scrollEndTimer = window.setTimeout(() => {
+            scrollEndTimer = null;
+            if (dragPointerId !== null || isProgrammaticScroll) return;
+            snapToNearestStep();
+          }, 96);
+        }
+        updateControls();
+      }, { passive: true });
+
+      window.addEventListener('resize', queueViewportRealign);
+
+      if (desktopQuery.addEventListener) {
+        desktopQuery.addEventListener('change', queueViewportRealign);
+      } else {
+        desktopQuery.addListener(queueViewportRealign);
+      }
+
+      if (typeof window.ResizeObserver === 'function') {
+        const viewportResizeObserver = new window.ResizeObserver(() => {
+          queueViewportRealign();
+        });
+        viewportResizeObserver.observe(viewport);
+      }
+
+      window.requestAnimationFrame(() => {
+        syncDesktopCardFormat();
+        syncFixedGrid();
+        window.requestAnimationFrame(() => {
+          applyDesktopPeekOffset(true);
+          updateControls();
+        });
+      });
+    });
+
+    quickAddForms.forEach((formEl) => {
+      if (!formEl || formEl.dataset.quickAddInit === 'true') return;
+      formEl.dataset.quickAddInit = 'true';
+
+      const buttonEl = formEl.querySelector('button[type="submit"]');
+      const idInputEl = formEl.querySelector('input[name="id"]');
+      if (!buttonEl || !idInputEl) return;
+
+      formEl.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (buttonEl.disabled) return;
+
+        const variantId = Number(idInputEl.value);
+        if (!Number.isInteger(variantId) || variantId <= 0) return;
+
+        buttonEl.disabled = true;
+        formEl.classList.remove('is-added', 'is-error');
+
+        try {
+          const response = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json'
+            },
+            body: JSON.stringify({
+              id: variantId,
+              quantity: 1
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Quick add request failed');
+          }
+
+          formEl.classList.add('is-added');
+          window.setTimeout(() => {
+            formEl.classList.remove('is-added');
+          }, 900);
+        } catch (_error) {
+          formEl.classList.add('is-error');
+          window.setTimeout(() => {
+            formEl.classList.remove('is-error');
+          }, 1200);
+        } finally {
+          buttonEl.disabled = false;
+        }
+      });
+    });
   };
 
   const initAllVideoHeros = (root = document) => {
     root.querySelectorAll('[data-video-hero]').forEach(initVideoHero);
   };
 
+  const initAllCollectionStacks = (root = document) => {
+    root.querySelectorAll('[data-collection-stacks]').forEach(initCollectionStacks);
+  };
+
   initInteractiveScramble();
+  initCollectionTickerScramble();
   initAllVideoHeros();
+  initAllCollectionStacks();
   document.addEventListener('shopify:section:load', (event) => {
     initInteractiveScramble(event.target);
+    initCollectionTickerScramble(event.target);
     initAllVideoHeros(event.target);
+    initAllCollectionStacks(event.target);
   });
 })();
