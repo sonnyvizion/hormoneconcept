@@ -1222,6 +1222,8 @@
       let scrollAnimToken = 0;
       let programmaticTargetLeft = null;
       let viewportRealignFrame = 0;
+      const TRACKPAD_SCROLL_DAMPING = 0.28;
+      const TRACKPAD_SCROLL_MAX_STEP = 42;
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const getMaxScroll = () => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
@@ -1235,6 +1237,16 @@
       const getLoopWidth = (step) => {
         if (!hasInfiniteLoop || !step) return 0;
         return step * loopSize;
+      };
+      const cancelProgrammaticScroll = () => {
+        if (scrollAnimFrame) {
+          window.cancelAnimationFrame(scrollAnimFrame);
+          scrollAnimFrame = 0;
+        }
+
+        scrollAnimToken += 1;
+        isProgrammaticScroll = false;
+        programmaticTargetLeft = null;
       };
       const isTrackpadWheelGesture = (event) => {
         if (event.deltaMode !== 0 || event.ctrlKey) return false;
@@ -1568,12 +1580,34 @@
         if (!horizontalIntent) return;
 
         if (isTrackpadWheelGesture(event) && !event.shiftKey) {
+          const rawTrackpadDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
+          const dampedTrackpadDelta = Math.max(
+            -TRACKPAD_SCROLL_MAX_STEP,
+            Math.min(TRACKPAD_SCROLL_MAX_STEP, rawTrackpadDelta * TRACKPAD_SCROLL_DAMPING)
+          );
+
+          if (Math.abs(dampedTrackpadDelta) < 0.5) return;
+
+          event.preventDefault();
           hasManualScroll = true;
+          cancelProgrammaticScroll();
+
           if (wheelResetTimer) {
             window.clearTimeout(wheelResetTimer);
             wheelResetTimer = null;
           }
+
+          if (scrollEndTimer) {
+            window.clearTimeout(scrollEndTimer);
+            scrollEndTimer = null;
+          }
+
           wheelAccumDelta = 0;
+          viewport.scrollLeft = clampScroll(viewport.scrollLeft + dampedTrackpadDelta);
+          if (hasInfiniteLoop) {
+            normalizeInfinitePosition();
+          }
+          updateControls();
           return;
         }
 
