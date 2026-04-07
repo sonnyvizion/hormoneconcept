@@ -1573,7 +1573,6 @@
       });
 
       viewport.addEventListener('wheel', (event) => {
-        if (!desktopQuery.matches) return;
         if (getMaxScroll() <= 2) return;
 
         const horizontalIntent = event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);

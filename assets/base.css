@@ -1020,6 +1020,8 @@ body:not(.template-index) main {
 .category-sticky__panel {
   position: sticky;
   top: 0;
+  min-height: 100vh;
+  min-height: 100svh;
   height: 100vh;
   height: 100svh;
   overflow: hidden;
@@ -1869,19 +1871,19 @@ body:not(.template-index) main {
     --hero-side-progress-shell-gap: clamp(12px, 1.5vw, 14px);
     --hero-side-progress-marker-size: clamp(9px, 1vw, 12px);
     --hero-side-progress-y-offset: 4px;
-    --hero-side-progress-extra: clamp(30px, 5.2vh, 48px);
-    --hero-side-progress-step-min: clamp(52px, 7.8vh, 80px);
-    --hero-tech-frame-width: min(72vw, 620px);
-    --hero-tech-frame-height: min(37vh, 320px);
-    --hero-cta-size: clamp(.98rem, 3vw, 1.46rem);
+    --hero-side-progress-extra: clamp(42px, 6.4vh, 62px);
+    --hero-side-progress-step-min: clamp(72px, 9.4vh, 112px);
+    --hero-tech-frame-width: min(82vw, 760px);
+    --hero-tech-frame-height: min(45vh, 420px);
+    --hero-cta-size: clamp(1rem, 3.2vw, 1.72rem);
   }
 
   .category-sticky__content-wrap {
     padding:
-      clamp(90px, 10vh, 112px)
-      clamp(18px, 3vw, 28px)
-      clamp(20px, 3vh, 34px)
-      calc(clamp(18px, 3vw, 28px) + var(--hero-side-progress-reserve));
+      clamp(96px, 10.5vh, 122px)
+      clamp(20px, 3.4vw, 34px)
+      clamp(24px, 3.6vh, 38px)
+      calc(clamp(20px, 3.4vw, 34px) + var(--hero-side-progress-reserve));
   }
 
   .category-sticky__eyebrow {
