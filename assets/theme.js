@@ -1236,6 +1236,16 @@
         if (!hasInfiniteLoop || !step) return 0;
         return step * loopSize;
       };
+      const isTrackpadWheelGesture = (event) => {
+        if (event.deltaMode !== 0 || event.ctrlKey) return false;
+
+        const absDeltaX = Math.abs(event.deltaX);
+        const absDeltaY = Math.abs(event.deltaY);
+        const hasMixedAxes = absDeltaX > 0 && absDeltaY > 0;
+        const hasFractionalDelta = !Number.isInteger(event.deltaX) || !Number.isInteger(event.deltaY);
+
+        return hasMixedAxes || hasFractionalDelta;
+      };
 
       const withProgrammaticScroll = (targetLeft, options = {}) => {
         const { instant = false } = options;
@@ -1556,6 +1566,16 @@
 
         const horizontalIntent = event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
         if (!horizontalIntent) return;
+
+        if (isTrackpadWheelGesture(event) && !event.shiftKey) {
+          hasManualScroll = true;
+          if (wheelResetTimer) {
+            window.clearTimeout(wheelResetTimer);
+            wheelResetTimer = null;
+          }
+          wheelAccumDelta = 0;
+          return;
+        }
 
         const dominantDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
         if (Math.abs(dominantDelta) < 1) return;
