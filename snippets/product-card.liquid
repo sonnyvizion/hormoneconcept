@@ -1,11 +1,17 @@
-<article class="product-card">
-  <a href="{{ product.url }}">
+{% assign product_variant = product.selected_or_first_available_variant %}
+
+<article class="product-card product-card--v2">
+  <a class="product-card__link" href="{{ product.url }}">
     {% if product.featured_image %}
       {{ product.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: product.title }}
     {% else %}
       <div class="ph-img"></div>
     {% endif %}
-    <h3>{{ product.title }}</h3>
-    <p>{{ product.price | money }}</p>
+
+    <div class="product-card__meta">
+      <p class="product-card__vendor">{{ product.vendor | default: shop.name | upcase }}</p>
+      <h3>{{ product.title | upcase }}</h3>
+      <p class="product-card__price">{{ product_variant.price | money }}</p>
+    </div>
   </a>
 </article>

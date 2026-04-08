@@ -1,8 +1,13 @@
 <section class="main-page">
-  <div class="container page-content">
-    <h1>{{ page.title }}</h1>
-    <div class="rte">
-      {{ page.content }}
+  <div class="container">
+    <div class="site-page-shell site-page-shell--content page-content">
+      <header class="site-page-head">
+        <p class="site-page-kicker">[ PAGE ]</p>
+        <h1>{{ page.title }}</h1>
+      </header>
+      <div class="rte page-content__body">
+        {{ page.content }}
+      </div>
     </div>
   </div>
 </section>

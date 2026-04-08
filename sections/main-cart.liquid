@@ -1,51 +1,71 @@
 <section class="main-cart">
   <div class="container">
-    <h1>Panier</h1>
+    <div class="site-page-shell site-page-shell--cart">
+      <header class="site-page-head">
+        <p class="site-page-kicker">[ PANIER ]</p>
+        <h1>VOTRE SELECTION</h1>
+      </header>
 
-    {% if cart.item_count == 0 %}
-      <p>Votre panier est vide.</p>
-      <a class="button" href="{{ routes.all_products_collection_url }}">Continuer vos achats</a>
-    {% else %}
-      {% form 'cart', cart %}
-        <div class="cart-table-wrap">
-          <table class="cart-table">
-            <thead>
-              <tr>
-                <th>Produit</th>
-                <th>Prix</th>
-                <th>Quantite</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in cart.items %}
-                <tr>
-                  <td>
-                    <a href="{{ item.url }}">{{ item.product.title }}</a>
-                  </td>
-                  <td>{{ item.final_price | money }}</td>
-                  <td>
+      {% if cart.item_count == 0 %}
+        <div class="cart-empty">
+          <p>VOTRE PANIER EST ACTUELLEMENT VIDE.</p>
+          <a class="button" href="{{ routes.all_products_collection_url }}">CONTINUER LES ACHATS</a>
+        </div>
+      {% else %}
+        {% form 'cart', cart, class: 'cart-form-v2' %}
+          <div class="cart-list-v2">
+            {% for item in cart.items %}
+              <article class="cart-item-v2">
+                <a class="cart-item-v2__media" href="{{ item.url }}">
+                  {% if item.image %}
+                    {{ item.image | image_url: width: 720 | image_tag: loading: 'lazy', alt: item.product.title }}
+                  {% else %}
+                    <div class="ph-img"></div>
+                  {% endif %}
+                </a>
+
+                <div class="cart-item-v2__body">
+                  <p class="cart-item-v2__vendor">{{ item.product.vendor | default: shop.name | upcase }}</p>
+                  <h2><a href="{{ item.url }}">{{ item.product.title | upcase }}</a></h2>
+                  {% unless item.variant.title contains 'Default' %}
+                    <p class="cart-item-v2__variant">{{ item.variant.title | upcase }}</p>
+                  {% endunless %}
+
+                  <div class="cart-item-v2__row">
+                    <p class="cart-item-v2__unit">{{ item.final_price | money }}</p>
+                    <label for="CartQty-{{ item.key }}">QTE</label>
                     <input
+                      id="CartQty-{{ item.key }}"
                       type="number"
                       min="0"
                       name="updates[]"
                       value="{{ item.quantity }}"
                       aria-label="Quantite {{ item.product.title }}"
                     >
-                  </td>
-                  <td>{{ item.final_line_price | money }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+                    <p class="cart-item-v2__line">{{ item.final_line_price | money }}</p>
+                  </div>
 
-        <div class="cart-actions">
-          <button class="button button-secondary" type="submit" name="update">Mettre a jour</button>
-          <button class="button" type="submit" name="checkout">Paiement</button>
-        </div>
-      {% endform %}
-    {% endif %}
+                  <a class="cart-item-v2__remove" href="{{ item.url_to_remove }}">SUPPRIMER</a>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+
+          <aside class="cart-summary-v2">
+            <div class="cart-summary-v2__line">
+              <p>SOUS-TOTAL</p>
+              <p>{{ cart.total_price | money }}</p>
+            </div>
+            <p class="cart-summary-v2__note">FRAIS D'EXPEDITION ET TAXES CALCULES A L'ETAPE SUIVANTE.</p>
+
+            <div class="cart-actions">
+              <button class="button button-secondary" type="submit" name="update">METTRE A JOUR</button>
+              <button class="button" type="submit" name="checkout">PASSER AU PAIEMENT</button>
+            </div>
+          </aside>
+        {% endform %}
+      {% endif %}
+    </div>
   </div>
 </section>
 

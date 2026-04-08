@@ -1,0 +1,63 @@
+<section class="main-page main-search">
+  <div class="container">
+    <div class="site-page-shell site-page-shell--catalog">
+      <header class="site-page-head">
+        <p class="site-page-kicker">[ RECHERCHE ]</p>
+        <h1>TROUVER UNE PAIRE</h1>
+      </header>
+
+      <form action="{{ routes.search_url }}" method="get" class="site-search-form" role="search">
+        <input type="hidden" name="options[prefix]" value="last">
+        <label class="visually-hidden" for="SearchInput">Recherche</label>
+        <input id="SearchInput" type="search" name="q" value="{{ search.terms | escape }}" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off">
+        <button class="button" type="submit">LANCER</button>
+      </form>
+
+      {% if search.performed %}
+        <div class="catalog-toolbar">
+          <p class="catalog-toolbar__count">{{ search.results_count }} RESULTATS</p>
+        </div>
+
+        <div class="catalog-grid">
+          {% for item in search.results %}
+            {% if item.object_type == 'product' %}
+              {% render 'product-card', product: item %}
+            {% elsif item.object_type == 'collection' %}
+              <article class="catalog-entry">
+                <a class="catalog-entry__link" href="{{ item.url }}">
+                  <p class="catalog-entry__type">[ COLLECTION ]</p>
+                  <h3>{{ item.title | upcase }}</h3>
+                </a>
+              </article>
+            {% elsif item.object_type == 'page' %}
+              <article class="catalog-entry">
+                <a class="catalog-entry__link" href="{{ item.url }}">
+                  <p class="catalog-entry__type">[ PAGE ]</p>
+                  <h3>{{ item.title | upcase }}</h3>
+                </a>
+              </article>
+            {% elsif item.object_type == 'article' %}
+              <article class="catalog-entry">
+                <a class="catalog-entry__link" href="{{ item.url }}">
+                  <p class="catalog-entry__type">[ ARTICLE ]</p>
+                  <h3>{{ item.title | upcase }}</h3>
+                </a>
+              </article>
+            {% endif %}
+          {% else %}
+            <div class="catalog-empty">
+              <p>AUCUN RESULTAT POUR \"{{ search.terms | upcase }}\".</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Main search",
+  "settings": []
+}
+{% endschema %}

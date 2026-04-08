@@ -1,43 +1,72 @@
 <section class="main-product">
-  <div class="container product-layout">
-    <div class="product-media">
-      {% if product.featured_image %}
-        {{ product.featured_image | image_url: width: 1200 | image_tag: loading: 'eager', alt: product.title }}
-      {% else %}
-        <div class="ph-img"></div>
-      {% endif %}
-    </div>
+  <div class="container">
+    <div class="site-page-shell site-page-shell--product">
+      <header class="site-page-head site-page-head--product">
+        <p class="site-page-kicker">[ PRODUIT ]</p>
+        <h1>{{ product.title }}</h1>
+      </header>
 
-    <div class="product-info">
-      <h1>{{ product.title }}</h1>
-      <p class="product-price">{{ product.selected_or_first_available_variant.price | money }}</p>
-
-      {% form 'product', product %}
-        {% if product.has_only_default_variant == false %}
-          {% for option in product.options_with_values %}
-            <label class="field-label" for="Option-{{ option.position }}">{{ option.name }}</label>
-            <select id="Option-{{ option.position }}" name="options[{{ option.name | escape }}]">
-              {% for value in option.values %}
-                <option value="{{ value | escape }}" {% if option.selected_value == value %}selected{% endif %}>
-                  {{ value }}
-                </option>
-              {% endfor %}
-            </select>
-          {% endfor %}
-        {% endif %}
-
-        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-
-        <button class="button" type="submit" {% unless product.available %}disabled{% endunless %}>
-          {% if product.available %}Ajouter au panier{% else %}Rupture de stock{% endif %}
-        </button>
-      {% endform %}
-
-      {% if product.description != blank %}
-        <div class="rte product-description">
-          {{ product.description }}
+      <div class="product-view">
+        <div class="product-view__media">
+          <div class="product-view__media-frame">
+            {% if product.featured_image %}
+              {{ product.featured_image | image_url: width: 1800 | image_tag: loading: 'eager', alt: product.title }}
+            {% else %}
+              <div class="ph-img"></div>
+            {% endif %}
+          </div>
         </div>
-      {% endif %}
+
+        <div class="product-view__details">
+          <div class="product-view__panel">
+            <div class="product-view__price-line">
+              <p class="product-view__price">{{ product.selected_or_first_available_variant.price | money }}</p>
+              <p class="product-view__status">
+                {% if product.available %}
+                  EN STOCK
+                {% else %}
+                  RUPTURE
+                {% endif %}
+              </p>
+            </div>
+
+            {% form 'product', product, class: 'product-form-v2' %}
+              {% if product.has_only_default_variant %}
+                <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+              {% else %}
+                <label class="field-label" for="ProductVariant">OPTIONS</label>
+                <select id="ProductVariant" name="id">
+                  {% for variant in product.variants %}
+                    <option value="{{ variant.id }}" {% if variant == product.selected_or_first_available_variant %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
+                      {{ variant.title | upcase }} - {{ variant.price | money }}
+                    </option>
+                  {% endfor %}
+                </select>
+              {% endif %}
+
+              <label class="field-label" for="ProductQuantity">QUANTITE</label>
+              <input id="ProductQuantity" type="number" name="quantity" min="1" value="1">
+
+              <button class="button product-form-v2__submit" type="submit" {% unless product.available %}disabled{% endunless %}>
+                {% if product.available %}
+                  AJOUTER AU PANIER
+                {% else %}
+                  INDISPONIBLE
+                {% endif %}
+              </button>
+            {% endform %}
+          </div>
+
+          {% if product.description != blank %}
+            <div class="product-view__panel product-view__panel--description">
+              <p class="site-page-kicker">[ DESCRIPTION ]</p>
+              <div class="rte product-description">
+                {{ product.description }}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </section>

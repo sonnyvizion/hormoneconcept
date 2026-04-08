@@ -1,27 +1,63 @@
+{% liquid
+  assign current_sort = collection.sort_by | default: collection.default_sort_by
+%}
+
 <section class="main-collection">
   <div class="container">
-    <header class="page-head">
-      <h1>{{ collection.title }}</h1>
-      {% if collection.description != blank %}
-        <div class="rte">{{ collection.description }}</div>
-      {% endif %}
-    </header>
+    <div class="site-page-shell site-page-shell--catalog">
+      <header class="site-page-head">
+        <p class="site-page-kicker">[ COLLECTION ]</p>
+        <h1>{{ collection.title }}</h1>
+        {% if collection.description != blank %}
+          <div class="rte site-page-lead">{{ collection.description }}</div>
+        {% endif %}
+      </header>
 
-    {% paginate collection.products by section.settings.products_per_page %}
-      <div class="product-grid">
-        {% for product in collection.products %}
-          {% render 'product-card', product: product %}
-        {% else %}
-          <p>Aucun produit dans cette collection.</p>
-        {% endfor %}
-      </div>
+      {% paginate collection.products by section.settings.products_per_page %}
+        <div class="catalog-toolbar">
+          <p class="catalog-toolbar__count">{{ collection.products_count }} PRODUITS</p>
+          <form class="catalog-toolbar__sort" method="get" action="{{ collection.url }}">
+            <label for="SortBy">TRI</label>
+            <select id="SortBy" name="sort_by" onchange="this.form.submit()">
+              {% for option in collection.sort_options %}
+                <option value="{{ option.value | escape }}" {% if option.value == current_sort %}selected{% endif %}>
+                  {{ option.name | upcase }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
 
-      {% if paginate.pages > 1 %}
-        <nav class="pagination" role="navigation" aria-label="Pagination collection">
-          {{ paginate | default_pagination }}
-        </nav>
-      {% endif %}
-    {% endpaginate %}
+        <div class="catalog-grid">
+          {% for product in collection.products %}
+            {% render 'product-card', product: product %}
+          {% else %}
+            <div class="catalog-empty">
+              <p>AUCUN PRODUIT DISPONIBLE DANS CETTE COLLECTION.</p>
+              <a class="button" href="{{ routes.all_products_collection_url }}">VOIR TOUTES LES PIECES</a>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if paginate.pages > 1 %}
+          <nav class="site-pagination" role="navigation" aria-label="Pagination collection">
+            {% if paginate.previous %}
+              <a class="site-pagination__item" href="{{ paginate.previous.url }}">PRECEDENT</a>
+            {% endif %}
+            {% for part in paginate.parts %}
+              {% if part.is_link %}
+                <a class="site-pagination__item" href="{{ part.url }}">{{ part.title }}</a>
+              {% else %}
+                <span class="site-pagination__item {% if part.title == paginate.current_page %}is-active{% endif %}">{{ part.title }}</span>
+              {% endif %}
+            {% endfor %}
+            {% if paginate.next %}
+              <a class="site-pagination__item" href="{{ paginate.next.url }}">SUIVANT</a>
+            {% endif %}
+          </nav>
+        {% endif %}
+      {% endpaginate %}
+    </div>
   </div>
 </section>
 

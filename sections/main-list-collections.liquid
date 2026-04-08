@@ -1,0 +1,45 @@
+<section class="main-page main-list-collections">
+  <div class="container">
+    <div class="site-page-shell site-page-shell--catalog">
+      <header class="site-page-head">
+        <p class="site-page-kicker">[ COLLECTIONS ]</p>
+        <h1>TOUTES LES COLLECTIONS</h1>
+      </header>
+
+      <div class="collections-grid-v2">
+        {% for coll in collections %}
+          {% if coll.handle != 'frontpage' %}
+            <article class="collection-tile-v2">
+              <a class="collection-tile-v2__link" href="{{ coll.url }}">
+                <div class="collection-tile-v2__media">
+                  {% if coll.featured_image %}
+                    {{ coll.featured_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: coll.title }}
+                  {% elsif coll.products.first and coll.products.first.featured_image %}
+                    {{ coll.products.first.featured_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: coll.title }}
+                  {% else %}
+                    <div class="ph-img"></div>
+                  {% endif %}
+                </div>
+                <div class="collection-tile-v2__meta">
+                  <h3>{{ coll.title | upcase }}</h3>
+                  <p>{{ coll.products_count }} PRODUITS</p>
+                </div>
+              </a>
+            </article>
+          {% endif %}
+        {% else %}
+          <div class="catalog-empty">
+            <p>AUCUNE COLLECTION DISPONIBLE.</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Main list collections",
+  "settings": []
+}
+{% endschema %}
