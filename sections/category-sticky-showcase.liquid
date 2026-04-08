@@ -43,49 +43,6 @@
                 <div class="category-sticky__placeholder"></div>
               {% endif %}
             </div>
-
-            <div class="category-sticky__overlay">
-              <div class="category-sticky__side-progress video-hero__side-progress" aria-hidden="true">
-                <span class="video-hero__side-plus">+</span>
-                <div class="video-hero__side-track">
-                  {% for i in (1..total_blocks) %}
-                    {% assign step_index = i | minus: 1 %}
-                    <span class="video-hero__side-step{% if step_index < current_index %} is-past{% elsif step_index == current_index %} is-active{% endif %}">
-                      <span class="video-hero__side-step-fill"></span>
-                    </span>
-                  {% endfor %}
-                </div>
-                <span class="video-hero__side-plus">+</span>
-              </div>
-
-              <div class="category-sticky__tech-frame video-hero__tech-frame" aria-hidden="true">
-                <span class="video-hero__tech-frame-grain"></span>
-              </div>
-
-              <div class="container category-sticky__content-wrap">
-                <div class="category-sticky__copy">
-                  {% if block.settings.text != blank %}
-                    <p class="category-sticky__eyebrow">{{ block.settings.text }}</p>
-                  {% endif %}
-
-                  {% if block.settings.cta_label != blank %}
-                    {% if block.settings.cta_link != blank %}
-                      <a class="category-sticky__cta video-hero__availability" href="{{ block.settings.cta_link }}">
-                        <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
-                        <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
-                        <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
-                      </a>
-                    {% else %}
-                      <span class="category-sticky__cta video-hero__availability">
-                        <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
-                        <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
-                        <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
-                      </span>
-                    {% endif %}
-                  {% endif %}
-                </div>
-              </div>
-            </div>
           </div>
         </article>
       {% endfor %}
@@ -99,49 +56,76 @@
             <div class="category-sticky__media">
               <div class="category-sticky__placeholder"></div>
             </div>
-
-            <div class="category-sticky__overlay">
-              <div class="category-sticky__side-progress video-hero__side-progress" aria-hidden="true">
-                <span class="video-hero__side-plus">+</span>
-                <div class="video-hero__side-track">
-                  {% for j in (1..2) %}
-                    {% assign step_index = j | minus: 1 %}
-                    <span class="video-hero__side-step{% if step_index < current_index %} is-past{% elsif step_index == current_index %} is-active{% endif %}">
-                      <span class="video-hero__side-step-fill"></span>
-                    </span>
-                  {% endfor %}
-                </div>
-                <span class="video-hero__side-plus">+</span>
-              </div>
-
-              <div class="category-sticky__tech-frame video-hero__tech-frame" aria-hidden="true">
-                <span class="video-hero__tech-frame-grain"></span>
-              </div>
-
-              <div class="container category-sticky__content-wrap">
-                <div class="category-sticky__copy">
-                  {% if current_index == 0 %}
-                    <p class="category-sticky__eyebrow">Collection Capsule</p>
-                    <span class="category-sticky__cta video-hero__availability">
-                      <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
-                      <span class="video-hero__availability-label">MODE HOMME</span>
-                      <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
-                    </span>
-                  {% else %}
-                    <p class="category-sticky__eyebrow">Collection Signature</p>
-                    <span class="category-sticky__cta video-hero__availability">
-                      <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
-                      <span class="video-hero__availability-label">MODE FEMME</span>
-                      <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
-                    </span>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
           </div>
         </article>
       {% endfor %}
     {% endif %}
+
+    <div class="category-sticky__overlay">
+      <div class="category-sticky__side-progress video-hero__side-progress" aria-hidden="true">
+        <span class="video-hero__side-plus">+</span>
+        <div class="video-hero__side-track">
+          {% for i in (1..total_blocks) %}
+            {% assign step_index = i | minus: 1 %}
+            <span class="video-hero__side-step{% if step_index == 0 %} is-active{% endif %}" data-category-step data-index="{{ step_index }}">
+              <span class="video-hero__side-step-fill"></span>
+            </span>
+          {% endfor %}
+        </div>
+        <span class="video-hero__side-plus">+</span>
+      </div>
+
+      <div class="category-sticky__tech-frame video-hero__tech-frame" aria-hidden="true">
+        <span class="video-hero__tech-frame-grain"></span>
+      </div>
+
+      <div class="container category-sticky__content-wrap">
+        <div class="category-sticky__copy-list">
+          {% if section.blocks.size > 0 %}
+            {% for block in section.blocks %}
+              <div class="category-sticky__copy{% if forloop.first %} is-active{% endif %}" data-category-copy data-index="{{ forloop.index0 }}">
+                {% if block.settings.text != blank %}
+                  <p class="category-sticky__eyebrow">{{ block.settings.text }}</p>
+                {% endif %}
+
+                {% if block.settings.cta_label != blank %}
+                  {% if block.settings.cta_link != blank %}
+                    <a class="category-sticky__cta video-hero__availability" href="{{ block.settings.cta_link }}">
+                      <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                      <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
+                      <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                    </a>
+                  {% else %}
+                    <span class="category-sticky__cta video-hero__availability">
+                      <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                      <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
+                      <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                    </span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="category-sticky__copy is-active" data-category-copy data-index="0">
+              <p class="category-sticky__eyebrow">Collection Capsule</p>
+              <span class="category-sticky__cta video-hero__availability">
+                <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                <span class="video-hero__availability-label">MODE HOMME</span>
+                <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+              </span>
+            </div>
+            <div class="category-sticky__copy" data-category-copy data-index="1">
+              <p class="category-sticky__eyebrow">Collection Signature</p>
+              <span class="category-sticky__cta video-hero__availability">
+                <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                <span class="video-hero__availability-label">MODE FEMME</span>
+                <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+              </span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
