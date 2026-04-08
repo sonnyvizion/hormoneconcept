@@ -1214,10 +1214,6 @@
       let dragPointerId = null;
       let dragLastX = 0;
       let dragAccumDelta = 0;
-      let dragDidMove = false;
-      let dragPointerCaptured = false;
-      let dragPointerWasMouse = false;
-      let dragClickLink = null;
       let suppressClick = false;
       let wheelAccumDelta = 0;
       let wheelResetTimer = null;
@@ -1661,18 +1657,11 @@
         dragPointerId = event.pointerId;
         dragLastX = event.clientX;
         dragAccumDelta = 0;
-        dragDidMove = false;
-        dragPointerCaptured = false;
-        dragPointerWasMouse = isMousePointer;
-        dragClickLink = isMousePointer
-          ? event.target.closest('.collection-slider__product-link[href]')
-          : null;
         suppressClick = false;
-
         viewport.classList.add('is-dragging');
+
         if (viewport.setPointerCapture) {
           viewport.setPointerCapture(event.pointerId);
-          dragPointerCaptured = true;
         }
       });
 
@@ -1683,17 +1672,8 @@
         dragLastX = event.clientX;
         if (Math.abs(deltaX) < 0.01) return;
 
-        dragAccumDelta += Math.abs(deltaX);
-        if (!dragDidMove) {
-          if (dragAccumDelta < 1.2) return;
-          dragDidMove = true;
-        }
-
-        if (event.cancelable) {
-          event.preventDefault();
-        }
-
         hasManualScroll = true;
+        dragAccumDelta += Math.abs(deltaX);
         viewport.scrollLeft = clampScroll(viewport.scrollLeft - deltaX);
         if (hasInfiniteLoop) {
           normalizeInfinitePosition();
@@ -1709,40 +1689,17 @@
       const endDrag = (event) => {
         if (dragPointerId === null || event.pointerId !== dragPointerId) return;
 
-        if (
-          dragPointerCaptured
-          && viewport.releasePointerCapture
-          && viewport.hasPointerCapture?.(event.pointerId)
-        ) {
+        if (viewport.releasePointerCapture && viewport.hasPointerCapture?.(event.pointerId)) {
           viewport.releasePointerCapture(event.pointerId);
         }
 
         dragPointerId = null;
-        if (
-          dragPointerWasMouse
-          && !dragDidMove
-          && dragClickLink
-        ) {
-          const href = dragClickLink.getAttribute('href');
-          if (href) {
-            const shouldOpenNewTab = event.metaKey || event.ctrlKey || dragClickLink.getAttribute('target') === '_blank';
-            if (shouldOpenNewTab) {
-              window.open(href, '_blank', 'noopener');
-            } else {
-              window.location.assign(href);
-            }
-          }
-          updateControls();
-        } else if (dragDidMove && dragAccumDelta > 0.5) {
+        if (dragAccumDelta > 0.5) {
           snapToNearestStep();
         } else {
           updateControls();
         }
         dragAccumDelta = 0;
-        dragDidMove = false;
-        dragPointerCaptured = false;
-        dragPointerWasMouse = false;
-        dragClickLink = null;
         viewport.classList.remove('is-dragging');
       };
 
@@ -1839,130 +1796,6 @@
     });
   };
 
-  const initCategorySticky = (sectionRoot) => {
-    if (!sectionRoot || sectionRoot.dataset.categoryStickyInit === 'true') return;
-    sectionRoot.dataset.categoryStickyInit = 'true';
-
-    const categorySectionWrapper = sectionRoot.closest('.shopify-section');
-    if (categorySectionWrapper && categorySectionWrapper.dataset.categoryStickyLayerInit !== 'true') {
-      categorySectionWrapper.dataset.categoryStickyLayerInit = 'true';
-      categorySectionWrapper.classList.add('shopify-section--category-sticky-base');
-
-      let nextSection = categorySectionWrapper.nextElementSibling;
-      let isFirstAboveCategory = true;
-      while (nextSection) {
-        if (nextSection.classList?.contains('shopify-section')) {
-          nextSection.classList.add('shopify-section--above-category-sticky');
-          if (isFirstAboveCategory) {
-            nextSection.classList.add('shopify-section--above-category-sticky-first');
-            isFirstAboveCategory = false;
-          }
-        }
-        nextSection = nextSection.nextElementSibling;
-      }
-    }
-
-    const stack = sectionRoot.querySelector('.category-sticky__stack');
-    const items = Array.from(sectionRoot.querySelectorAll('[data-category-item]'));
-    const copyItems = Array.from(sectionRoot.querySelectorAll('[data-category-copy]'));
-    const stepItems = Array.from(sectionRoot.querySelectorAll('[data-category-step]'));
-    if (!stack || !items.length) return;
-
-    let progressFrame = 0;
-    let layoutFrame = 0;
-    let activeIndex = -1;
-
-    const setActiveState = (nextIndex) => {
-      const clampedIndex = Math.min(items.length - 1, Math.max(0, nextIndex));
-      if (clampedIndex === activeIndex) return;
-      activeIndex = clampedIndex;
-
-      copyItems.forEach((copyEl, index) => {
-        const copyIndex = Number.parseInt(copyEl.dataset.index || `${index}`, 10);
-        copyEl.classList.toggle('is-active', copyIndex === activeIndex);
-      });
-
-      stepItems.forEach((stepEl, index) => {
-        const stepIndex = Number.parseInt(stepEl.dataset.index || `${index}`, 10);
-        stepEl.classList.toggle('is-past', stepIndex < activeIndex);
-        stepEl.classList.toggle('is-active', stepIndex === activeIndex);
-      });
-    };
-
-    const getViewportHeight = () => Math.max(
-      window.innerHeight || 0,
-      document.documentElement.clientHeight || 0,
-      stack.clientHeight || 0
-    );
-
-    const updateProgress = () => {
-      const total = items.length;
-      const viewportHeight = getViewportHeight();
-      if (!viewportHeight) return;
-
-      const sectionTop = sectionRoot.getBoundingClientRect().top + window.scrollY;
-      const maxTravel = viewportHeight * Math.max(total - 1, 0);
-      const travel = Math.min(Math.max(window.scrollY - sectionTop, 0), maxTravel);
-      const progress = viewportHeight ? travel / viewportHeight : 0;
-
-      items.forEach((itemEl, index) => {
-        const offset = Math.max(0, (index - progress) * 100);
-        itemEl.style.setProperty('--category-item-offset', `${offset}`);
-      });
-
-      setActiveState(Math.round(progress));
-    };
-
-    const queueProgressUpdate = () => {
-      if (progressFrame) return;
-      progressFrame = window.requestAnimationFrame(() => {
-        progressFrame = 0;
-        updateProgress();
-      });
-    };
-
-    const updateLayout = () => {
-      const total = Math.max(1, items.length);
-      const viewportHeight = getViewportHeight();
-      if (!viewportHeight) return;
-
-      // Keep one extra sticky viewport after the last category so the next
-      // section can scroll over it instead of ending sticky immediately.
-      const stickyScreens = total + (total > 1 ? 1 : 0);
-
-      sectionRoot.style.setProperty('--category-total', `${stickyScreens}`);
-      sectionRoot.style.minHeight = `${viewportHeight * stickyScreens}px`;
-      stack.style.height = `${viewportHeight}px`;
-      updateProgress();
-    };
-
-    const queueLayoutUpdate = () => {
-      if (layoutFrame) return;
-      layoutFrame = window.requestAnimationFrame(() => {
-        layoutFrame = 0;
-        updateLayout();
-      });
-    };
-
-    window.addEventListener('scroll', queueProgressUpdate, { passive: true });
-    window.addEventListener('resize', queueLayoutUpdate);
-
-    if (window.visualViewport?.addEventListener) {
-      window.visualViewport.addEventListener('resize', queueLayoutUpdate);
-    }
-
-    if (typeof window.ResizeObserver === 'function') {
-      const stickyResizeObserver = new window.ResizeObserver(() => {
-        queueLayoutUpdate();
-      });
-      stickyResizeObserver.observe(sectionRoot);
-    }
-
-    window.requestAnimationFrame(() => {
-      updateLayout();
-    });
-  };
-
   const initAllVideoHeros = (root = document) => {
     root.querySelectorAll('[data-video-hero]').forEach(initVideoHero);
   };
@@ -1971,20 +1804,14 @@
     root.querySelectorAll('[data-collection-stacks]').forEach(initCollectionStacks);
   };
 
-  const initAllCategorySticky = (root = document) => {
-    root.querySelectorAll('[data-category-sticky]').forEach(initCategorySticky);
-  };
-
   initInteractiveScramble();
   initCollectionTickerScramble();
   initAllVideoHeros();
   initAllCollectionStacks();
-  initAllCategorySticky();
   document.addEventListener('shopify:section:load', (event) => {
     initInteractiveScramble(event.target);
     initCollectionTickerScramble(event.target);
     initAllVideoHeros(event.target);
     initAllCollectionStacks(event.target);
-    initAllCategorySticky(event.target);
   });
 })();
