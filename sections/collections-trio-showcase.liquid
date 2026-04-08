@@ -2,7 +2,6 @@
   assign fallback_titles = 'VETEMENTS|ACCESSOIRES|SNEAKERS' | split: '|'
   assign fallback_subtitles = 'MODE HOMME|DISPONIBLE|DISPONIBLE' | split: '|'
   assign fallback_cta_labels = 'VETEMENTS|ACCESSOIRES|SNEAKERS' | split: '|'
-  assign fallback_tickers = 'VOIR LES COLLECTIONS|VOIR LES COLLECTIONS|VOIR LES COLLECTIONS' | split: '|'
 %}
 
 <section
@@ -13,9 +12,6 @@
     --collections-trio-grid-gap: {{ section.settings.grid_gap }}px;
     --collections-trio-line-color: {{ section.settings.line_color }};
     --collections-trio-card-bg: {{ section.settings.card_bg }};
-    --collections-trio-ticker-bg: {{ section.settings.ticker_bg }};
-    --collections-trio-ticker-color: {{ section.settings.ticker_color }};
-    --collections-trio-ticker-duration: {{ section.settings.ticker_duration }}s;
   "
 >
   <div class="collections-trio__inner">
@@ -28,10 +24,8 @@
           assign desktop_image = blank
           assign mobile_image = blank
           assign image_focus = '50% 50%'
-          assign show_ticker = true
           assign title = fallback_titles[slot_index]
           assign subtitle = fallback_subtitles[slot_index]
-          assign ticker_text = fallback_tickers[slot_index]
           assign cta_label = fallback_cta_labels[slot_index]
           assign cta_link = ''
 
@@ -39,10 +33,8 @@
             assign collection_ref = block.settings.collection
             assign title = block.settings.title | default: collection_ref.title | default: fallback_titles[slot_index]
             assign subtitle = block.settings.subtitle | default: fallback_subtitles[slot_index]
-            assign ticker_text = block.settings.ticker_text | default: fallback_tickers[slot_index]
             assign cta_label = block.settings.cta_label | default: title
             assign cta_link = block.settings.cta_link | default: collection_ref.url
-            assign show_ticker = block.settings.show_ticker
             assign image_focus = block.settings.image_focus | default: '50% 50%'
 
             if block.settings.image_desktop != blank
@@ -92,17 +84,6 @@
           </div>
 
           <span class="collections-trio__corners" aria-hidden="true"></span>
-
-          {% if show_ticker %}
-            <div class="collections-trio__ticker-shell">
-              <div class="collections-trio__ticker" aria-hidden="true">
-                <span class="collections-trio__ticker-track">
-                  <span>{{ ticker_text }} - {{ ticker_text }} - {{ ticker_text }} - {{ ticker_text }} -</span>
-                  <span>{{ ticker_text }} - {{ ticker_text }} - {{ ticker_text }} - {{ ticker_text }} -</span>
-                </span>
-              </div>
-            </div>
-          {% endif %}
 
           <div class="collections-trio__copy">
             {% if title != blank %}

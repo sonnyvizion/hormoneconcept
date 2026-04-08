@@ -1,0 +1,256 @@
+{% liquid
+  assign desktop_image = section.settings.image_desktop | default: section.settings.image_mobile
+  assign mobile_image = section.settings.image_mobile | default: desktop_image
+  assign image_alt = section.settings.image_alt | default: section.settings.title | default: section.settings.store_name | default: 'Boutique'
+%}
+
+<section
+  class="store-showcase"
+  style="
+    --store-showcase-height: {{ section.settings.image_height }};
+    --store-showcase-frame-color: {{ section.settings.frame_color }};
+    --store-showcase-frame-opacity: {{ section.settings.frame_opacity | times: 0.01 }};
+    --store-showcase-info-bg: {{ section.settings.info_bg }};
+    --store-showcase-text: {{ section.settings.text_color }};
+  "
+>
+  <div class="store-showcase__media-shell">
+    <div class="store-showcase__media-frame">
+      {% if desktop_image != blank %}
+        <picture class="store-showcase__picture">
+          {% if mobile_image != blank %}
+            <source media="(max-width: 740px)" srcset="{{ mobile_image | image_url: width: 1600 }}">
+          {% endif %}
+          {{
+            desktop_image
+            | image_url: width: 3200
+            | image_tag:
+              loading: 'lazy',
+              class: 'store-showcase__image',
+              alt: image_alt
+          }}
+        </picture>
+      {% else %}
+        <div class="store-showcase__placeholder"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="store-showcase__info">
+    <div class="store-showcase__info-inner">
+      <div class="store-showcase__address">
+        {% if section.settings.title != blank %}
+          <p class="store-showcase__line">{{ section.settings.title }}</p>
+        {% endif %}
+        {% if section.settings.store_name != blank %}
+          <p class="store-showcase__line">{{ section.settings.store_name }}</p>
+        {% endif %}
+        {% if section.settings.address_line_1 != blank %}
+          <p class="store-showcase__line">{{ section.settings.address_line_1 }}</p>
+        {% endif %}
+        {% if section.settings.address_line_2 != blank %}
+          <p class="store-showcase__line">{{ section.settings.address_line_2 }}</p>
+        {% endif %}
+        {% if section.settings.phone != blank %}
+          <p class="store-showcase__line">{{ section.settings.phone }}</p>
+        {% endif %}
+      </div>
+
+      <div class="store-showcase__hours">
+        {% if section.blocks.size > 0 %}
+          {% for block in section.blocks %}
+            <div class="store-showcase__hours-row" {{ block.shopify_attributes }}>
+              <span class="store-showcase__day">{{ block.settings.day }}</span>
+              <span class="store-showcase__time">{{ block.settings.hours }}</span>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="store-showcase__hours-row">
+            <span class="store-showcase__day">LUNDI</span>
+            <span class="store-showcase__time">11:00 - 18:00</span>
+          </div>
+          <div class="store-showcase__hours-row">
+            <span class="store-showcase__day">MARDI</span>
+            <span class="store-showcase__time">11:00 - 18:00</span>
+          </div>
+          <div class="store-showcase__hours-row">
+            <span class="store-showcase__day">MERCREDI</span>
+            <span class="store-showcase__time">11:00 - 18:00</span>
+          </div>
+          <div class="store-showcase__hours-row">
+            <span class="store-showcase__day">JEUDI</span>
+            <span class="store-showcase__time">11:00 - 18:00</span>
+          </div>
+          <div class="store-showcase__hours-row">
+            <span class="store-showcase__day">VENDREDI</span>
+            <span class="store-showcase__time">11:00 - 18:00</span>
+          </div>
+          <div class="store-showcase__hours-row">
+            <span class="store-showcase__day">SAMEDI</span>
+            <span class="store-showcase__time">11:00 - 18:00</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Store showcase",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image_desktop",
+      "label": "Image desktop"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "Image mobile"
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "Texte alternatif image",
+      "default": "Boutique Hormone Concept"
+    },
+    {
+      "type": "range",
+      "id": "image_height",
+      "label": "Hauteur image (vh)",
+      "min": 44,
+      "max": 92,
+      "step": 1,
+      "default": 66
+    },
+    {
+      "type": "color",
+      "id": "frame_color",
+      "label": "Couleur du cadre image",
+      "default": "#E4E6E8"
+    },
+    {
+      "type": "range",
+      "id": "frame_opacity",
+      "label": "Opacite du cadre image (%)",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "default": 62
+    },
+    {
+      "type": "color",
+      "id": "info_bg",
+      "label": "Fond du bloc infos",
+      "default": "#D6D6D6"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Couleur du texte",
+      "default": "#151B22"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "LA BOUTIQUE"
+    },
+    {
+      "type": "text",
+      "id": "store_name",
+      "label": "Nom de la boutique",
+      "default": "HORMONE CONCEPT"
+    },
+    {
+      "type": "text",
+      "id": "address_line_1",
+      "label": "Adresse ligne 1",
+      "default": "102 RUE DE LONGCHAMP"
+    },
+    {
+      "type": "text",
+      "id": "address_line_2",
+      "label": "Adresse ligne 2",
+      "default": "PARIS, 75016"
+    },
+    {
+      "type": "text",
+      "id": "phone",
+      "label": "Telephone",
+      "default": "01 73 74 88 18"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "hours_row",
+      "name": "Ligne horaire",
+      "settings": [
+        {
+          "type": "text",
+          "id": "day",
+          "label": "Jour",
+          "default": "LUNDI"
+        },
+        {
+          "type": "text",
+          "id": "hours",
+          "label": "Horaires",
+          "default": "11:00 - 18:00"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 7,
+  "presets": [
+    {
+      "name": "Store showcase",
+      "blocks": [
+        {
+          "type": "hours_row",
+          "settings": {
+            "day": "LUNDI",
+            "hours": "11:00 - 18:00"
+          }
+        },
+        {
+          "type": "hours_row",
+          "settings": {
+            "day": "MARDI",
+            "hours": "11:00 - 18:00"
+          }
+        },
+        {
+          "type": "hours_row",
+          "settings": {
+            "day": "MERCREDI",
+            "hours": "11:00 - 18:00"
+          }
+        },
+        {
+          "type": "hours_row",
+          "settings": {
+            "day": "JEUDI",
+            "hours": "11:00 - 18:00"
+          }
+        },
+        {
+          "type": "hours_row",
+          "settings": {
+            "day": "VENDREDI",
+            "hours": "11:00 - 18:00"
+          }
+        },
+        {
+          "type": "hours_row",
+          "settings": {
+            "day": "SAMEDI",
+            "hours": "11:00 - 18:00"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

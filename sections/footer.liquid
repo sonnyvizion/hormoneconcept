@@ -1,6 +1,199 @@
-<footer class="site-footer">
-  <div class="container">
-    <p>{{ section.settings.text }}</p>
+{% liquid
+  assign footer_line_alpha = section.settings.line_opacity | divided_by: 100.0
+  assign footer_line_color = section.settings.line_color | color_modify: 'alpha', footer_line_alpha
+%}
+
+<footer
+  class="site-footer site-footer--showcase"
+  style="
+    --footer-bg: {{ section.settings.bg_color }};
+    --footer-line: {{ footer_line_color }};
+    --footer-text: {{ section.settings.text_color }};
+    --footer-muted: {{ section.settings.muted_color }};
+    --footer-input-text: {{ section.settings.input_text_color }};
+  "
+>
+  <div class="site-footer-v2">
+    <div class="site-footer-v2__panel">
+      <div class="site-footer-v2__newsletter">
+        {% if section.settings.newsletter_title != blank %}
+          <h2 class="site-footer-v2__heading">{{ section.settings.newsletter_title }}</h2>
+        {% endif %}
+
+        {% if section.settings.newsletter_copy != blank %}
+          <p class="site-footer-v2__copy">{{ section.settings.newsletter_copy | newline_to_br }}</p>
+        {% endif %}
+
+        {% assign newsletter_form_id = 'FooterNewsletterForm-' | append: section.id %}
+        {% form 'customer', id: newsletter_form_id, class: 'site-footer-v2__newsletter-form' %}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          <div class="site-footer-v2__field-shell">
+            <input
+              id="FooterNewsletterEmail-{{ section.id }}"
+              class="site-footer-v2__email-input"
+              type="email"
+              name="contact[email]"
+              value="{% if customer %}{{ customer.email }}{% endif %}"
+              aria-label="{{ section.settings.newsletter_placeholder }}"
+              autocorrect="off"
+              autocapitalize="off"
+              autocomplete="email"
+              placeholder="{{ section.settings.newsletter_placeholder }}"
+              required
+            >
+          </div>
+
+          <button type="submit" class="site-footer-v2__submit">
+            {{ section.settings.newsletter_cta }}
+          </button>
+
+          {% if form.posted_successfully? %}
+            <p class="site-footer-v2__form-message">{{ section.settings.newsletter_success }}</p>
+          {% elsif form.errors %}
+            <p class="site-footer-v2__form-message site-footer-v2__form-message--error">{{ section.settings.newsletter_error }}</p>
+          {% endif %}
+        {% endform %}
+      </div>
+
+      <div class="site-footer-v2__meta">
+        <div class="site-footer-v2__links-row">
+          <div class="site-footer-v2__links-group site-footer-v2__links-group--social">
+            {% if section.settings.social_title != blank %}
+              <h3 class="site-footer-v2__group-title">{{ section.settings.social_title }}</h3>
+            {% endif %}
+
+            <ul class="site-footer-v2__links-list" role="list">
+              {% if section.settings.social_link_1_label != blank %}
+                <li>
+                  {% if section.settings.social_link_1_url != blank %}
+                    <a href="{{ section.settings.social_link_1_url }}">{{ section.settings.social_link_1_label }}</a>
+                  {% else %}
+                    <span>{{ section.settings.social_link_1_label }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+
+              {% if section.settings.social_link_2_label != blank %}
+                <li>
+                  {% if section.settings.social_link_2_url != blank %}
+                    <a href="{{ section.settings.social_link_2_url }}">{{ section.settings.social_link_2_label }}</a>
+                  {% else %}
+                    <span>{{ section.settings.social_link_2_label }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+
+              {% if section.settings.social_link_3_label != blank %}
+                <li>
+                  {% if section.settings.social_link_3_url != blank %}
+                    <a href="{{ section.settings.social_link_3_url }}">{{ section.settings.social_link_3_label }}</a>
+                  {% else %}
+                    <span>{{ section.settings.social_link_3_label }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+
+          <div class="site-footer-v2__links-group site-footer-v2__links-group--legal">
+            {% if section.settings.legal_title != blank %}
+              <h3 class="site-footer-v2__group-title">{{ section.settings.legal_title }}</h3>
+            {% endif %}
+
+            <ul class="site-footer-v2__links-list" role="list">
+              {% if section.settings.legal_link_1_label != blank %}
+                <li>
+                  {% if section.settings.legal_link_1_url != blank %}
+                    <a href="{{ section.settings.legal_link_1_url }}">{{ section.settings.legal_link_1_label }}</a>
+                  {% else %}
+                    <span>{{ section.settings.legal_link_1_label }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+
+              {% if section.settings.legal_link_2_label != blank %}
+                <li>
+                  {% if section.settings.legal_link_2_url != blank %}
+                    <a href="{{ section.settings.legal_link_2_url }}">{{ section.settings.legal_link_2_label }}</a>
+                  {% else %}
+                    <span>{{ section.settings.legal_link_2_label }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+
+              {% if section.settings.legal_link_3_label != blank %}
+                <li>
+                  {% if section.settings.legal_link_3_url != blank %}
+                    <a href="{{ section.settings.legal_link_3_url }}">{{ section.settings.legal_link_3_label }}</a>
+                  {% else %}
+                    <span>{{ section.settings.legal_link_3_label }}</span>
+                  {% endif %}
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+
+          <div class="site-footer-v2__visual">
+            {% if section.settings.media_video != blank %}
+              {{
+                section.settings.media_video
+                | video_tag:
+                  autoplay: true,
+                  loop: true,
+                  muted: true,
+                  controls: false,
+                  playsinline: true,
+                  class: 'site-footer-v2__visual-video'
+              }}
+            {% elsif section.settings.media_image != blank %}
+              {{
+                section.settings.media_image
+                | image_url: width: 900
+                | image_tag:
+                  class: 'site-footer-v2__visual-image',
+                  loading: 'lazy',
+                  alt: section.settings.media_alt
+              }}
+            {% else %}
+              <div class="site-footer-v2__visual-placeholder" aria-hidden="true">VIDEO</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="site-footer-v2__address">
+          {% if section.settings.store_title != blank %}
+            <p class="site-footer-v2__address-line site-footer-v2__address-line--strong">{{ section.settings.store_title }}</p>
+          {% endif %}
+          {% if section.settings.store_line_1 != blank %}
+            <p class="site-footer-v2__address-line">{{ section.settings.store_line_1 }}</p>
+          {% endif %}
+          {% if section.settings.store_line_2 != blank %}
+            <p class="site-footer-v2__address-line">{{ section.settings.store_line_2 }}</p>
+          {% endif %}
+          {% if section.settings.store_line_3 != blank %}
+            <p class="site-footer-v2__address-line">{{ section.settings.store_line_3 }}</p>
+          {% endif %}
+          {% if section.settings.store_phone != blank %}
+            <p class="site-footer-v2__address-line">{{ section.settings.store_phone }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer-v2__brand">
+      {% if section.settings.bottom_logo_image != blank %}
+        {{
+          section.settings.bottom_logo_image
+          | image_url: width: 2800
+          | image_tag:
+            class: 'site-footer-v2__brand-image',
+            loading: 'lazy',
+            alt: section.settings.bottom_logo_alt | default: shop.name
+        }}
+      {% else %}
+        <span class="site-footer-v2__brand-text">{{ section.settings.bottom_logo_text }}</span>
+      {% endif %}
+    </div>
   </div>
 </footer>
 
@@ -9,10 +202,239 @@
   "name": "Footer",
   "settings": [
     {
+      "type": "header",
+      "content": "Newsletter"
+    },
+    {
       "type": "text",
-      "id": "text",
-      "label": "Texte",
-      "default": "© 2026 Hormone Concept"
+      "id": "newsletter_title",
+      "label": "Titre newsletter",
+      "default": "NEWSLETTER"
+    },
+    {
+      "type": "textarea",
+      "id": "newsletter_copy",
+      "label": "Texte newsletter",
+      "default": "RESTEZ INFORME EN VOUS\nINSCRIVANT A LA NEWSLETTER"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_placeholder",
+      "label": "Placeholder email",
+      "default": "TON EMAIL*"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_cta",
+      "label": "Texte bouton",
+      "default": "JE M'INSCRIS ↘"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_success",
+      "label": "Message de succes",
+      "default": "MERCI POUR TON INSCRIPTION."
+    },
+    {
+      "type": "text",
+      "id": "newsletter_error",
+      "label": "Message d'erreur",
+      "default": "UNE ERREUR EST SURVENUE, REESSAIE."
+    },
+    {
+      "type": "header",
+      "content": "Bloc liens"
+    },
+    {
+      "type": "text",
+      "id": "social_title",
+      "label": "Titre reseaux",
+      "default": "RESEAUX SOCIAUX"
+    },
+    {
+      "type": "text",
+      "id": "social_link_1_label",
+      "label": "Reseau 1 - libelle",
+      "default": "INSTAGRAM"
+    },
+    {
+      "type": "url",
+      "id": "social_link_1_url",
+      "label": "Reseau 1 - URL"
+    },
+    {
+      "type": "text",
+      "id": "social_link_2_label",
+      "label": "Reseau 2 - libelle",
+      "default": "WHATSAPP"
+    },
+    {
+      "type": "url",
+      "id": "social_link_2_url",
+      "label": "Reseau 2 - URL"
+    },
+    {
+      "type": "text",
+      "id": "social_link_3_label",
+      "label": "Reseau 3 - libelle",
+      "default": "X"
+    },
+    {
+      "type": "url",
+      "id": "social_link_3_url",
+      "label": "Reseau 3 - URL"
+    },
+    {
+      "type": "text",
+      "id": "legal_title",
+      "label": "Titre legal",
+      "default": "LEGALES"
+    },
+    {
+      "type": "text",
+      "id": "legal_link_1_label",
+      "label": "Legal 1 - libelle",
+      "default": "MENTIONS LEGALES"
+    },
+    {
+      "type": "url",
+      "id": "legal_link_1_url",
+      "label": "Legal 1 - URL"
+    },
+    {
+      "type": "text",
+      "id": "legal_link_2_label",
+      "label": "Legal 2 - libelle",
+      "default": "CVG"
+    },
+    {
+      "type": "url",
+      "id": "legal_link_2_url",
+      "label": "Legal 2 - URL"
+    },
+    {
+      "type": "text",
+      "id": "legal_link_3_label",
+      "label": "Legal 3 - libelle",
+      "default": "RGPD"
+    },
+    {
+      "type": "url",
+      "id": "legal_link_3_url",
+      "label": "Legal 3 - URL"
+    },
+    {
+      "type": "video",
+      "id": "media_video",
+      "label": "Video sneaker"
+    },
+    {
+      "type": "image_picker",
+      "id": "media_image",
+      "label": "Image de remplacement"
+    },
+    {
+      "type": "text",
+      "id": "media_alt",
+      "label": "Texte alternatif media",
+      "default": "Sneaker"
+    },
+    {
+      "type": "header",
+      "content": "Adresse boutique"
+    },
+    {
+      "type": "text",
+      "id": "store_title",
+      "label": "Nom",
+      "default": "HORMONE CONCEPT"
+    },
+    {
+      "type": "text",
+      "id": "store_line_1",
+      "label": "Adresse ligne 1",
+      "default": "102 RUE DE LONGCHAMP"
+    },
+    {
+      "type": "text",
+      "id": "store_line_2",
+      "label": "Adresse ligne 2",
+      "default": "PARIS, 75016"
+    },
+    {
+      "type": "text",
+      "id": "store_line_3",
+      "label": "Adresse ligne 3"
+    },
+    {
+      "type": "text",
+      "id": "store_phone",
+      "label": "Telephone",
+      "default": "01 73 74 88 18"
+    },
+    {
+      "type": "header",
+      "content": "Grand logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "bottom_logo_image",
+      "label": "Logo image"
+    },
+    {
+      "type": "text",
+      "id": "bottom_logo_alt",
+      "label": "Texte alternatif logo",
+      "default": "HORMONE"
+    },
+    {
+      "type": "text",
+      "id": "bottom_logo_text",
+      "label": "Texte logo (fallback)",
+      "default": "HORMONE"
+    },
+    {
+      "type": "header",
+      "content": "Couleurs"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Fond",
+      "default": "#2A2327"
+    },
+    {
+      "type": "color",
+      "id": "line_color",
+      "label": "Lignes et cadres",
+      "default": "#E6E9EE"
+    },
+    {
+      "type": "range",
+      "id": "line_opacity",
+      "label": "Opacite des lignes (%)",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "default": 48
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Texte principal",
+      "default": "#F2F4F7"
+    },
+    {
+      "type": "color",
+      "id": "muted_color",
+      "label": "Texte secondaire",
+      "default": "#B8BDC5"
+    },
+    {
+      "type": "color",
+      "id": "input_text_color",
+      "label": "Texte champ email",
+      "default": "#8D929B"
     }
   ]
 }

@@ -1866,15 +1866,129 @@
     const items = Array.from(sectionRoot.querySelectorAll('[data-category-item]'));
     const copyItems = Array.from(sectionRoot.querySelectorAll('[data-category-copy]'));
     const stepItems = Array.from(sectionRoot.querySelectorAll('[data-category-step]'));
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (!stack || !items.length) return;
 
     let progressFrame = 0;
     let layoutFrame = 0;
     let activeIndex = -1;
+    const categoryLabelScrambleState = new WeakMap();
+
+    const getCopyIndex = (copyEl, fallbackIndex) => Number.parseInt(copyEl?.dataset.index || `${fallbackIndex}`, 10);
+
+    const getCopyByIndex = (index) => {
+      const target = Number.parseInt(`${index}`, 10);
+      if (!Number.isInteger(target)) return null;
+      return copyItems.find((copyEl, fallbackIndex) => getCopyIndex(copyEl, fallbackIndex) === target) || null;
+    };
+
+    const getCopyLabel = (copyEl) => copyEl?.querySelector('.video-hero__availability-label') || null;
+
+    const getLabelFinalText = (labelEl) => {
+      if (!labelEl) return '';
+      const finalText = normalizeText(
+        labelEl.dataset.copyFinal
+        || labelEl.dataset.scrambleFinal
+        || labelEl.textContent
+        || ''
+      );
+      if (finalText) {
+        labelEl.dataset.scrambleFinal = finalText;
+        labelEl.textContent = finalText;
+      }
+      return finalText;
+    };
+
+    const clearCategoryLabelScramble = (labelEl) => {
+      if (!labelEl) return;
+      const scrambleState = categoryLabelScrambleState.get(labelEl);
+      if (!scrambleState) return;
+      if (scrambleState.intervalId) {
+        window.clearInterval(scrambleState.intervalId);
+      }
+      unlockInteractiveWidth(scrambleState.lockTarget, scrambleState.widthLockState);
+      categoryLabelScrambleState.delete(labelEl);
+    };
+
+    const runCategoryLabelSwapScramble = (labelEl, startText, finalText) => {
+      if (!labelEl || !finalText) return;
+
+      const fromText = normalizeText(startText || finalText) || finalText;
+      clearCategoryLabelScramble(labelEl);
+      clearInteractiveScramble(labelEl);
+
+      const lockTarget = getInteractiveLockTarget(labelEl);
+      const widthLockState = lockInteractiveWidth(lockTarget);
+      const totalSteps = 12;
+      const intervalMs = 26;
+      let step = 0;
+
+      labelEl.textContent = fromText;
+
+      const intervalId = window.setInterval(() => {
+        step += 1;
+        const revealIndex = Math.floor((step / totalSteps) * finalText.length);
+        let output = '';
+
+        for (let i = 0; i < finalText.length; i += 1) {
+          const finalChar = finalText[i];
+          const fromChar = fromText[i] || '';
+
+          if (preserveScrambleChar(finalChar)) {
+            output += finalChar;
+          } else if (step <= 2 && fromChar && !preserveScrambleChar(fromChar)) {
+            output += fromChar;
+          } else if (i <= revealIndex) {
+            output += finalChar;
+          } else {
+            output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          }
+        }
+
+        labelEl.textContent = output;
+
+        if (step >= totalSteps) {
+          window.clearInterval(intervalId);
+          labelEl.textContent = finalText;
+          unlockInteractiveWidth(lockTarget, widthLockState);
+          categoryLabelScrambleState.delete(labelEl);
+        }
+      }, intervalMs);
+
+      categoryLabelScrambleState.set(labelEl, {
+        intervalId,
+        lockTarget,
+        widthLockState
+      });
+    };
+
+    const animateCategoryLabelTransition = (previousIndex, nextIndex) => {
+      const nextCopy = getCopyByIndex(nextIndex);
+      const nextLabel = getCopyLabel(nextCopy);
+      if (!nextLabel) return;
+
+      const nextFinalText = getLabelFinalText(nextLabel);
+      if (!nextFinalText) return;
+
+      if (previousIndex < 0 || reduceMotionQuery.matches) {
+        clearCategoryLabelScramble(nextLabel);
+        clearInteractiveScramble(nextLabel);
+        nextLabel.textContent = nextFinalText;
+        return;
+      }
+
+      const previousCopy = getCopyByIndex(previousIndex);
+      const previousLabel = getCopyLabel(previousCopy);
+      const previousFinalText = getLabelFinalText(previousLabel);
+      const startText = previousFinalText || nextFinalText;
+
+      runCategoryLabelSwapScramble(nextLabel, startText, nextFinalText);
+    };
 
     const setActiveState = (nextIndex) => {
       const clampedIndex = Math.min(items.length - 1, Math.max(0, nextIndex));
       if (clampedIndex === activeIndex) return;
+      const previousActiveIndex = activeIndex;
       activeIndex = clampedIndex;
 
       copyItems.forEach((copyEl, index) => {
@@ -1887,6 +2001,8 @@
         stepEl.classList.toggle('is-past', stepIndex < activeIndex);
         stepEl.classList.toggle('is-active', stepIndex === activeIndex);
       });
+
+      animateCategoryLabelTransition(previousActiveIndex, activeIndex);
     };
 
     const getViewportHeight = () => Math.max(
