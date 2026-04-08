@@ -1,6 +1,14 @@
 <header class="site-header">
   <div class="site-header-shell">
     <div class="site-header-frame">
+      <nav class="header-cell header-menu" aria-label="Menu principal">
+        <ul>
+          {% for link in section.settings.menu.links %}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+
       <a class="header-cell header-brand" href="{{ routes.root_url }}">
         {% if section.settings.logo_image != blank %}
           {% assign logo_style = '--header-logo-width: ' | append: section.settings.logo_width | append: 'px;' %}
@@ -15,17 +23,11 @@
         {% endif %}
       </a>
 
-      <nav class="header-cell header-menu" aria-label="Menu principal">
-        <ul>
-          {% for link in section.settings.menu.links %}
-            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-          {% endfor %}
-        </ul>
-      </nav>
-
-      <a class="header-cell header-link header-link--search" href="{{ routes.search_url }}">RECHERCHER</a>
-      <a class="header-cell header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
-      <a class="header-cell header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
+      <div class="header-cell header-actions">
+        <a class="header-link header-link--search" href="{{ routes.search_url }}">RECHERCHER</a>
+        <a class="header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
+        <a class="header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
+      </div>
     </div>
   </div>
 </header>

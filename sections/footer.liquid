@@ -25,6 +25,7 @@
         {% endif %}
 
         {% assign newsletter_form_id = 'FooterNewsletterForm-' | append: section.id %}
+        {% assign newsletter_cta_label = section.settings.newsletter_cta | replace: '↘', '' | strip %}
         {% form 'customer', id: newsletter_form_id, class: 'site-footer-v2__newsletter-form' %}
           <input type="hidden" name="contact[tags]" value="newsletter">
           <div class="site-footer-v2__field-shell">
@@ -44,7 +45,8 @@
           </div>
 
           <button type="submit" class="site-footer-v2__submit">
-            {{ section.settings.newsletter_cta }}
+            <span class="site-footer-v2__submit-label">{{ newsletter_cta_label }}</span>
+            <span class="site-footer-v2__submit-arrow" aria-hidden="true">↘</span>
           </button>
 
           {% if form.posted_successfully? %}

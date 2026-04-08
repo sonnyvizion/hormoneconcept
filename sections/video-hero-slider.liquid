@@ -95,7 +95,9 @@
                   <div class="video-hero__copy-left">
                     <h2>{{ block.settings.title }}</h2>
                     {% if block.settings.subtitle != blank %}
-                      <p>[ {{ block.settings.subtitle }} ]</p>
+                      <p class="video-hero__subtitle">
+                        <span class="video-hero__subtitle-bracket">[ {{ block.settings.subtitle }} ]</span>
+                      </p>
                     {% endif %}
                   </div>
 
@@ -112,7 +114,9 @@
                   <div class="video-hero__copy-right">
                     <h3>{{ block.settings.right_title | default: block.settings.title }}</h3>
                     {% if block.settings.right_subtitle != blank %}
-                      <p>[ {{ block.settings.right_subtitle }} ]</p>
+                      <p class="video-hero__subtitle">
+                        <span class="video-hero__subtitle-bracket">[ {{ block.settings.right_subtitle }} ]</span>
+                      </p>
                     {% endif %}
                   </div>
                 </div>
@@ -121,7 +125,10 @@
           {% else %}
             <article class="video-hero__slide is-active" data-slide data-index="0" data-image-desktop="" data-image-mobile="" data-transition-desktop="" data-transition-mobile="" data-transition-prev-desktop="" data-transition-prev-mobile="" data-image-alt="Hero">
               <div class="video-hero__copy-grid">
-                <div class="video-hero__copy-left"><h2>Nom de la paire</h2><p>[ Sous-titre ]</p></div>
+                <div class="video-hero__copy-left">
+                  <h2>Nom de la paire</h2>
+                  <p class="video-hero__subtitle"><span class="video-hero__subtitle-bracket">[ Sous-titre ]</span></p>
+                </div>
                 <div class="video-hero__copy-center">
                   <span class="video-hero__availability">
                     <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
@@ -129,7 +136,10 @@
                     <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
                   </span>
                 </div>
-                <div class="video-hero__copy-right"><h3>Modele</h3><p>[ DISPONIBLE ]</p></div>
+                <div class="video-hero__copy-right">
+                  <h3>Modele</h3>
+                  <p class="video-hero__subtitle"><span class="video-hero__subtitle-bracket">[ DISPONIBLE ]</span></p>
+                </div>
               </div>
             </article>
           {% endif %}
@@ -138,8 +148,25 @@
         {% if section.blocks.size > 0 %}
           <div class="video-hero__footer">
             <div class="video-hero__controls" role="group" aria-label="Navigation produits">
-              <button class="video-hero__prev" type="button" data-prev-trigger hidden>{{ section.settings.prev_label }}</button>
-              <button class="video-hero__next" type="button" data-next-trigger>{{ section.settings.next_label }}</button>
+              <button
+                class="video-hero__prev"
+                type="button"
+                data-prev-trigger
+                data-disable-scramble="true"
+                aria-label="{{ section.settings.prev_label }}"
+                hidden
+              >
+                ←
+              </button>
+              <button
+                class="video-hero__next"
+                type="button"
+                data-next-trigger
+                data-disable-scramble="true"
+                aria-label="{{ section.settings.next_label }}"
+              >
+                →
+              </button>
             </div>
             <div class="video-hero__steps" role="tablist" aria-label="Navigation paires">
               {% for block in section.blocks %}

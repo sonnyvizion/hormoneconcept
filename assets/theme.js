@@ -6,18 +6,24 @@
   const NAV_CONTROL_PULSE_MS = 320;
   const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const COPY_OUT_DURATION_MS = 400;
-  const COPY_ELEMENT_SELECTOR = '.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid p, .video-hero__copy-grid .video-hero__availability-label';
-  const INTERACTIVE_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__prev, .video-hero__next, .video-hero__availability';
+  const COPY_ELEMENT_SELECTOR = '.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid .video-hero__subtitle-bracket, .video-hero__copy-grid .video-hero__availability-label';
+  const INTERACTIVE_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__prev, .video-hero__next, .video-hero__availability, .site-footer-v2__links-list a, .site-footer-v2__links-list span, .site-footer-v2__submit';
   const interactiveScrambleState = new WeakMap();
 
   const getInteractiveTextTarget = (element) => {
     if (!element) return null;
-    return element.querySelector?.('.video-hero__availability-label') || element;
+    return element.querySelector?.('.video-hero__availability-label, .site-footer-v2__submit-label') || element;
   };
 
   const getInteractiveLockTarget = (element) => {
     if (!element) return null;
-    return element.closest?.('.video-hero__availability') || element;
+    return element.closest?.('.video-hero__availability, .site-footer-v2__submit') || element;
+  };
+
+  const isInteractiveScrambleDisabled = (element) => {
+    if (!element) return false;
+    if (element.dataset?.disableScramble === 'true') return true;
+    return Boolean(element.closest?.('[data-disable-scramble="true"]'));
   };
 
   const preserveScrambleChar = (char) => /[\s\[\](),.:;'’/\-]/.test(char);
@@ -91,6 +97,7 @@
   const runInteractiveScramble = (element, options = {}) => {
     const textTarget = getInteractiveTextTarget(element);
     if (!textTarget) return;
+    if (isInteractiveScrambleDisabled(element) || isInteractiveScrambleDisabled(textTarget)) return;
 
     const scrambleDirection = options.direction === 'out' ? 'out' : 'in';
     const totalSteps = Number.isFinite(options.totalSteps)
@@ -253,25 +260,6 @@
   const initVideoHero = (sectionRoot) => {
     if (!sectionRoot || sectionRoot.dataset.videoHeroInit === 'true') return;
     sectionRoot.dataset.videoHeroInit = 'true';
-
-    const heroSectionWrapper = sectionRoot.closest('.shopify-section');
-    if (heroSectionWrapper && heroSectionWrapper.dataset.videoHeroStickyInit !== 'true') {
-      heroSectionWrapper.dataset.videoHeroStickyInit = 'true';
-      heroSectionWrapper.classList.add('shopify-section--video-hero-sticky');
-
-      let isFirstAboveSection = true;
-      let siblingSection = heroSectionWrapper.nextElementSibling;
-      while (siblingSection) {
-        if (siblingSection.classList?.contains('shopify-section')) {
-          siblingSection.classList.add('shopify-section--above-video-hero');
-          if (isFirstAboveSection) {
-            siblingSection.classList.add('shopify-section--above-video-hero-first');
-            isFirstAboveSection = false;
-          }
-        }
-        siblingSection = siblingSection.nextElementSibling;
-      }
-    }
 
     const slides = Array.from(sectionRoot.querySelectorAll('[data-slide]'));
     if (!slides.length) return;
