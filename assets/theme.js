@@ -5,10 +5,14 @@
   const NAV_CONTROL_LEAVE_MS = 300;
   const NAV_CONTROL_PULSE_MS = 320;
   const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const CTA_SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_';
   const COPY_OUT_DURATION_MS = 400;
+  const LENIS_DESKTOP_QUERY = '(hover: hover) and (pointer: fine)';
   const COPY_ELEMENT_SELECTOR = '.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid .video-hero__subtitle-bracket, .video-hero__copy-grid .video-hero__availability-label';
+  const CTA_POINTER_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__availability, .video-hero__prev, .video-hero__next, .site-footer-v2__submit';
   const INTERACTIVE_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__prev, .video-hero__next, .video-hero__availability, .site-footer-v2__links-list a, .site-footer-v2__links-list span, .site-footer-v2__submit';
   const interactiveScrambleState = new WeakMap();
+  const ctaHoverScrambleState = new WeakMap();
 
   const getInteractiveTextTarget = (element) => {
     if (!element) return null;
@@ -105,6 +109,9 @@
       : (scrambleDirection === 'out' ? 8 : 10);
     const intervalMs = Number.isFinite(options.intervalMs) ? options.intervalMs : 28;
     const restoreFinalText = options.restoreFinalText !== false;
+    const scrambleChars = typeof options.charSet === 'string' && options.charSet.length
+      ? options.charSet
+      : SCRAMBLE_CHARS;
 
     const finalText = getInteractiveFinalText(textTarget);
     if (!finalText) return;
@@ -131,12 +138,12 @@
           output += finalChar;
         } else if (scrambleDirection === 'out') {
           output += i <= revealIndex
-            ? SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
+            ? scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
             : finalChar;
         } else if (i <= revealIndex) {
           output += finalChar;
         } else {
-          output += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          output += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
         }
       }
 
@@ -166,8 +173,133 @@
     });
   };
 
+  const buildCtaHoverScrambleOutput = (finalText, focusIndex, frameSeed = 0) => {
+    const coreRadius = 1.2;
+    const edgeRadius = 2.1;
+    let output = '';
+
+    for (let i = 0; i < finalText.length; i += 1) {
+      const finalChar = finalText[i];
+      if (preserveScrambleChar(finalChar)) {
+        output += finalChar;
+        continue;
+      }
+
+      const distance = Math.abs(i - focusIndex);
+      if (distance > edgeRadius) {
+        output += finalChar;
+        continue;
+      }
+
+      const pseudo = Math.abs(Math.sin(((i + 1) * 12.9898) + (frameSeed * 0.91)));
+      const intensity = distance <= coreRadius
+        ? 1
+        : Math.max(0, 1 - ((distance - coreRadius) / (edgeRadius - coreRadius)));
+      const scrambleChance = 0.12 + (intensity * 0.34);
+
+      if (pseudo < scrambleChance) {
+        const charIndex = Math.floor((pseudo * 1000 + frameSeed + i) % CTA_SCRAMBLE_CHARS.length);
+        output += CTA_SCRAMBLE_CHARS[charIndex];
+      } else {
+        output += finalChar;
+      }
+    }
+
+    return output;
+  };
+
+  const stopCtaHoverScramble = (element, resetText = true) => {
+    const textTarget = getInteractiveTextTarget(element);
+    if (!textTarget) return;
+
+    const state = ctaHoverScrambleState.get(textTarget);
+    if (state?.rafId) {
+      window.cancelAnimationFrame(state.rafId);
+    }
+
+    ctaHoverScrambleState.delete(textTarget);
+
+    if (!resetText) return;
+    const finalText = getInteractiveFinalText(textTarget);
+    if (finalText) {
+      textTarget.textContent = finalText;
+    }
+  };
+
+  const initCtaHoverScramble = (root = document) => {
+    root.querySelectorAll(CTA_POINTER_SCRAMBLE_SELECTOR).forEach((element) => {
+      if (element.dataset.ctaHoverScrambleInit === 'true') return;
+      element.dataset.ctaHoverScrambleInit = 'true';
+
+      const textTarget = getInteractiveTextTarget(element);
+      if (!textTarget) return;
+
+      const finalText = normalizeText(textTarget.textContent || '');
+      textTarget.dataset.scrambleFinal = finalText;
+      textTarget.textContent = finalText;
+
+      const getPointerRatio = (event) => {
+        const rect = element.getBoundingClientRect();
+        if (!rect.width) return 0.5;
+        const pointerX = event.clientX - rect.left;
+        return Math.min(1, Math.max(0, pointerX / rect.width));
+      };
+
+      const tick = (time) => {
+        const state = ctaHoverScrambleState.get(textTarget);
+        if (!state || !state.isActive) return;
+
+        if (!state.lastTick || (time - state.lastTick) >= 34) {
+          state.smoothedPointerRatio += (state.pointerRatio - state.smoothedPointerRatio) * 0.22;
+          const lastIndex = Math.max(state.finalText.length - 1, 0);
+          const focusIndex = state.smoothedPointerRatio * lastIndex;
+          const frameSeed = Math.floor(time / 72);
+          textTarget.textContent = buildCtaHoverScrambleOutput(state.finalText, focusIndex, frameSeed);
+          state.lastTick = time;
+        }
+
+        state.rafId = window.requestAnimationFrame(tick);
+      };
+
+      const start = (event) => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        clearInteractiveScramble(element);
+        stopCtaHoverScramble(element, false);
+
+        const state = {
+          isActive: true,
+          finalText: textTarget.dataset.scrambleFinal || finalText,
+          pointerRatio: event ? getPointerRatio(event) : 0.5,
+          smoothedPointerRatio: event ? getPointerRatio(event) : 0.5,
+          rafId: 0,
+          lastTick: 0
+        };
+
+        ctaHoverScrambleState.set(textTarget, state);
+        state.rafId = window.requestAnimationFrame(tick);
+      };
+
+      const move = (event) => {
+        const state = ctaHoverScrambleState.get(textTarget);
+        if (!state) return;
+        state.pointerRatio = getPointerRatio(event);
+      };
+
+      const stop = () => {
+        stopCtaHoverScramble(element, true);
+      };
+
+      element.addEventListener('pointerenter', start);
+      element.addEventListener('pointermove', move);
+      element.addEventListener('pointerleave', stop);
+      element.addEventListener('pointercancel', stop);
+      element.addEventListener('blur', stop);
+    });
+  };
+
   const initInteractiveScramble = (root = document) => {
     root.querySelectorAll(INTERACTIVE_SCRAMBLE_SELECTOR).forEach((element) => {
+      if (element.matches?.(CTA_POINTER_SCRAMBLE_SELECTOR)) return;
       if (element.dataset.navScrambleInit === 'true') return;
       element.dataset.navScrambleInit = 'true';
 
@@ -257,6 +389,384 @@
     });
   };
 
+  let headerScrollController = null;
+  let footerRevealController = null;
+
+  const initHeaderScrollVisibility = (root = document) => {
+    const headerFromRoot = root?.matches?.('.site-header')
+      ? root
+      : root?.querySelector?.('.site-header');
+    const headerEl = headerFromRoot || document.querySelector('.site-header');
+    if (!headerEl) return;
+
+    if (headerScrollController?.header === headerEl) return;
+    if (headerScrollController?.destroy) {
+      headerScrollController.destroy();
+    }
+
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const downThreshold = 22;
+    const upThreshold = 14;
+    const revealTopOffset = 34;
+
+    let rafId = 0;
+    let isHidden = false;
+    let downDistance = 0;
+    let upDistance = 0;
+    let lastY = Math.max(window.scrollY || window.pageYOffset || 0, 0);
+
+    const setHeaderHidden = (nextHidden) => {
+      if (isHidden === nextHidden) return;
+      isHidden = nextHidden;
+      headerEl.classList.toggle('is-scroll-hidden', nextHidden);
+    };
+
+    const updateHeaderState = () => {
+      rafId = 0;
+      const currentY = Math.max(window.scrollY || window.pageYOffset || 0, 0);
+      const delta = currentY - lastY;
+      lastY = currentY;
+
+      if (reduceMotionQuery.matches) {
+        downDistance = 0;
+        upDistance = 0;
+        setHeaderHidden(false);
+        return;
+      }
+
+      if (currentY <= revealTopOffset) {
+        downDistance = 0;
+        upDistance = 0;
+        setHeaderHidden(false);
+        return;
+      }
+
+      if (Math.abs(delta) < 0.8) return;
+
+      if (delta > 0) {
+        downDistance += delta;
+        upDistance = 0;
+        if (downDistance >= downThreshold) {
+          setHeaderHidden(true);
+        }
+        return;
+      }
+
+      upDistance += Math.abs(delta);
+      downDistance = 0;
+      if (upDistance >= upThreshold) {
+        setHeaderHidden(false);
+      }
+    };
+
+    const queueHeaderStateUpdate = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(updateHeaderState);
+    };
+
+    const handleReduceMotionChange = () => {
+      downDistance = 0;
+      upDistance = 0;
+      setHeaderHidden(false);
+      queueHeaderStateUpdate();
+    };
+
+    window.addEventListener('scroll', queueHeaderStateUpdate, { passive: true });
+    window.addEventListener('resize', queueHeaderStateUpdate, { passive: true });
+
+    if (reduceMotionQuery.addEventListener) {
+      reduceMotionQuery.addEventListener('change', handleReduceMotionChange);
+    } else {
+      reduceMotionQuery.addListener(handleReduceMotionChange);
+    }
+
+    queueHeaderStateUpdate();
+
+    headerScrollController = {
+      header: headerEl,
+      destroy: () => {
+        if (rafId) {
+          window.cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+        window.removeEventListener('scroll', queueHeaderStateUpdate);
+        window.removeEventListener('resize', queueHeaderStateUpdate);
+        if (reduceMotionQuery.removeEventListener) {
+          reduceMotionQuery.removeEventListener('change', handleReduceMotionChange);
+        } else {
+          reduceMotionQuery.removeListener(handleReduceMotionChange);
+        }
+        headerEl.classList.remove('is-scroll-hidden');
+      }
+    };
+  };
+
+  const initFooterReveal = (root = document) => {
+    const footerFromRoot = root?.matches?.('.site-footer.site-footer--showcase')
+      ? root
+      : root?.querySelector?.('.site-footer.site-footer--showcase');
+    const footerEl = footerFromRoot || document.querySelector('.site-footer.site-footer--showcase');
+    if (!footerEl) return;
+
+    if (footerRevealController?.footer === footerEl) return;
+    if (footerRevealController?.destroy) {
+      footerRevealController.destroy();
+    }
+
+    const docEl = document.documentElement;
+    const bodyEl = document.body;
+    if (!docEl || !bodyEl) return;
+
+    const desktopQuery = window.matchMedia('(min-width: 981px)');
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    let rafId = 0;
+    let footerHeight = 1;
+    let renderedOpacity = 0;
+    let lastOpacityTimestamp = 0;
+    let resizeObserver = null;
+    let isEnabled = false;
+
+    const setFooterOpacity = (contentOpacityValue, revealProgressValue) => {
+      const clampedOpacity = clamp(contentOpacityValue, 0, 1);
+      const revealProgress = clamp(revealProgressValue, 0, 1);
+      const contentOpacityString = clampedOpacity.toFixed(3);
+      const bgOpacityString = revealProgress > 0.001 ? '1' : '0';
+      footerEl.style.setProperty('--footer-reveal-content-opacity', contentOpacityString);
+      bodyEl.style.setProperty('--footer-reveal-content-opacity', contentOpacityString);
+      footerEl.style.setProperty('--footer-reveal-bg-opacity', bgOpacityString);
+      bodyEl.style.setProperty('--footer-reveal-bg-opacity', bgOpacityString);
+      footerEl.classList.toggle('is-reveal-interactive', clampedOpacity >= 0.1);
+    };
+
+    const refreshFooterHeight = () => {
+      if (!isEnabled) return;
+      const rect = footerEl.getBoundingClientRect();
+      const computed = window.getComputedStyle(footerEl);
+      const bottomOffset = Number.parseFloat(computed.bottom || '0') || 0;
+      footerHeight = Math.max(1, Math.ceil(rect.height + bottomOffset));
+      docEl.style.setProperty('--footer-reveal-height', `${footerHeight}px`);
+      bodyEl.style.setProperty('--footer-reveal-height', `${footerHeight}px`);
+    };
+
+    const getRevealProgress = () => {
+      const scrollY = Math.max(window.scrollY || window.pageYOffset || 0, 0);
+      const maxScroll = Math.max(docEl.scrollHeight - window.innerHeight, 1);
+      const pageProgress = clamp(scrollY / maxScroll, 0, 1);
+      const fadeStart = 0.78;
+      return pageProgress <= fadeStart
+        ? 0
+        : clamp((pageProgress - fadeStart) / (1 - fadeStart), 0, 1);
+    };
+
+    const applyFooterReveal = (timestamp = 0) => {
+      rafId = 0;
+      if (!isEnabled) return;
+
+      const revealProgress = getRevealProgress();
+      const contentStartThreshold = 0.8;
+      const targetOpacity = revealProgress <= contentStartThreshold
+        ? 0
+        : clamp((revealProgress - contentStartThreshold) / (1 - contentStartThreshold), 0, 1);
+
+      renderedOpacity = targetOpacity;
+      lastOpacityTimestamp = timestamp || window.performance?.now?.() || Date.now();
+
+      setFooterOpacity(renderedOpacity, revealProgress);
+
+      if (isEnabled) {
+        queueFooterReveal();
+      }
+    };
+
+    const queueFooterReveal = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(applyFooterReveal);
+    };
+
+    const enableReveal = () => {
+      if (isEnabled) return;
+      isEnabled = true;
+      bodyEl.classList.add('has-footer-reveal');
+      const footerBg = window.getComputedStyle(footerEl).getPropertyValue('--footer-bg').trim();
+      if (footerBg) {
+        bodyEl.style.setProperty('--footer-reveal-bg', footerBg);
+      }
+      renderedOpacity = 0;
+      lastOpacityTimestamp = 0;
+      setFooterOpacity(0, 0);
+      refreshFooterHeight();
+      queueFooterReveal();
+    };
+
+    const disableReveal = () => {
+      if (!isEnabled) return;
+      isEnabled = false;
+      bodyEl.classList.remove('has-footer-reveal');
+      footerEl.classList.remove('is-reveal-interactive');
+      footerEl.style.removeProperty('--footer-reveal-content-opacity');
+      bodyEl.style.removeProperty('--footer-reveal-content-opacity');
+      footerEl.style.removeProperty('--footer-reveal-bg-opacity');
+      bodyEl.style.removeProperty('--footer-reveal-bg-opacity');
+      bodyEl.style.removeProperty('--footer-reveal-bg');
+      docEl.style.removeProperty('--footer-reveal-height');
+      bodyEl.style.removeProperty('--footer-reveal-height');
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    };
+
+    const syncRevealMode = () => {
+      if (desktopQuery.matches) {
+        enableReveal();
+      } else {
+        disableReveal();
+      }
+    };
+
+    const handleResize = () => {
+      refreshFooterHeight();
+      queueFooterReveal();
+    };
+
+    const handleReducedMotionChange = () => {
+      lastOpacityTimestamp = 0;
+      queueFooterReveal();
+    };
+
+    window.addEventListener('scroll', queueFooterReveal, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+
+    if (desktopQuery.addEventListener) {
+      desktopQuery.addEventListener('change', syncRevealMode);
+    } else {
+      desktopQuery.addListener(syncRevealMode);
+    }
+
+    if (reduceMotionQuery.addEventListener) {
+      reduceMotionQuery.addEventListener('change', handleReducedMotionChange);
+    } else {
+      reduceMotionQuery.addListener(handleReducedMotionChange);
+    }
+
+    if (typeof window.ResizeObserver === 'function') {
+      resizeObserver = new window.ResizeObserver(() => {
+        refreshFooterHeight();
+        queueFooterReveal();
+      });
+      resizeObserver.observe(footerEl);
+    }
+
+    syncRevealMode();
+
+    footerRevealController = {
+      footer: footerEl,
+      destroy: () => {
+        disableReveal();
+        window.removeEventListener('scroll', queueFooterReveal);
+        window.removeEventListener('resize', handleResize);
+        if (desktopQuery.removeEventListener) {
+          desktopQuery.removeEventListener('change', syncRevealMode);
+        } else {
+          desktopQuery.removeListener(syncRevealMode);
+        }
+        if (reduceMotionQuery.removeEventListener) {
+          reduceMotionQuery.removeEventListener('change', handleReducedMotionChange);
+        } else {
+          reduceMotionQuery.removeListener(handleReducedMotionChange);
+        }
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+        }
+      }
+    };
+  };
+
+  const initLenisSmoothScroll = () => {
+    if (typeof window.Lenis !== 'function') return;
+
+    const desktopQuery = window.matchMedia(LENIS_DESKTOP_QUERY);
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let lenis = null;
+    let lenisFrame = 0;
+
+    const shouldEnableLenis = () => desktopQuery.matches && !reduceMotionQuery.matches;
+
+    const stopLenis = () => {
+      if (lenisFrame) {
+        window.cancelAnimationFrame(lenisFrame);
+        lenisFrame = 0;
+      }
+
+      if (lenis) {
+        lenis.destroy();
+        lenis = null;
+      }
+    };
+
+    const tickLenis = (time) => {
+      if (!lenis) return;
+      lenis.raf(time);
+      lenisFrame = window.requestAnimationFrame(tickLenis);
+    };
+
+    const syncLenisState = () => {
+      if (!shouldEnableLenis()) {
+        stopLenis();
+        return;
+      }
+
+      if (lenis) {
+        if (typeof lenis.resize === 'function') {
+          lenis.resize();
+        }
+        return;
+      }
+
+      lenis = new window.Lenis({
+        lerp: 0.075,
+        smoothWheel: true,
+        wheelMultiplier: 1.08,
+        syncTouch: false,
+        touchMultiplier: 1,
+        gestureOrientation: 'vertical',
+        orientation: 'vertical',
+        prevent: (node) => Boolean(
+          node
+          && typeof node.closest === 'function'
+          && node.closest('[data-lenis-prevent="true"]')
+        )
+      });
+
+      lenisFrame = window.requestAnimationFrame(tickLenis);
+    };
+
+    const queueLenisResize = () => {
+      if (lenis && typeof lenis.resize === 'function') {
+        lenis.resize();
+      }
+    };
+
+    if (desktopQuery.addEventListener) {
+      desktopQuery.addEventListener('change', syncLenisState);
+    } else {
+      desktopQuery.addListener(syncLenisState);
+    }
+
+    if (reduceMotionQuery.addEventListener) {
+      reduceMotionQuery.addEventListener('change', syncLenisState);
+    } else {
+      reduceMotionQuery.addListener(syncLenisState);
+    }
+
+    window.addEventListener('resize', queueLenisResize, { passive: true });
+    window.addEventListener('pageshow', queueLenisResize);
+    syncLenisState();
+  };
+
   const initVideoHero = (sectionRoot) => {
     if (!sectionRoot || sectionRoot.dataset.videoHeroInit === 'true') return;
     sectionRoot.dataset.videoHeroInit = 'true';
@@ -268,6 +778,7 @@
     const transitionEl = sectionRoot.querySelector('.video-hero__transition');
     const placeholderEl = sectionRoot.querySelector('.video-hero__placeholder');
     const techFrameEl = sectionRoot.querySelector('.video-hero__tech-frame');
+    const contentWrapEl = sectionRoot.querySelector('.video-hero__content-wrap');
     const prevTriggerEl = sectionRoot.querySelector('[data-prev-trigger]');
     const nextTriggerEl = sectionRoot.querySelector('[data-next-trigger]');
     const stepEls = Array.from(sectionRoot.querySelectorAll('[data-jump-index]'));
@@ -287,9 +798,13 @@
     let wheelResetTimer = 0;
     let autoplayTimer = 0;
     let autoplayDirection = 1;
+    let scrollEffectFrame = 0;
+    let renderedCopyOpacity = 1;
+    let lastCopyOpacityTimestamp = 0;
     const imagePreloadCache = new Map();
     const navControlAnimationState = new WeakMap();
     let hasInitializedNavigation = false;
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
     const parseSlideData = (slide) => ({
       imageDesktop: (slide.dataset.imageDesktop || '').trim(),
@@ -815,6 +1330,85 @@
       window.requestAnimationFrame(alignTechFrameToCopyGrid);
     };
 
+    const updateScrollCopyOpacity = (targetOpacity, immediate = false) => {
+      const clampedTarget = clamp(targetOpacity, 0, 1);
+      const now = window.performance?.now ? window.performance.now() : Date.now();
+
+      if (immediate) {
+        renderedCopyOpacity = clampedTarget;
+        lastCopyOpacityTimestamp = now;
+      } else {
+        if (!Number.isFinite(lastCopyOpacityTimestamp) || lastCopyOpacityTimestamp <= 0) {
+          lastCopyOpacityTimestamp = now;
+        }
+
+        const delta = Math.max(0, Math.min(80, now - lastCopyOpacityTimestamp));
+        const smoothing = 1 - Math.exp(-delta / 220);
+        lastCopyOpacityTimestamp = now;
+        renderedCopyOpacity += (clampedTarget - renderedCopyOpacity) * smoothing;
+
+        if (Math.abs(clampedTarget - renderedCopyOpacity) <= 0.003) {
+          renderedCopyOpacity = clampedTarget;
+        }
+      }
+
+      sectionRoot.style.setProperty('--hero-copy-scroll-opacity', `${renderedCopyOpacity.toFixed(3)}`);
+      sectionRoot.classList.toggle(
+        'is-scroll-copy-hidden',
+        clampedTarget <= 0.01 && renderedCopyOpacity <= 0.01
+      );
+
+      return renderedCopyOpacity;
+    };
+
+    const applyScrollEffect = () => {
+      scrollEffectFrame = 0;
+      if (!contentWrapEl) return;
+
+      const sectionRect = sectionRoot.getBoundingClientRect();
+      const sectionHeight = Math.max(sectionRect.height, 1);
+      const scrollPastTop = Math.max(0, -sectionRect.top);
+      const traveled = Math.min(scrollPastTop, sectionHeight);
+      const scrollProgress = clamp(traveled / sectionHeight, 0, 1);
+      const fadeStartProgress = 0.06;
+      const fadeEndProgress = 0.42;
+
+      let copyOpacity = 1;
+      if (scrollProgress >= fadeEndProgress) {
+        copyOpacity = 0;
+      } else if (scrollProgress > fadeStartProgress) {
+        copyOpacity = 1 - ((scrollProgress - fadeStartProgress) / (fadeEndProgress - fadeStartProgress));
+      }
+
+      if (reduceMotionQuery.matches) {
+        updateScrollCopyOpacity(copyOpacity, true);
+        sectionRoot.style.setProperty('--hero-content-parallax-y', '0px');
+        sectionRoot.style.setProperty('--hero-media-parallax-y', '0px');
+        queueTechFrameAlignment();
+        return;
+      }
+
+      const parallaxFactor = window.innerWidth <= breakpoint ? 0.2 : 0.3;
+      const parallaxOffset = traveled * parallaxFactor;
+      const currentCopyOpacity = updateScrollCopyOpacity(copyOpacity);
+
+      const mediaParallaxRatio = window.innerWidth <= breakpoint ? 0.82 : 0.88;
+      const mediaParallaxOffset = parallaxOffset * mediaParallaxRatio;
+
+      sectionRoot.style.setProperty('--hero-content-parallax-y', `${parallaxOffset.toFixed(2)}px`);
+      sectionRoot.style.setProperty('--hero-media-parallax-y', `${mediaParallaxOffset.toFixed(2)}px`);
+      queueTechFrameAlignment();
+
+      if (Math.abs(copyOpacity - currentCopyOpacity) > 0.003) {
+        queueScrollEffect();
+      }
+    };
+
+    const queueScrollEffect = () => {
+      if (scrollEffectFrame) return;
+      scrollEffectFrame = window.requestAnimationFrame(applyScrollEffect);
+    };
+
     const setSlideState = (index) => {
       activeIndex = index;
       slides.forEach((slide, i) => {
@@ -1104,6 +1698,7 @@
       if (isTransitioning) return;
       showImage(activeIndex, false);
       queueTechFrameAlignment();
+      queueScrollEffect();
       queueAutoplay();
     };
 
@@ -1123,6 +1718,8 @@
     }
 
     window.addEventListener('resize', queueTechFrameAlignment);
+    window.addEventListener('resize', queueScrollEffect);
+    window.addEventListener('scroll', queueScrollEffect, { passive: true });
     sectionRoot.addEventListener('wheel', handleHorizontalWheel, { passive: false });
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -1132,6 +1729,7 @@
     setSlideState(0);
     showImage(0, false);
     queueTechFrameAlignment();
+    queueScrollEffect();
     queueAutoplay();
   };
 
@@ -2079,12 +2677,19 @@
     root.querySelectorAll('[data-category-sticky]').forEach(initCategorySticky);
   };
 
+  initHeaderScrollVisibility();
+  initFooterReveal();
+  initLenisSmoothScroll();
+  initCtaHoverScramble();
   initInteractiveScramble();
   initCollectionTickerScramble();
   initAllVideoHeros();
   initAllCollectionStacks();
   initAllCategorySticky();
   document.addEventListener('shopify:section:load', (event) => {
+    initHeaderScrollVisibility(event.target);
+    initFooterReveal(event.target);
+    initCtaHoverScramble(event.target);
     initInteractiveScramble(event.target);
     initCollectionTickerScramble(event.target);
     initAllVideoHeros(event.target);
