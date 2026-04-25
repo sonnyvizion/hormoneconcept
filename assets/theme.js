@@ -9,19 +9,19 @@
   const COPY_OUT_DURATION_MS = 400;
   const LENIS_DESKTOP_QUERY = '(hover: hover) and (pointer: fine)';
   const COPY_ELEMENT_SELECTOR = '.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid .video-hero__subtitle-bracket, .video-hero__copy-grid .video-hero__availability-label';
-  const CTA_POINTER_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__availability, .video-hero__prev, .video-hero__next, .site-footer-v2__submit';
-  const INTERACTIVE_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__prev, .video-hero__next, .video-hero__availability, .site-footer-v2__links-list a, .site-footer-v2__links-list span, .site-footer-v2__submit';
+  const CTA_POINTER_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__availability, .site-footer-v2__submit';
+  const INTERACTIVE_SCRAMBLE_SELECTOR = '.header-menu a, .header-link, .button, .video-hero__availability, .collection-slider__fixed-quick-add-button, .site-footer-v2__links-list a, .site-footer-v2__links-list span, .site-footer-v2__submit';
   const interactiveScrambleState = new WeakMap();
   const ctaHoverScrambleState = new WeakMap();
 
   const getInteractiveTextTarget = (element) => {
     if (!element) return null;
-    return element.querySelector?.('.video-hero__availability-label, .site-footer-v2__submit-label') || element;
+    return element.querySelector?.('.video-hero__availability-label, .site-footer-v2__submit-label, .collection-slider__fixed-quick-add-label') || element;
   };
 
   const getInteractiveLockTarget = (element) => {
     if (!element) return null;
-    return element.closest?.('.video-hero__availability, .site-footer-v2__submit') || element;
+    return element.closest?.('.video-hero__availability, .site-footer-v2__submit, .collection-slider__fixed-quick-add-button') || element;
   };
 
   const isInteractiveScrambleDisabled = (element) => {
@@ -233,6 +233,7 @@
 
       const textTarget = getInteractiveTextTarget(element);
       if (!textTarget) return;
+      if (isInteractiveScrambleDisabled(element) || isInteractiveScrambleDisabled(textTarget)) return;
 
       const finalText = normalizeText(textTarget.textContent || '');
       textTarget.dataset.scrambleFinal = finalText;
@@ -528,16 +529,17 @@
     let resizeObserver = null;
     let isEnabled = false;
 
-    const setFooterOpacity = (contentOpacityValue, revealProgressValue) => {
+    const setFooterOpacity = (contentOpacityValue) => {
       const clampedOpacity = clamp(contentOpacityValue, 0, 1);
-      const revealProgress = clamp(revealProgressValue, 0, 1);
       const contentOpacityString = clampedOpacity.toFixed(3);
-      const bgOpacityString = revealProgress > 0.001 ? '1' : '0';
       footerEl.style.setProperty('--footer-reveal-content-opacity', contentOpacityString);
       bodyEl.style.setProperty('--footer-reveal-content-opacity', contentOpacityString);
-      footerEl.style.setProperty('--footer-reveal-bg-opacity', bgOpacityString);
-      bodyEl.style.setProperty('--footer-reveal-bg-opacity', bgOpacityString);
       footerEl.classList.toggle('is-reveal-interactive', clampedOpacity >= 0.1);
+    };
+    const getHeroShellInset = () => {
+      const rawInset = window.getComputedStyle(bodyEl).getPropertyValue('--hero-shell-inset');
+      const parsedInset = Number.parseFloat(rawInset);
+      return Number.isFinite(parsedInset) ? parsedInset : 0;
     };
 
     const refreshFooterHeight = () => {
@@ -553,11 +555,9 @@
     const getRevealProgress = () => {
       const scrollY = Math.max(window.scrollY || window.pageYOffset || 0, 0);
       const maxScroll = Math.max(docEl.scrollHeight - window.innerHeight, 1);
-      const pageProgress = clamp(scrollY / maxScroll, 0, 1);
-      const fadeStart = 0.78;
-      return pageProgress <= fadeStart
-        ? 0
-        : clamp((pageProgress - fadeStart) / (1 - fadeStart), 0, 1);
+      const distanceToEnd = Math.max(0, maxScroll - scrollY);
+      const revealDistance = Math.max(1, Math.ceil(footerHeight + getHeroShellInset()));
+      return clamp(1 - (distanceToEnd / revealDistance), 0, 1);
     };
 
     const applyFooterReveal = (timestamp = 0) => {
@@ -565,7 +565,7 @@
       if (!isEnabled) return;
 
       const revealProgress = getRevealProgress();
-      const contentStartThreshold = 0.8;
+      const contentStartThreshold = 0.4;
       const targetOpacity = revealProgress <= contentStartThreshold
         ? 0
         : clamp((revealProgress - contentStartThreshold) / (1 - contentStartThreshold), 0, 1);
@@ -573,7 +573,7 @@
       renderedOpacity = targetOpacity;
       lastOpacityTimestamp = timestamp || window.performance?.now?.() || Date.now();
 
-      setFooterOpacity(renderedOpacity, revealProgress);
+      setFooterOpacity(renderedOpacity);
 
       if (isEnabled) {
         queueFooterReveal();
@@ -595,7 +595,7 @@
       }
       renderedOpacity = 0;
       lastOpacityTimestamp = 0;
-      setFooterOpacity(0, 0);
+      setFooterOpacity(0);
       refreshFooterHeight();
       queueFooterReveal();
     };
@@ -607,8 +607,6 @@
       footerEl.classList.remove('is-reveal-interactive');
       footerEl.style.removeProperty('--footer-reveal-content-opacity');
       bodyEl.style.removeProperty('--footer-reveal-content-opacity');
-      footerEl.style.removeProperty('--footer-reveal-bg-opacity');
-      bodyEl.style.removeProperty('--footer-reveal-bg-opacity');
       bodyEl.style.removeProperty('--footer-reveal-bg');
       docEl.style.removeProperty('--footer-reveal-height');
       bodyEl.style.removeProperty('--footer-reveal-height');
@@ -1159,7 +1157,7 @@
       clearNavigationControlAnimation(controlEl);
       clearInteractiveScramble(controlEl);
       controlEl.classList.remove('is-nav-entering', 'is-nav-leaving', 'is-nav-pulsing');
-      controlEl.hidden = !isVisible;
+      controlEl.hidden = false;
       controlEl.disabled = !isVisible;
       controlEl.setAttribute('aria-disabled', isVisible ? 'false' : 'true');
       controlEl.classList.toggle('is-disabled', !isVisible);
@@ -1190,63 +1188,18 @@
         return;
       }
 
-      const isCurrentlyVisible = !controlEl.hidden;
-      const isCurrentlyAnimating = controlEl.classList.contains('is-nav-entering') || controlEl.classList.contains('is-nav-leaving');
-      if (isVisible === isCurrentlyVisible && !isCurrentlyAnimating) {
-        controlEl.disabled = !isVisible;
-        controlEl.setAttribute('aria-disabled', isVisible ? 'false' : 'true');
-        controlEl.classList.toggle('is-disabled', !isVisible);
-        return;
-      }
+      const currentState = navControlAnimationState.get(controlEl);
+      if (!currentState || currentState.nonce !== runNonce) return;
 
-      if (isVisible) {
-        controlEl.hidden = false;
-        controlEl.disabled = false;
-        controlEl.setAttribute('aria-disabled', 'false');
-        controlEl.classList.remove('is-disabled');
-
-        void controlEl.offsetWidth;
-        controlEl.classList.add('is-nav-entering');
-        runInteractiveScramble(controlEl, { direction: 'in' });
-
-        state.classTimer = window.setTimeout(() => {
-          const currentState = navControlAnimationState.get(controlEl);
-          if (!currentState || currentState.nonce !== runNonce) return;
-          controlEl.classList.remove('is-nav-entering');
-          currentState.classTimer = 0;
-        }, NAV_CONTROL_ENTER_MS);
-        return;
-      }
-
-      if (controlEl.hidden) {
-        controlEl.disabled = true;
-        controlEl.setAttribute('aria-disabled', 'true');
-        controlEl.classList.add('is-disabled');
-        return;
-      }
-
-      controlEl.disabled = true;
-      controlEl.setAttribute('aria-disabled', 'true');
-      controlEl.classList.remove('is-disabled');
-      controlEl.classList.add('is-nav-leaving');
-      runInteractiveScramble(controlEl, {
-        direction: 'out',
-        restoreFinalText: false
-      });
-
-      state.hideTimer = window.setTimeout(() => {
-        const currentState = navControlAnimationState.get(controlEl);
-        if (!currentState || currentState.nonce !== runNonce) return;
-        controlEl.hidden = true;
-        controlEl.classList.remove('is-nav-leaving');
-        controlEl.classList.add('is-disabled');
-        clearInteractiveScramble(controlEl);
-        currentState.hideTimer = 0;
-      }, NAV_CONTROL_LEAVE_MS);
+      controlEl.hidden = false;
+      controlEl.disabled = !isVisible;
+      controlEl.setAttribute('aria-disabled', isVisible ? 'false' : 'true');
+      controlEl.classList.toggle('is-disabled', !isVisible);
     };
 
     const pulseNavigationControl = (controlEl) => {
       if (!controlEl || controlEl.hidden || reduceMotionQuery.matches) return;
+      if (controlEl.classList.contains('is-disabled')) return;
       if (controlEl.classList.contains('is-nav-entering') || controlEl.classList.contains('is-nav-leaving')) return;
 
       let state = navControlAnimationState.get(controlEl);
@@ -1782,7 +1735,7 @@
       sectionRoot.style.setProperty('--collection-slider-row-height-current', `${computedRowHeight}px`);
     };
 
-    rows.forEach((row) => {
+    rows.forEach((row, rowIndex) => {
       const viewport = row.querySelector('[data-stack-viewport]');
       const track = row.querySelector('[data-stack-track]');
       const prevButton = row.querySelector('[data-stack-prev]');
@@ -1797,6 +1750,7 @@
       const fixedQuickAddTargets = new WeakMap();
       let isProgrammaticScroll = false;
       let hasManualScroll = false;
+      let hasUserInteracted = false;
       let dragPointerId = null;
       let dragLastX = 0;
       let dragAccumDelta = 0;
@@ -1811,10 +1765,15 @@
       let scrollAnimFrame = 0;
       let scrollAnimToken = 0;
       let programmaticTargetLeft = null;
+      let programmaticScrollEndTimer = null;
       let viewportRealignFrame = 0;
+      let autoSlideFrame = 0;
+      let autoSlideState = 0;
+      let previousAutoSlideRowTop = null;
       const TRACKPAD_SCROLL_DAMPING = 0.28;
       const TRACKPAD_SCROLL_MAX_STEP = 42;
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
 
       const getMaxScroll = () => Math.max(0, viewport.scrollWidth - viewport.clientWidth);
       const clampScroll = (value, min = 0, max = getMaxScroll()) => Math.min(Math.max(value, min), max);
@@ -1834,6 +1793,11 @@
           scrollAnimFrame = 0;
         }
 
+        if (programmaticScrollEndTimer) {
+          window.clearTimeout(programmaticScrollEndTimer);
+          programmaticScrollEndTimer = null;
+        }
+
         scrollAnimToken += 1;
         isProgrammaticScroll = false;
         programmaticTargetLeft = null;
@@ -1850,7 +1814,7 @@
       };
 
       const withProgrammaticScroll = (targetLeft, options = {}) => {
-        const { instant = false } = options;
+        const { instant = false, durationMs = null } = options;
         const clampedTarget = clampScroll(targetLeft);
         const startLeft = viewport.scrollLeft;
         const delta = clampedTarget - startLeft;
@@ -1862,6 +1826,11 @@
         if (scrollAnimFrame) {
           window.cancelAnimationFrame(scrollAnimFrame);
           scrollAnimFrame = 0;
+        }
+
+        if (programmaticScrollEndTimer) {
+          window.clearTimeout(programmaticScrollEndTimer);
+          programmaticScrollEndTimer = null;
         }
 
         scrollAnimToken += 1;
@@ -1881,7 +1850,34 @@
           return;
         }
 
-        const duration = Math.min(520, Math.max(260, Math.abs(delta) * 0.7));
+        const duration = Number.isFinite(durationMs)
+          ? Math.max(180, durationMs)
+          : Math.min(520, Math.max(260, Math.abs(delta) * 0.7));
+        const shouldUseNativeSmoothScroll = (
+          !instant
+          && !prefersReducedMotion
+          && (window.innerWidth <= 640 || coarsePointerQuery.matches)
+          && typeof viewport.scrollTo === 'function'
+        );
+
+        if (shouldUseNativeSmoothScroll) {
+          viewport.scrollTo({
+            left: clampedTarget,
+            behavior: 'smooth'
+          });
+          updateControls();
+
+          programmaticScrollEndTimer = window.setTimeout(() => {
+            programmaticScrollEndTimer = null;
+            if (currentToken !== scrollAnimToken) return;
+            normalizeInfinitePosition();
+            isProgrammaticScroll = false;
+            programmaticTargetLeft = null;
+            updateControls();
+          }, duration + 140);
+          return;
+        }
+
         const startTime = window.performance.now();
         const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
@@ -1933,6 +1929,13 @@
         }
         return Math.max(0, rawIndex);
       };
+      const getCurrentRawStepIndex = () => {
+        const step = getScrollStep(track);
+        if (!step) return 0;
+
+        const baseOffset = getBaseOffset(step);
+        return Math.round((getReferenceScrollLeft() - baseOffset) / step);
+      };
       const alignToStepIndex = (index, options = {}) => {
         const { instant = true } = options;
         const step = getScrollStep(track);
@@ -1951,6 +1954,21 @@
         const targetLeft = baseOffset + (targetIndex * step);
         withProgrammaticScroll(targetLeft, { instant });
       };
+      const alignToRawStepIndex = (index, options = {}) => {
+        if (!hasInfiniteLoop) {
+          alignToStepIndex(index, options);
+          return;
+        }
+
+        const { instant = true } = options;
+        const step = getScrollStep(track);
+        if (!step) return;
+
+        const baseOffset = getBaseOffset(step);
+        const targetRawIndex = Number.isFinite(index) ? index : 0;
+        const targetLeft = baseOffset + (targetRawIndex * step);
+        withProgrammaticScroll(targetLeft, { instant });
+      };
       const realignAfterViewportChange = () => {
         const anchorIndex = getCurrentStepIndex();
 
@@ -1962,6 +1980,7 @@
           window.requestAnimationFrame(() => {
             syncFixedGrid();
             updateControls();
+            queueAutoSlide();
           });
         });
       };
@@ -1971,6 +1990,59 @@
           viewportRealignFrame = 0;
           realignAfterViewportChange();
         });
+      };
+      const getAutoSlideThresholdRatio = () => {
+        if (rowIndex === 0) return 0.5;
+        if (rowIndex === 1) return 0.2;
+        return null;
+      };
+      const applyAutoSlide = () => {
+        autoSlideFrame = 0;
+
+        const thresholdRatio = getAutoSlideThresholdRatio();
+        if (!Number.isFinite(thresholdRatio)) return;
+
+        if (getMaxScroll() <= 2) return;
+
+        const viewportHeight = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+        if (!viewportHeight) return;
+
+        const rowRect = row.getBoundingClientRect();
+        const triggerLine = viewportHeight * thresholdRatio;
+        const currentRowTop = rowRect.top;
+
+        if (!Number.isFinite(previousAutoSlideRowTop)) {
+          previousAutoSlideRowTop = currentRowTop;
+          return;
+        }
+
+        if (hasUserInteracted || dragPointerId !== null || isProgrammaticScroll) {
+          previousAutoSlideRowTop = currentRowTop;
+          return;
+        }
+
+        const crossedForward = previousAutoSlideRowTop > triggerLine && currentRowTop <= triggerLine;
+        const crossedBackward = previousAutoSlideRowTop < triggerLine && currentRowTop >= triggerLine;
+        previousAutoSlideRowTop = currentRowTop;
+
+        if (crossedForward && autoSlideState === 0) {
+          autoSlideState = 1;
+          scrollByStep(1, {
+            durationMs: window.innerWidth <= 640 ? 420 : 320
+          });
+          return;
+        }
+
+        if (crossedBackward && autoSlideState === 1) {
+          autoSlideState = 0;
+          scrollByStep(-1, {
+            durationMs: window.innerWidth <= 640 ? 420 : 320
+          });
+        }
+      };
+      const queueAutoSlide = () => {
+        if (autoSlideFrame) return;
+        autoSlideFrame = window.requestAnimationFrame(applyAutoSlide);
       };
       const setFixedQuickAddTarget = (buttonEl, formEl) => {
         if (!buttonEl) return;
@@ -2094,7 +2166,7 @@
         syncFixedQuickAddButtons();
       };
 
-      const scrollByStep = (direction) => {
+      const scrollByStep = (direction, options = {}) => {
         const step = getScrollStep(track) || viewport.clientWidth * 0.75;
         if (!step) return;
 
@@ -2102,7 +2174,7 @@
           const baseOffset = getBaseOffset(step);
           const currentIndex = Math.round((getReferenceScrollLeft() - baseOffset) / step);
           const target = baseOffset + ((currentIndex + direction) * step);
-          withProgrammaticScroll(target);
+          withProgrammaticScroll(target, options);
           return;
         }
 
@@ -2111,9 +2183,8 @@
         const currentIndex = Math.round((getReferenceScrollLeft() - baseOffset) / step);
         const target = clampScroll(baseOffset + ((currentIndex + direction) * step), baseOffset, maxScroll);
 
-        withProgrammaticScroll(target);
+        withProgrammaticScroll(target, options);
       };
-
       const snapToNearestStep = (options = {}) => {
         const { instant = false } = options;
         const step = getScrollStep(track);
@@ -2133,12 +2204,14 @@
       prevButton.addEventListener('click', () => {
         if (prevButton.classList.contains('is-disabled')) return;
         hasManualScroll = true;
+        hasUserInteracted = true;
         scrollByStep(-1);
       });
 
       nextButton.addEventListener('click', () => {
         if (nextButton.classList.contains('is-disabled')) return;
         hasManualScroll = true;
+        hasUserInteracted = true;
         scrollByStep(1);
       });
 
@@ -2179,6 +2252,7 @@
 
           event.preventDefault();
           hasManualScroll = true;
+          hasUserInteracted = true;
           cancelProgrammaticScroll();
 
           if (wheelResetTimer) {
@@ -2205,6 +2279,7 @@
 
         event.preventDefault();
         hasManualScroll = true;
+        hasUserInteracted = true;
         wheelAccumDelta += dominantDelta;
 
         if (Math.abs(wheelAccumDelta) >= 38) {
@@ -2231,6 +2306,7 @@
         if (!isMousePointer && !desktopQuery.matches) return;
 
         event.preventDefault();
+        hasUserInteracted = true;
         if (scrollEndTimer) {
           window.clearTimeout(scrollEndTimer);
           scrollEndTimer = null;
@@ -2350,6 +2426,7 @@
       }, { passive: true });
 
       window.addEventListener('resize', queueViewportRealign);
+      window.addEventListener('scroll', queueAutoSlide, { passive: true });
 
       if (desktopQuery.addEventListener) {
         desktopQuery.addEventListener('change', queueViewportRealign);
@@ -2370,6 +2447,7 @@
         window.requestAnimationFrame(() => {
           applyDesktopPeekOffset(true);
           updateControls();
+          queueAutoSlide();
         });
       });
     });
@@ -2665,6 +2743,78 @@
     });
   };
 
+  const initCollectionsTrioParallax = (sectionRoot) => {
+    if (!sectionRoot || sectionRoot.dataset.collectionsTrioParallaxInit === 'true') return;
+    sectionRoot.dataset.collectionsTrioParallaxInit = 'true';
+
+    const items = Array.from(sectionRoot.querySelectorAll('.collections-trio__item'));
+    if (!items.length) return;
+
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    let parallaxFrame = 0;
+
+    const resetParallax = () => {
+      items.forEach((itemEl) => {
+        itemEl.style.setProperty('--collections-trio-media-parallax-y', '0px');
+      });
+    };
+
+    const applyParallax = () => {
+      parallaxFrame = 0;
+
+      if (reduceMotionQuery.matches) {
+        resetParallax();
+        return;
+      }
+
+      const viewportHeight = Math.max(
+        window.innerHeight || 0,
+        document.documentElement.clientHeight || 0,
+        1
+      );
+      const viewportCenter = viewportHeight / 2;
+      const maxOffset = window.innerWidth <= 640 ? 8 : 14;
+
+      items.forEach((itemEl) => {
+        const rect = itemEl.getBoundingClientRect();
+        const itemCenter = rect.top + (rect.height / 2);
+        const normalizedDistance = clamp((viewportCenter - itemCenter) / viewportHeight, -0.5, 0.5);
+        const parallaxOffset = normalizedDistance * maxOffset * 2;
+        itemEl.style.setProperty('--collections-trio-media-parallax-y', `${parallaxOffset.toFixed(2)}px`);
+      });
+    };
+
+    const queueParallax = () => {
+      if (parallaxFrame) return;
+      parallaxFrame = window.requestAnimationFrame(applyParallax);
+    };
+
+    window.addEventListener('scroll', queueParallax, { passive: true });
+    window.addEventListener('resize', queueParallax);
+
+    if (window.visualViewport?.addEventListener) {
+      window.visualViewport.addEventListener('resize', queueParallax);
+    }
+
+    if (reduceMotionQuery.addEventListener) {
+      reduceMotionQuery.addEventListener('change', queueParallax);
+    } else {
+      reduceMotionQuery.addListener(queueParallax);
+    }
+
+    if (typeof window.ResizeObserver === 'function') {
+      const trioResizeObserver = new window.ResizeObserver(() => {
+        queueParallax();
+      });
+      trioResizeObserver.observe(sectionRoot);
+    }
+
+    window.requestAnimationFrame(() => {
+      applyParallax();
+    });
+  };
+
   const initAllVideoHeros = (root = document) => {
     root.querySelectorAll('[data-video-hero]').forEach(initVideoHero);
   };
@@ -2677,6 +2827,10 @@
     root.querySelectorAll('[data-category-sticky]').forEach(initCategorySticky);
   };
 
+  const initAllCollectionsTrioParallax = (root = document) => {
+    root.querySelectorAll('.collections-trio').forEach(initCollectionsTrioParallax);
+  };
+
   initHeaderScrollVisibility();
   initFooterReveal();
   initLenisSmoothScroll();
@@ -2686,6 +2840,7 @@
   initAllVideoHeros();
   initAllCollectionStacks();
   initAllCategorySticky();
+  initAllCollectionsTrioParallax();
   document.addEventListener('shopify:section:load', (event) => {
     initHeaderScrollVisibility(event.target);
     initFooterReveal(event.target);
@@ -2695,5 +2850,6 @@
     initAllVideoHeros(event.target);
     initAllCollectionStacks(event.target);
     initAllCategorySticky(event.target);
+    initAllCollectionsTrioParallax(event.target);
   });
 })();
