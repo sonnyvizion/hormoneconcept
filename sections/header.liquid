@@ -1,12 +1,31 @@
 <header class="site-header">
   <div class="site-header-shell">
     <div class="site-header-frame">
-      <nav class="header-cell header-menu" aria-label="Menu principal">
-        <ul>
-          {% for link in section.settings.menu.links %}
-            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-          {% endfor %}
-        </ul>
+      <nav class="header-cell header-menu" aria-label="Menu principal" data-mobile-nav>
+        <button
+          class="header-menu__toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="HeaderMenuPanel-{{ section.id }}"
+          data-mobile-nav-toggle
+        >
+          <span class="header-menu__toggle-icon" aria-hidden="true">
+            <span class="header-menu__toggle-line"></span>
+            <span class="header-menu__toggle-line"></span>
+            <span class="header-menu__toggle-line"></span>
+          </span>
+          <span class="header-menu__toggle-label">MENU</span>
+        </button>
+
+        <div class="header-menu__panel" id="HeaderMenuPanel-{{ section.id }}" data-mobile-nav-panel>
+          <ul>
+            <li class="header-menu__mobile-only"><a href="{{ routes.search_url }}" data-search-trigger aria-controls="HeaderSearchOverlay-{{ section.id }}">RECHERCHER</a></li>
+            {% for link in section.settings.menu.links %}
+              <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+            {% endfor %}
+            <li class="header-menu__mobile-only header-menu__mobile-account"><a href="{{ routes.account_url }}">COMPTE</a></li>
+          </ul>
+        </div>
       </nav>
 
       <a class="header-cell header-brand" href="{{ routes.root_url }}">
@@ -24,9 +43,38 @@
       </a>
 
       <div class="header-cell header-actions">
-        <a class="header-link header-link--search" href="{{ routes.search_url }}">RECHERCHER</a>
+        <a class="header-link header-link--search" href="{{ routes.search_url }}" data-search-trigger aria-controls="HeaderSearchOverlay-{{ section.id }}">RECHERCHER</a>
         <a class="header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
         <a class="header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
+      </div>
+    </div>
+
+    <div
+      class="header-search-overlay"
+      id="HeaderSearchOverlay-{{ section.id }}"
+      data-search-overlay
+      data-search-endpoint="{{ routes.search_url | append: '/suggest' }}"
+      data-search-section-id="predictive-search"
+      hidden
+    >
+      <div class="header-search-overlay__backdrop" data-search-close></div>
+      <div class="header-search-overlay__dialog" role="dialog" aria-modal="true" aria-labelledby="HeaderSearchTitle-{{ section.id }}">
+        <div class="header-search-overlay__head">
+          <p class="header-search-overlay__kicker" id="HeaderSearchTitle-{{ section.id }}">[ RECHERCHE ]</p>
+          <button class="header-search-overlay__close" type="button" aria-label="Fermer la recherche" data-search-close>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+        <form action="{{ routes.search_url }}" method="get" class="site-search-form header-search-overlay__form" role="search">
+          <input type="hidden" name="options[prefix]" value="last">
+          <label class="visually-hidden" for="HeaderSearchInput-{{ section.id }}">Recherche</label>
+          <input id="HeaderSearchInput-{{ section.id }}" type="search" name="q" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off" data-search-input>
+          <button class="header-search-overlay__submit" type="submit">
+            <span class="header-search-overlay__submit-label">LANCER</span>
+          </button>
+        </form>
+        <div class="header-search-predictive" data-search-results hidden></div>
       </div>
     </div>
   </div>

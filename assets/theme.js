@@ -391,7 +391,286 @@
   };
 
   let headerScrollController = null;
+  let mobileNavController = null;
+  let searchOverlayController = null;
   let footerRevealController = null;
+
+  const initMobileNav = (root = document) => {
+    const headerFromRoot = root?.matches?.('.site-header')
+      ? root
+      : root?.querySelector?.('.site-header');
+    const headerEl = headerFromRoot || document.querySelector('.site-header');
+    if (!headerEl) return;
+
+    const navEl = headerEl.querySelector('[data-mobile-nav]');
+    const toggleButton = navEl?.querySelector('[data-mobile-nav-toggle]');
+    const panelEl = navEl?.querySelector('[data-mobile-nav-panel]');
+    if (!navEl || !toggleButton || !panelEl) return;
+
+    if (mobileNavController?.nav === navEl) return;
+    if (mobileNavController?.destroy) {
+      mobileNavController.destroy();
+    }
+
+    const mobileQuery = window.matchMedia('(max-width: 640px)');
+    const panelLinks = Array.from(panelEl.querySelectorAll('a'));
+
+    const syncOpenState = (isOpen) => {
+      navEl.classList.toggle('is-open', isOpen);
+      headerEl.classList.toggle('has-mobile-menu-open', isOpen);
+      document.body.classList.toggle('mobile-menu-open', isOpen);
+      toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    };
+
+    const closeMenu = () => {
+      syncOpenState(false);
+    };
+
+    const openMenu = () => {
+      syncOpenState(true);
+    };
+
+    const toggleMenu = () => {
+      if (navEl.classList.contains('is-open')) {
+        closeMenu();
+        return;
+      }
+      openMenu();
+    };
+
+    const handleDocumentClick = (event) => {
+      if (!mobileQuery.matches) return;
+      if (!navEl.classList.contains('is-open')) return;
+      if (navEl.contains(event.target)) return;
+      closeMenu();
+    };
+
+    const handleKeydown = (event) => {
+      if (event.key !== 'Escape') return;
+      if (!navEl.classList.contains('is-open')) return;
+      closeMenu();
+      toggleButton.focus();
+    };
+
+    const handleViewportChange = () => {
+      if (mobileQuery.matches) return;
+      closeMenu();
+    };
+
+    toggleButton.addEventListener('click', toggleMenu);
+    document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('keydown', handleKeydown);
+    panelLinks.forEach((linkEl) => linkEl.addEventListener('click', closeMenu));
+
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener('change', handleViewportChange);
+    } else {
+      mobileQuery.addListener(handleViewportChange);
+    }
+
+    syncOpenState(navEl.classList.contains('is-open'));
+    handleViewportChange();
+
+    mobileNavController = {
+      nav: navEl,
+      destroy: () => {
+        closeMenu();
+        toggleButton.removeEventListener('click', toggleMenu);
+        document.removeEventListener('click', handleDocumentClick);
+        document.removeEventListener('keydown', handleKeydown);
+        panelLinks.forEach((linkEl) => linkEl.removeEventListener('click', closeMenu));
+        if (mobileQuery.removeEventListener) {
+          mobileQuery.removeEventListener('change', handleViewportChange);
+        } else {
+          mobileQuery.removeListener(handleViewportChange);
+        }
+      }
+    };
+  };
+
+  const initSearchOverlay = (root = document) => {
+    const overlayEl = root?.matches?.('[data-search-overlay]')
+      ? root
+      : root?.querySelector?.('[data-search-overlay]') || document.querySelector('[data-search-overlay]');
+    if (!overlayEl) return;
+
+    if (searchOverlayController?.overlay === overlayEl) return;
+    if (searchOverlayController?.destroy) {
+      searchOverlayController.destroy();
+    }
+
+    const triggerEls = Array.from(document.querySelectorAll('[data-search-trigger]'));
+    const closeEls = Array.from(overlayEl.querySelectorAll('[data-search-close]'));
+    const inputEl = overlayEl.querySelector('[data-search-input]');
+    const formEl = overlayEl.querySelector('.header-search-overlay__form');
+    const resultsEl = overlayEl.querySelector('[data-search-results]');
+    const dialogEl = overlayEl.querySelector('.header-search-overlay__dialog');
+    const headerEl = overlayEl.closest('.site-header');
+    const searchEndpoint = overlayEl.dataset.searchEndpoint;
+    const searchSectionId = overlayEl.dataset.searchSectionId;
+    const minSearchLength = 2;
+
+    let searchDebounceId = 0;
+    let searchAbortController = null;
+
+    const clearPendingSearch = () => {
+      window.clearTimeout(searchDebounceId);
+      if (searchAbortController) {
+        searchAbortController.abort();
+        searchAbortController = null;
+      }
+      overlayEl.classList.remove('is-search-loading');
+    };
+
+    const clearResults = () => {
+      clearPendingSearch();
+      if (!resultsEl) return;
+      resultsEl.hidden = true;
+      resultsEl.innerHTML = '';
+    };
+
+    const renderLoadingState = () => {
+      if (!resultsEl) return;
+      resultsEl.hidden = false;
+      resultsEl.innerHTML = '<div class="header-search-predictive__loading"><p>Recherche en cours...</p></div>';
+      overlayEl.classList.add('is-search-loading');
+    };
+
+    const renderPredictiveResults = (markup, searchTerm) => {
+      if (!resultsEl) return;
+
+      const parsedMarkup = new DOMParser().parseFromString(markup, 'text/html');
+      const predictiveRoot = parsedMarkup.querySelector('[data-predictive-search-root]');
+      if (!predictiveRoot) {
+        clearResults();
+        return;
+      }
+
+      if (inputEl?.value.trim() !== searchTerm) return;
+
+      overlayEl.classList.remove('is-search-loading');
+      resultsEl.hidden = false;
+      resultsEl.innerHTML = predictiveRoot.outerHTML;
+    };
+
+    const fetchPredictiveResults = async (searchTerm) => {
+      if (!searchEndpoint || !searchSectionId || !resultsEl) return;
+
+      clearPendingSearch();
+      renderLoadingState();
+
+      const requestUrl = new URL(searchEndpoint, window.location.origin);
+      requestUrl.searchParams.set('q', searchTerm);
+      requestUrl.searchParams.set('section_id', searchSectionId);
+      requestUrl.searchParams.set('resources[type]', 'product,collection,page,article,query');
+      requestUrl.searchParams.set('resources[limit]', '8');
+      requestUrl.searchParams.set('resources[limit_scope]', 'each');
+      requestUrl.searchParams.set('resources[options][unavailable_products]', 'hide');
+      requestUrl.searchParams.set('resources[options][fields]', 'title,product_type,variants.title,vendor');
+
+      searchAbortController = new AbortController();
+
+      try {
+        const response = await fetch(requestUrl.toString(), {
+          signal: searchAbortController.signal,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Predictive search failed with status ${response.status}`);
+        }
+
+        const markup = await response.text();
+        renderPredictiveResults(markup, searchTerm);
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        clearResults();
+      } finally {
+        searchAbortController = null;
+        overlayEl.classList.remove('is-search-loading');
+      }
+    };
+
+    const schedulePredictiveSearch = () => {
+      if (!inputEl || !resultsEl) return;
+
+      const searchTerm = inputEl.value.trim();
+      if (searchTerm.length < minSearchLength) {
+        clearResults();
+        return;
+      }
+
+      window.clearTimeout(searchDebounceId);
+      searchDebounceId = window.setTimeout(() => {
+        fetchPredictiveResults(searchTerm);
+      }, 180);
+    };
+
+    const closeOverlay = () => {
+      overlayEl.hidden = true;
+      headerEl?.classList.remove('has-search-overlay-open');
+      document.body.classList.remove('search-overlay-open');
+      clearResults();
+    };
+
+    const openOverlay = () => {
+      overlayEl.hidden = false;
+      headerEl?.classList.add('has-search-overlay-open');
+      document.body.classList.add('search-overlay-open');
+      window.requestAnimationFrame(() => {
+        inputEl?.focus();
+        if (inputEl?.value.trim().length >= minSearchLength) {
+          schedulePredictiveSearch();
+        }
+      });
+    };
+
+    const handleTriggerClick = (event) => {
+      event.preventDefault();
+      if (!overlayEl.hidden) {
+        closeOverlay();
+        return;
+      }
+      openOverlay();
+    };
+
+    const handleKeydown = (event) => {
+      if (event.key !== 'Escape') return;
+      if (overlayEl.hidden) return;
+      closeOverlay();
+    };
+
+    const handleDocumentClick = (event) => {
+      if (overlayEl.hidden) return;
+      if (dialogEl?.contains(event.target)) return;
+      if (triggerEls.some((triggerEl) => triggerEl.contains(event.target))) return;
+      closeOverlay();
+    };
+
+    triggerEls.forEach((triggerEl) => triggerEl.addEventListener('click', handleTriggerClick));
+    closeEls.forEach((closeEl) => closeEl.addEventListener('click', closeOverlay));
+    inputEl?.addEventListener('input', schedulePredictiveSearch);
+    inputEl?.addEventListener('focus', schedulePredictiveSearch);
+    formEl?.addEventListener('submit', clearPendingSearch);
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('click', handleDocumentClick);
+
+    searchOverlayController = {
+      overlay: overlayEl,
+      destroy: () => {
+        closeOverlay();
+        triggerEls.forEach((triggerEl) => triggerEl.removeEventListener('click', handleTriggerClick));
+        closeEls.forEach((closeEl) => closeEl.removeEventListener('click', closeOverlay));
+        inputEl?.removeEventListener('input', schedulePredictiveSearch);
+        inputEl?.removeEventListener('focus', schedulePredictiveSearch);
+        formEl?.removeEventListener('submit', clearPendingSearch);
+        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('click', handleDocumentClick);
+      }
+    };
+  };
 
   const initHeaderScrollVisibility = (root = document) => {
     const headerFromRoot = root?.matches?.('.site-header')
@@ -436,6 +715,13 @@
       }
 
       if (currentY <= revealTopOffset) {
+        downDistance = 0;
+        upDistance = 0;
+        setHeaderHidden(false);
+        return;
+      }
+
+      if (headerEl.classList.contains('has-mobile-menu-open') || headerEl.classList.contains('has-search-overlay-open')) {
         downDistance = 0;
         upDistance = 0;
         setHeaderHidden(false);
@@ -2832,6 +3118,8 @@
   };
 
   initHeaderScrollVisibility();
+  initMobileNav();
+  initSearchOverlay();
   initFooterReveal();
   initLenisSmoothScroll();
   initCtaHoverScramble();
@@ -2843,6 +3131,8 @@
   initAllCollectionsTrioParallax();
   document.addEventListener('shopify:section:load', (event) => {
     initHeaderScrollVisibility(event.target);
+    initMobileNav(event.target);
+    initSearchOverlay(event.target);
     initFooterReveal(event.target);
     initCtaHoverScramble(event.target);
     initInteractiveScramble(event.target);

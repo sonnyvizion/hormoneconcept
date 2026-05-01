@@ -1,0 +1,118 @@
+{% liquid
+  assign product_results = predictive_search.resources.products
+  assign collection_results = predictive_search.resources.collections
+  assign page_results = predictive_search.resources.pages
+  assign article_results = predictive_search.resources.articles
+  assign query_results = predictive_search.resources.queries
+
+  assign total_results = product_results.size
+  assign total_results = total_results | plus: collection_results.size
+  assign total_results = total_results | plus: page_results.size
+  assign total_results = total_results | plus: article_results.size
+  assign total_results = total_results | plus: query_results.size
+%}
+
+<div
+  class="header-search-predictive__root"
+  data-predictive-search-root
+  data-predictive-search-state="{% if total_results > 0 %}results{% else %}empty{% endif %}"
+>
+  {% if total_results > 0 %}
+    {% if query_results.size > 0 %}
+      <section class="header-search-predictive__group">
+        <p class="header-search-predictive__label">Suggestions</p>
+        <div class="header-search-predictive__stack">
+          {% for query in query_results limit: 3 %}
+            <a class="header-search-predictive__query" href="{{ query.url }}">
+              <span>→</span>
+              <span>{{ query.styled_text }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if product_results.size > 0 %}
+      <section class="header-search-predictive__group">
+        <p class="header-search-predictive__label">Produits</p>
+        <div class="header-search-predictive__stack">
+          {% for product in product_results limit: 4 %}
+            <a class="header-search-predictive__product" href="{{ product.url }}">
+              <span class="header-search-predictive__thumb">
+                {% if product.featured_media %}
+                  {{
+                    product.featured_media.preview_image
+                    | image_url: width: 120
+                    | image_tag:
+                      alt: product.title,
+                      loading: 'lazy',
+                      widths: '60, 120',
+                      sizes: '60px'
+                  }}
+                {% else %}
+                  <span class="header-search-predictive__thumb-placeholder"></span>
+                {% endif %}
+              </span>
+              <span class="header-search-predictive__meta">
+                {% if product.vendor != blank %}
+                  <span class="header-search-predictive__eyebrow">{{ product.vendor }}</span>
+                {% endif %}
+                <span class="header-search-predictive__title">{{ product.title }}</span>
+                <span class="header-search-predictive__price">
+                  {% if product.price_varies %}A partir de {% endif %}{{ product.price | money }}
+                </span>
+              </span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if collection_results.size > 0 or page_results.size > 0 or article_results.size > 0 %}
+      <section class="header-search-predictive__group">
+        <p class="header-search-predictive__label">Univers</p>
+        <div class="header-search-predictive__stack">
+          {% for collection in collection_results limit: 2 %}
+            <a class="header-search-predictive__link" href="{{ collection.url }}">
+              <span class="header-search-predictive__type">Collection</span>
+              <span class="header-search-predictive__title">{{ collection.title }}</span>
+            </a>
+          {% endfor %}
+
+          {% for page in page_results limit: 2 %}
+            <a class="header-search-predictive__link" href="{{ page.url }}">
+              <span class="header-search-predictive__type">Page</span>
+              <span class="header-search-predictive__title">{{ page.title }}</span>
+            </a>
+          {% endfor %}
+
+          {% for article in article_results limit: 2 %}
+            <a class="header-search-predictive__link" href="{{ article.url }}">
+              <span class="header-search-predictive__type">Journal</span>
+              <span class="header-search-predictive__title">{{ article.title }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <div class="header-search-predictive__footer">
+      <a class="header-search-predictive__all" href="{{ routes.search_url }}?q={{ predictive_search.terms | url_escape }}&options%5Bprefix%5D=last">
+        VOIR TOUS LES RESULTATS
+      </a>
+    </div>
+  {% else %}
+    <div class="header-search-predictive__empty">
+      <p>Aucun resultat pour "{{ predictive_search.terms }}".</p>
+      <a class="header-search-predictive__all" href="{{ routes.search_url }}?q={{ predictive_search.terms | url_escape }}&options%5Bprefix%5D=last">
+        LANCER LA RECHERCHE COMPLETE
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "Predictive search"
+}
+{% endschema %}
