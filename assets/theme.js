@@ -3274,6 +3274,33 @@
     sectionRoot.addEventListener('focusin', stopAutoplay);
     sectionRoot.addEventListener('focusout', startAutoplay);
 
+    let parallaxFrame = 0;
+    const applyParallax = () => {
+      parallaxFrame = 0;
+      if (reduceMotionQuery.matches) {
+        sectionRoot.style.setProperty('--hero-content-parallax-y', '0px');
+        sectionRoot.style.setProperty('--hero-media-parallax-y', '0px');
+        return;
+      }
+      const rect = sectionRoot.getBoundingClientRect();
+      const sectionHeight = Math.max(rect.height, 1);
+      const scrollPastTop = Math.max(0, -rect.top);
+      const traveled = Math.min(scrollPastTop, sectionHeight);
+      const parallaxFactor = window.innerWidth <= breakpoint ? 0.2 : 0.3;
+      const parallaxOffset = traveled * parallaxFactor;
+      const mediaParallaxRatio = window.innerWidth <= breakpoint ? 0.82 : 0.88;
+      const mediaParallaxOffset = parallaxOffset * mediaParallaxRatio;
+      sectionRoot.style.setProperty('--hero-content-parallax-y', `${parallaxOffset.toFixed(2)}px`);
+      sectionRoot.style.setProperty('--hero-media-parallax-y', `${mediaParallaxOffset.toFixed(2)}px`);
+    };
+    const queueParallax = () => {
+      if (parallaxFrame) return;
+      parallaxFrame = window.requestAnimationFrame(applyParallax);
+    };
+    window.addEventListener('scroll', queueParallax, { passive: true });
+    window.addEventListener('resize', queueParallax);
+    applyParallax();
+
     const handleResize = () => {
       const slide = slides[activeIndex];
       if (!slide) return;
