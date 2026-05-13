@@ -12,41 +12,49 @@
           <a class="button" href="{{ routes.all_products_collection_url }}">CONTINUER LES ACHATS</a>
         </div>
       {% else %}
-        {% form 'cart', cart, class: 'cart-form-v2' %}
+        {% form 'cart', cart, class: 'cart-form-v2', data-cart-auto-update: '' %}
           <div class="cart-list-v2">
+            <div class="cart-list-v2__head" role="row" aria-hidden="true">
+              <span class="cart-list-v2__col cart-list-v2__col--product">PRODUIT</span>
+              <span class="cart-list-v2__col cart-list-v2__col--unit">PRIX</span>
+              <span class="cart-list-v2__col cart-list-v2__col--qty">QTE</span>
+              <span class="cart-list-v2__col cart-list-v2__col--line">TOTAL</span>
+            </div>
+
             {% for item in cart.items %}
               <article class="cart-item-v2">
                 <a class="cart-item-v2__media" href="{{ item.url }}">
                   {% if item.image %}
-                    {{ item.image | image_url: width: 720 | image_tag: loading: 'lazy', alt: item.product.title }}
+                    {{ item.image | image_url: width: 200 | image_tag: loading: 'lazy', width: 100, height: 100, alt: item.product.title }}
                   {% else %}
                     <div class="ph-img"></div>
                   {% endif %}
                 </a>
 
-                <div class="cart-item-v2__body">
+                <div class="cart-item-v2__info">
                   <p class="cart-item-v2__vendor">{{ item.product.vendor | default: shop.name | upcase }}</p>
                   <h2><a href="{{ item.url }}">{{ item.product.title | upcase }}</a></h2>
                   {% unless item.variant.title contains 'Default' %}
                     <p class="cart-item-v2__variant">{{ item.variant.title | upcase }}</p>
                   {% endunless %}
-
-                  <div class="cart-item-v2__row">
-                    <p class="cart-item-v2__unit">{{ item.final_price | money }}</p>
-                    <label for="CartQty-{{ item.key }}">QTE</label>
-                    <input
-                      id="CartQty-{{ item.key }}"
-                      type="number"
-                      min="0"
-                      name="updates[]"
-                      value="{{ item.quantity }}"
-                      aria-label="Quantite {{ item.product.title }}"
-                    >
-                    <p class="cart-item-v2__line">{{ item.final_line_price | money }}</p>
-                  </div>
-
                   <a class="cart-item-v2__remove" href="{{ item.url_to_remove }}">SUPPRIMER</a>
                 </div>
+
+                <p class="cart-item-v2__unit">{{ item.final_price | money }}</p>
+
+                <div class="cart-item-v2__qty">
+                  <label class="visually-hidden" for="CartQty-{{ item.key }}">Quantite {{ item.product.title }}</label>
+                  <input
+                    id="CartQty-{{ item.key }}"
+                    type="number"
+                    min="0"
+                    name="updates[]"
+                    value="{{ item.quantity }}"
+                    aria-label="Quantite {{ item.product.title }}"
+                  >
+                </div>
+
+                <p class="cart-item-v2__line">{{ item.final_line_price | money }}</p>
               </article>
             {% endfor %}
           </div>
@@ -59,7 +67,7 @@
             <p class="cart-summary-v2__note">FRAIS D'EXPEDITION ET TAXES CALCULES A L'ETAPE SUIVANTE.</p>
 
             <div class="cart-actions">
-              <button class="button button-secondary" type="submit" name="update">METTRE A JOUR</button>
+              <button type="submit" name="update" hidden data-cart-update-submit>METTRE A JOUR</button>
               <button class="button" type="submit" name="checkout">PASSER AU PAIEMENT</button>
             </div>
           </aside>
