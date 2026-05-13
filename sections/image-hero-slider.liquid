@@ -1,0 +1,284 @@
+<section
+  class="video-hero video-hero--still"
+  data-image-hero-slider
+  data-mobile-breakpoint="{{ section.settings.mobile_breakpoint }}"
+  data-autoplay="{{ section.settings.autoplay }}"
+  data-autoplay-delay="{{ section.settings.autoplay_delay }}"
+>
+  <div class="video-hero__media-frame">
+    <div class="video-hero__media">
+      <img class="video-hero__image" alt="" loading="eager" width="2200" height="1300">
+      <div class="video-hero__placeholder"></div>
+    </div>
+
+    <div class="video-hero__overlay">
+      <div class="video-hero__side-progress" aria-hidden="true">
+        <span class="video-hero__side-plus">+</span>
+        <div class="video-hero__side-track">
+          {% if section.blocks.size > 0 %}
+            {% for block in section.blocks %}
+              <span
+                class="video-hero__side-step {% if forloop.first %}is-active{% endif %}"
+                data-side-step
+              >
+                <span class="video-hero__side-step-fill"></span>
+              </span>
+            {% endfor %}
+          {% else %}
+            <span class="video-hero__side-step is-active" data-side-step>
+              <span class="video-hero__side-step-fill"></span>
+            </span>
+          {% endif %}
+        </div>
+        <span class="video-hero__side-plus">+</span>
+      </div>
+      <div class="video-hero__tech-frame" aria-hidden="true">
+        <span class="video-hero__tech-frame-grain"></span>
+      </div>
+
+      <div class="container video-hero__content-wrap">
+        <div class="video-hero__panel">
+          {% if section.blocks.size > 0 %}
+            {% for block in section.blocks %}
+              <article
+                class="video-hero__slide {% if forloop.first %}is-active{% endif %}"
+                data-slide
+                data-index="{{ forloop.index0 }}"
+                data-image-desktop="{% if block.settings.image_desktop != blank %}{{ block.settings.image_desktop | image_url: width: 2200 }}{% endif %}"
+                data-image-mobile="{% if block.settings.image_mobile != blank %}{{ block.settings.image_mobile | image_url: width: 1200 }}{% endif %}"
+                data-image-alt="{{ block.settings.title | escape }}"
+                {{ block.shopify_attributes }}
+              >
+                <div class="video-hero__copy-grid">
+                  <div class="video-hero__copy-left">
+                    <h2>{{ block.settings.title }}</h2>
+                    {% if block.settings.subtitle != blank %}
+                      <p class="video-hero__subtitle">
+                        <span class="video-hero__subtitle-bracket">[ {{ block.settings.subtitle }} ]</span>
+                      </p>
+                    {% endif %}
+                  </div>
+
+                  <div class="video-hero__copy-center">
+                    {% if block.settings.cta_label != blank and block.settings.cta_link != blank %}
+                      <a class="video-hero__availability" href="{{ block.settings.cta_link }}">
+                        <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                        <span class="video-hero__availability-label">{{ block.settings.cta_label }}</span>
+                        <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                      </a>
+                    {% endif %}
+                  </div>
+
+                  <div class="video-hero__copy-right">
+                    <h3>{{ block.settings.right_title | default: block.settings.title }}</h3>
+                    {% if block.settings.right_subtitle != blank %}
+                      <p class="video-hero__subtitle">
+                        <span class="video-hero__subtitle-bracket">[ {{ block.settings.right_subtitle }} ]</span>
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+              </article>
+            {% endfor %}
+          {% else %}
+            <article class="video-hero__slide is-active" data-slide data-index="0" data-image-desktop="" data-image-mobile="" data-image-alt="Banner">
+              <div class="video-hero__copy-grid">
+                <div class="video-hero__copy-left">
+                  <h2>Titre gauche</h2>
+                  <p class="video-hero__subtitle"><span class="video-hero__subtitle-bracket">[ Sous-titre ]</span></p>
+                </div>
+                <div class="video-hero__copy-center">
+                  <span class="video-hero__availability">
+                    <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                    <span class="video-hero__availability-label">DISPONIBLE</span>
+                    <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                  </span>
+                </div>
+                <div class="video-hero__copy-right">
+                  <h3>Titre droite</h3>
+                  <p class="video-hero__subtitle"><span class="video-hero__subtitle-bracket">[ DISPONIBLE ]</span></p>
+                </div>
+              </div>
+            </article>
+          {% endif %}
+        </div>
+
+        {% if section.blocks.size > 1 %}
+          <div class="video-hero__footer">
+            <div class="video-hero__controls" role="group" aria-label="Navigation banner">
+              <button
+                class="video-hero__prev is-disabled"
+                type="button"
+                data-prev-trigger
+                data-disable-scramble="true"
+                aria-label="{{ section.settings.prev_label }}"
+                aria-disabled="true"
+                disabled
+              >
+                <span class="video-hero__chevron video-hero__chevron--left" aria-hidden="true"></span>
+              </button>
+              <button
+                class="video-hero__next"
+                type="button"
+                data-next-trigger
+                data-disable-scramble="true"
+                aria-label="{{ section.settings.next_label }}"
+              >
+                <span class="video-hero__chevron video-hero__chevron--right" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="video-hero__steps" role="tablist" aria-label="Navigation banner">
+              {% for block in section.blocks %}
+                <button
+                  class="video-hero__step {% if forloop.first %}is-active{% endif %}"
+                  type="button"
+                  data-jump-index="{{ forloop.index0 }}"
+                  role="tab"
+                  aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                  aria-label="Slide {{ forloop.index }}"
+                >
+                  <span class="video-hero__step-fill"></span>
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Image hero slider",
+  "settings": [
+    {
+      "type": "range",
+      "id": "mobile_breakpoint",
+      "label": "Breakpoint mobile (px)",
+      "min": 480,
+      "max": 1024,
+      "step": 16,
+      "default": 768
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Defilement automatique",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "label": "Delai entre slides (ms)",
+      "min": 2000,
+      "max": 10000,
+      "step": 500,
+      "default": 5000
+    },
+    {
+      "type": "text",
+      "id": "next_label",
+      "label": "Label navigation (suivant)",
+      "default": "SUIVANT"
+    },
+    {
+      "type": "text",
+      "id": "prev_label",
+      "label": "Label navigation (precedent)",
+      "default": "PRECEDENT"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titre gauche",
+          "default": "TITRE"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Sous-titre gauche",
+          "default": "SOUS-TITRE"
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "Texte CTA central",
+          "default": "DECOUVRIR"
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "Lien CTA"
+        },
+        {
+          "type": "text",
+          "id": "right_title",
+          "label": "Titre droite",
+          "default": "MODELE"
+        },
+        {
+          "type": "text",
+          "id": "right_subtitle",
+          "label": "Sous-titre droite",
+          "default": "DISPONIBLE"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_desktop",
+          "label": "Photo desktop"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_mobile",
+          "label": "Photo mobile"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [
+    {
+      "name": "Image hero slider",
+      "blocks": [
+        {
+          "type": "slide",
+          "settings": {
+            "title": "TITRE 1",
+            "subtitle": "SOUS-TITRE",
+            "cta_label": "DECOUVRIR",
+            "right_title": "MODELE",
+            "right_subtitle": "DISPONIBLE"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "title": "TITRE 2",
+            "subtitle": "SOUS-TITRE",
+            "cta_label": "DECOUVRIR",
+            "right_title": "MODELE",
+            "right_subtitle": "DISPONIBLE"
+          }
+        },
+        {
+          "type": "slide",
+          "settings": {
+            "title": "TITRE 3",
+            "subtitle": "SOUS-TITRE",
+            "cta_label": "DECOUVRIR",
+            "right_title": "MODELE",
+            "right_subtitle": "DISPONIBLE"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
