@@ -12,26 +12,6 @@
     </div>
 
     <div class="video-hero__overlay">
-      <div class="video-hero__side-progress" aria-hidden="true">
-        <span class="video-hero__side-plus">+</span>
-        <div class="video-hero__side-track">
-          {% if section.blocks.size > 0 %}
-            {% for block in section.blocks %}
-              <span
-                class="video-hero__side-step {% if forloop.first %}is-active{% endif %}"
-                data-side-step
-              >
-                <span class="video-hero__side-step-fill"></span>
-              </span>
-            {% endfor %}
-          {% else %}
-            <span class="video-hero__side-step is-active" data-side-step>
-              <span class="video-hero__side-step-fill"></span>
-            </span>
-          {% endif %}
-        </div>
-        <span class="video-hero__side-plus">+</span>
-      </div>
       <div class="video-hero__tech-frame" aria-hidden="true">
         <span class="video-hero__tech-frame-grain"></span>
       </div>
