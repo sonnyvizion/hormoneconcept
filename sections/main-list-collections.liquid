@@ -24,32 +24,24 @@
               {% assign idx = idx | plus: 1 %}
               {% assign idx_label = idx | prepend: '00' | slice: -2, 2 %}
               <li class="collection-list__item">
-                <a class="collection-card" href="{{ coll.url }}">
-                  <div class="collection-card__media">
+                <a class="collection-row" href="{{ coll.url }}">
+                  <span class="collection-row__index">{{ idx_label }}</span>
+
+                  <span class="collection-row__thumb">
                     {% if coll.image %}
-                      {{ coll.image | image_url: width: 1400 | image_tag: loading: 'lazy', alt: coll.title, class: 'collection-card__image' }}
+                      {{ coll.image | image_url: width: 200 | image_tag: loading: 'lazy', width: 64, height: 64, alt: coll.title, class: 'collection-row__image' }}
                     {% elsif coll.products.first and coll.products.first.featured_image %}
-                      {{ coll.products.first.featured_image | image_url: width: 1400 | image_tag: loading: 'lazy', alt: coll.title, class: 'collection-card__image' }}
+                      {{ coll.products.first.featured_image | image_url: width: 200 | image_tag: loading: 'lazy', width: 64, height: 64, alt: coll.title, class: 'collection-row__image' }}
                     {% else %}
-                      <div class="collection-card__placeholder" aria-hidden="true"></div>
+                      <span class="collection-row__placeholder" aria-hidden="true"></span>
                     {% endif %}
+                  </span>
 
-                    <span class="collection-card__corner collection-card__corner--tl" aria-hidden="true"></span>
-                    <span class="collection-card__corner collection-card__corner--tr" aria-hidden="true"></span>
-                    <span class="collection-card__corner collection-card__corner--bl" aria-hidden="true"></span>
-                    <span class="collection-card__corner collection-card__corner--br" aria-hidden="true"></span>
+                  <span class="collection-row__title">{{ coll.title | upcase }}</span>
 
-                    <span class="collection-card__count">[ {{ coll.products_count }} {% if coll.products_count == 1 %}PRODUIT{% else %}PRODUITS{% endif %} ]</span>
-                  </div>
+                  <span class="collection-row__count">{{ coll.products_count }} {% if coll.products_count == 1 %}PRODUIT{% else %}PRODUITS{% endif %}</span>
 
-                  <div class="collection-card__meta">
-                    <span class="collection-card__index">[ {{ idx_label }} ]</span>
-                    <h2 class="collection-card__title">{{ coll.title | upcase }}</h2>
-                    <span class="collection-card__cta">
-                      <span class="collection-card__cta-label">VOIR</span>
-                      <span class="collection-card__cta-arrow" aria-hidden="true">→</span>
-                    </span>
-                  </div>
+                  <span class="collection-row__arrow" aria-hidden="true">→</span>
                 </a>
               </li>
             {% endunless %}
