@@ -4105,6 +4105,7 @@ body.search-overlay-open::before {
       "center center"
       ".      right";
     gap: 16px;
+    padding: clamp(36px, 9vh, 96px) 0;
     text-align: left;
     align-items: start;
   }
