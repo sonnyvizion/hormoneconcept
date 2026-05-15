@@ -4900,6 +4900,16 @@ body.search-overlay-open::before {
   .video-hero__side-progress {
     display: none;
   }
+
+  .header-menu__views {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-menu__quick-actions {
+    margin-top: auto;
+    padding-bottom: 20px;
+  }
 }
 
 :root {
