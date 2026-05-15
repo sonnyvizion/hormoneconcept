@@ -4129,6 +4129,15 @@ body.search-overlay-open::before {
     align-self: end;
   }
 
+  .video-hero--still .video-hero__tech-frame {
+    background: none;
+  }
+
+  .video-hero--still .video-hero__tech-frame::after,
+  .video-hero--still .video-hero__tech-frame-grain {
+    display: none;
+  }
+
   .collection-slider__badge--title {
     width: min(22vw, 196px);
     min-width: 142px;
