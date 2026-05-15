@@ -466,7 +466,7 @@ body.mobile-menu-open {
 body.mobile-menu-open::before {
   content: "";
   position: fixed;
-  top: calc(var(--hero-shell-inset) + (var(--site-header-shell-padding) * 2) + var(--site-header-height) + 2px);
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
