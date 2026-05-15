@@ -3,36 +3,64 @@
     <div class="site-page-shell site-page-shell--catalog">
       <header class="site-page-head">
         <p class="site-page-kicker">[ COLLECTIONS ]</p>
-        <h1>TOUTES LES COLLECTIONS</h1>
+        <h1>{{ section.settings.heading | default: 'NOTRE CATALOGUE' }}</h1>
+        {% if section.settings.lead != blank %}
+          <p class="site-page-lead">{{ section.settings.lead }}</p>
+        {% endif %}
       </header>
 
-      <div class="collections-grid-v2">
-        {% for coll in collections %}
-          {% if coll.handle != 'frontpage' %}
-            <article class="collection-tile-v2">
-              <a class="collection-tile-v2__link" href="{{ coll.url }}">
-                <div class="collection-tile-v2__media">
-                  {% if coll.featured_image %}
-                    {{ coll.featured_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: coll.title }}
-                  {% elsif coll.products.first and coll.products.first.featured_image %}
-                    {{ coll.products.first.featured_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: coll.title }}
-                  {% else %}
-                    <div class="ph-img"></div>
-                  {% endif %}
-                </div>
-                <div class="collection-tile-v2__meta">
-                  <h3>{{ coll.title | upcase }}</h3>
-                  <p>{{ coll.products_count }} PRODUITS</p>
-                </div>
-              </a>
-            </article>
-          {% endif %}
-        {% else %}
-          <div class="catalog-empty">
-            <p>AUCUNE COLLECTION DISPONIBLE.</p>
-          </div>
-        {% endfor %}
-      </div>
+      {% assign visible_count = 0 %}
+      {% for coll in collections %}
+        {% if coll.handle != 'frontpage' %}
+          {% assign visible_count = visible_count | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+
+      {% if visible_count > 0 %}
+        <ul class="collection-list" role="list">
+          {% assign idx = 0 %}
+          {% for coll in collections %}
+            {% unless coll.handle == 'frontpage' %}
+              {% assign idx = idx | plus: 1 %}
+              {% assign idx_label = idx | prepend: '00' | slice: -2, 2 %}
+              <li class="collection-list__item">
+                <a class="collection-card" href="{{ coll.url }}">
+                  <div class="collection-card__media">
+                    {% if coll.image %}
+                      {{ coll.image | image_url: width: 1400 | image_tag: loading: 'lazy', alt: coll.title, class: 'collection-card__image' }}
+                    {% elsif coll.products.first and coll.products.first.featured_image %}
+                      {{ coll.products.first.featured_image | image_url: width: 1400 | image_tag: loading: 'lazy', alt: coll.title, class: 'collection-card__image' }}
+                    {% else %}
+                      <div class="collection-card__placeholder" aria-hidden="true"></div>
+                    {% endif %}
+
+                    <span class="collection-card__corner collection-card__corner--tl" aria-hidden="true"></span>
+                    <span class="collection-card__corner collection-card__corner--tr" aria-hidden="true"></span>
+                    <span class="collection-card__corner collection-card__corner--bl" aria-hidden="true"></span>
+                    <span class="collection-card__corner collection-card__corner--br" aria-hidden="true"></span>
+
+                    <span class="collection-card__count">[ {{ coll.products_count }} {% if coll.products_count == 1 %}PRODUIT{% else %}PRODUITS{% endif %} ]</span>
+                  </div>
+
+                  <div class="collection-card__meta">
+                    <span class="collection-card__index">[ {{ idx_label }} ]</span>
+                    <h2 class="collection-card__title">{{ coll.title | upcase }}</h2>
+                    <span class="collection-card__cta">
+                      <span class="collection-card__cta-label">VOIR</span>
+                      <span class="collection-card__cta-arrow" aria-hidden="true">→</span>
+                    </span>
+                  </div>
+                </a>
+              </li>
+            {% endunless %}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="catalog-empty">
+          <p>AUCUNE COLLECTION DISPONIBLE.</p>
+          <a class="button" href="{{ routes.all_products_collection_url }}">VOIR TOUS LES PRODUITS</a>
+        </div>
+      {% endif %}
     </div>
   </div>
 </section>
@@ -40,6 +68,19 @@
 {% schema %}
 {
   "name": "Main list collections",
-  "settings": []
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Titre principal",
+      "default": "NOTRE CATALOGUE"
+    },
+    {
+      "type": "text",
+      "id": "lead",
+      "label": "Sous-titre (optionnel)",
+      "default": "EXPLOREZ L'ENSEMBLE DES COLLECTIONS HORMONE CONCEPT."
+    }
+  ]
 }
 {% endschema %}
