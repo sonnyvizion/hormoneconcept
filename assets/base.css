@@ -3259,6 +3259,8 @@ body.search-overlay-open::before {
 .main-cart,
 .main-page {
   padding: 36px 0 72px;
+  background: var(--paper);
+  min-height: calc(100vh - var(--site-header-height) - var(--hero-shell-inset) * 2 - 80px);
 }
 
 .site-page-shell {
