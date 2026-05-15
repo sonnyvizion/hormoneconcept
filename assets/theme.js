@@ -3127,7 +3127,6 @@
 
     let activeIndex = 0;
     let isTransitioning = false;
-    let autoplayTimer = 0;
 
     const getImageUrl = (slide) => {
       const desktop = (slide.dataset.imageDesktop || '').trim();
@@ -3229,50 +3228,36 @@
       });
     };
 
-    const stopAutoplay = () => {
-      if (autoplayTimer) {
-        clearInterval(autoplayTimer);
-        autoplayTimer = 0;
-      }
+    sectionRoot.style.setProperty('--hero-step-loader-duration', `${autoplayDelay}ms`);
+    sectionRoot.style.setProperty('--hero-step-loader-state', 'running');
+
+    const setLoaderPlayState = (state) => {
+      sectionRoot.style.setProperty('--hero-step-loader-state', state);
     };
 
-    const startAutoplay = () => {
+    sectionRoot.addEventListener('animationend', (event) => {
+      if (event.animationName !== 'imageHeroStepLoader') return;
       if (!autoplayEnabled || slides.length < 2 || reduceMotionQuery.matches) return;
-      stopAutoplay();
-      autoplayTimer = window.setInterval(() => {
-        goTo(activeIndex + 1);
-      }, autoplayDelay);
-    };
+      goTo(activeIndex + 1);
+    });
 
     if (prevTriggerEl) {
-      prevTriggerEl.addEventListener('click', () => {
-        stopAutoplay();
-        goTo(activeIndex - 1);
-        startAutoplay();
-      });
+      prevTriggerEl.addEventListener('click', () => goTo(activeIndex - 1));
     }
     if (nextTriggerEl) {
-      nextTriggerEl.addEventListener('click', () => {
-        stopAutoplay();
-        goTo(activeIndex + 1);
-        startAutoplay();
-      });
+      nextTriggerEl.addEventListener('click', () => goTo(activeIndex + 1));
     }
     stepEls.forEach((step) => {
       step.addEventListener('click', () => {
         const index = Number(step.dataset.jumpIndex);
-        if (!Number.isNaN(index)) {
-          stopAutoplay();
-          goTo(index);
-          startAutoplay();
-        }
+        if (!Number.isNaN(index)) goTo(index);
       });
     });
 
-    sectionRoot.addEventListener('mouseenter', stopAutoplay);
-    sectionRoot.addEventListener('mouseleave', startAutoplay);
-    sectionRoot.addEventListener('focusin', stopAutoplay);
-    sectionRoot.addEventListener('focusout', startAutoplay);
+    sectionRoot.addEventListener('mouseenter', () => setLoaderPlayState('paused'));
+    sectionRoot.addEventListener('mouseleave', () => setLoaderPlayState('running'));
+    sectionRoot.addEventListener('focusin', () => setLoaderPlayState('paused'));
+    sectionRoot.addEventListener('focusout', () => setLoaderPlayState('running'));
 
     let parallaxFrame = 0;
     const applyParallax = () => {
@@ -3319,7 +3304,6 @@
       showPlaceholder(true);
     }
     syncControls();
-    startAutoplay();
   };
 
   const initAllImageHeroSliders = (root = document) => {

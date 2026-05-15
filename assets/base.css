@@ -1122,6 +1122,29 @@ body.search-overlay-open::before {
   opacity: .06;
 }
 
+.video-hero--still .video-hero__step {
+  overflow: hidden;
+  background: rgba(218, 232, 247, .12);
+}
+
+.video-hero--still[data-autoplay="true"] .video-hero__step.is-active .video-hero__step-fill {
+  transform-origin: left center;
+  animation: imageHeroStepLoader var(--hero-step-loader-duration, 5000ms) linear forwards;
+  animation-play-state: var(--hero-step-loader-state, running);
+}
+
+@keyframes imageHeroStepLoader {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-hero--still[data-autoplay="true"] .video-hero__step.is-active .video-hero__step-fill {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
 @keyframes heroTechFrameGrain {
   0% {
     transform: translate3d(0, 0, 0);
