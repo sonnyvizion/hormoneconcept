@@ -1,0 +1,234 @@
+<section class="sneaker-cleaning-page">
+  <div class="container">
+    <div class="sneaker-cleaning-page__inner">
+      <div class="sneaker-cleaning-page__hero">
+        <header class="sneaker-cleaning-page__head">
+          {% if section.settings.kicker != blank %}
+            <p class="site-page-kicker">[ {{ section.settings.kicker | escape }} ]</p>
+          {% endif %}
+          {% if section.settings.title != blank %}
+            <h1>{{ section.settings.title | escape }}</h1>
+          {% endif %}
+          {% if section.settings.text != blank %}
+            <p>{{ section.settings.text | escape }}</p>
+          {% endif %}
+
+          <div class="sneaker-cleaning-page__proofs" aria-label="Points forts du service">
+            <span>Diagnostic matiere</span>
+            <span>Lacets inclus</span>
+            <span>Finition main</span>
+          </div>
+        </header>
+
+        <div class="sneaker-cleaning-page__gallery" aria-label="Apercu du service nettoyage sneakers">
+          {% for block in section.blocks %}
+            {% if block.type == 'image' %}
+              <article class="sneaker-cleaning-page__image-card" {{ block.shopify_attributes }}>
+                {% if block.settings.image != blank %}
+                  {{
+                    block.settings.image
+                    | image_url: width: 1600
+                    | image_tag:
+                      class: 'sneaker-cleaning-page__image',
+                      loading: 'lazy',
+                      alt: block.settings.alt
+                  }}
+                {% else %}
+                  <div class="sneaker-cleaning-page__image-placeholder">
+                    <span>{{ block.settings.caption | default: 'NETTOYAGE' | escape }}</span>
+                  </div>
+                {% endif %}
+                {% if block.settings.caption != blank %}
+                  <p class="sneaker-cleaning-page__caption">{{ block.settings.caption | escape }}</p>
+                {% endif %}
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="sneaker-cleaning-page__process" aria-label="Etapes du nettoyage">
+        <article>
+          <span>01</span>
+          <h2>Diagnostic</h2>
+          <p>Controle des matieres, coutures, zones marquees et niveau de nettoyage adapte.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h2>Nettoyage</h2>
+          <p>Travail manuel sur la tige, les semelles, les lacets et les details sensibles.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h2>Finition</h2>
+          <p>Brossage, sechage controle, remise en forme et verification avant restitution.</p>
+        </article>
+      </div>
+
+      <div class="sneaker-cleaning-page__pricing">
+        <div class="sneaker-cleaning-page__pricing-head">
+          {% if section.settings.pricing_kicker != blank %}
+            <p class="site-page-kicker">[ {{ section.settings.pricing_kicker | escape }} ]</p>
+          {% endif %}
+          {% if section.settings.pricing_title != blank %}
+            <h2>{{ section.settings.pricing_title | escape }}</h2>
+          {% endif %}
+        </div>
+
+        <div class="sneaker-cleaning-page__pricing-grid">
+          {% for block in section.blocks %}
+            {% if block.type == 'price' %}
+              <article class="sneaker-cleaning-page__price-card" {{ block.shopify_attributes }}>
+                {% if block.settings.service != blank %}
+                  <h3>{{ block.settings.service | escape }}</h3>
+                {% endif %}
+                {% if block.settings.description != blank %}
+                  <p>{{ block.settings.description | escape }}</p>
+                {% endif %}
+                {% if block.settings.price != blank %}
+                  <span>{{ block.settings.price | escape }}</span>
+                {% endif %}
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Sneaker cleaning page",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "SERVICE"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "NETTOYAGE SNEAKERS"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Texte",
+      "default": "Un nettoyage minutieux pour prolonger la vie de vos paires, raviver les matieres et retrouver une silhouette propre."
+    },
+    {
+      "type": "text",
+      "id": "pricing_kicker",
+      "label": "Kicker tarifs",
+      "default": "TARIFS"
+    },
+    {
+      "type": "text",
+      "id": "pricing_title",
+      "label": "Titre tarifs",
+      "default": "GRILLE TARIFAIRE"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "alt",
+          "label": "Texte alternatif",
+          "default": "Nettoyage sneakers Hormone Concept"
+        },
+        {
+          "type": "text",
+          "id": "caption",
+          "label": "Legende",
+          "default": "DETAIL NETTOYAGE"
+        }
+      ]
+    },
+    {
+      "type": "price",
+      "name": "Tarif",
+      "settings": [
+        {
+          "type": "text",
+          "id": "service",
+          "label": "Service",
+          "default": "NETTOYAGE STANDARD"
+        },
+        {
+          "type": "text",
+          "id": "description",
+          "label": "Description",
+          "default": "Nettoyage exterieur, lacets et finition."
+        },
+        {
+          "type": "text",
+          "id": "price",
+          "label": "Prix",
+          "default": "A PARTIR DE 25 EUR"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sneaker cleaning page",
+      "blocks": [
+        {
+          "type": "image",
+          "settings": {
+            "caption": "AVANT / APRES"
+          }
+        },
+        {
+          "type": "image",
+          "settings": {
+            "caption": "DETAIL MATIERE"
+          }
+        },
+        {
+          "type": "image",
+          "settings": {
+            "caption": "FINITION"
+          }
+        },
+        {
+          "type": "price",
+          "settings": {
+            "service": "NETTOYAGE STANDARD",
+            "description": "Nettoyage exterieur, semelle intermediaire et lacets.",
+            "price": "A PARTIR DE 25 EUR"
+          }
+        },
+        {
+          "type": "price",
+          "settings": {
+            "service": "NETTOYAGE PREMIUM",
+            "description": "Nettoyage approfondi, traitement des matieres et finition.",
+            "price": "A PARTIR DE 39 EUR"
+          }
+        },
+        {
+          "type": "price",
+          "settings": {
+            "service": "DEEP CLEAN",
+            "description": "Interieur, exterieur, lacets, semelles et controle final.",
+            "price": "A PARTIR DE 55 EUR"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

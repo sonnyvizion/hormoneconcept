@@ -16,16 +16,6 @@
           </span>
           <span class="header-menu__toggle-label">MENU</span>
         </button>
-
-        <div class="header-menu__panel" id="HeaderMenuPanel-{{ section.id }}" data-mobile-nav-panel>
-          <ul>
-            <li class="header-menu__mobile-only"><a href="{{ routes.search_url }}" data-search-trigger aria-controls="HeaderSearchOverlay-{{ section.id }}">RECHERCHER</a></li>
-            {% for link in section.settings.menu.links %}
-              <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-            {% endfor %}
-            <li class="header-menu__mobile-only header-menu__mobile-account"><a href="{{ routes.account_url }}">COMPTE</a></li>
-          </ul>
-        </div>
       </nav>
 
       <a class="header-cell header-brand" href="{{ routes.root_url }}">
@@ -39,13 +29,45 @@
               loading: 'eager',
               style: logo_style
           }}
+        {% else %}
+          <span class="header-brand__wordmark">{{ settings.brand_name | default: shop.name }}</span>
         {% endif %}
       </a>
 
       <div class="header-cell header-actions">
-        <a class="header-link header-link--search" href="{{ routes.search_url }}" data-search-trigger aria-controls="HeaderSearchOverlay-{{ section.id }}">RECHERCHER</a>
-        <a class="header-link header-link--account" href="{{ routes.account_url }}">COMPTE</a>
-        <a class="header-link header-link--cart" href="{{ routes.cart_url }}">PANIER</a>
+        <a
+          class="header-link header-link--search"
+          href="{{ routes.search_url }}"
+          data-search-trigger
+          data-disable-scramble="true"
+          aria-controls="HeaderSearchOverlay-{{ section.id }}"
+          aria-label="Rechercher"
+        >
+          <span class="header-link__icon header-link__icon--search" aria-hidden="true"></span>
+          <span class="visually-hidden">Rechercher</span>
+        </a>
+        <a
+          class="header-link header-link--account"
+          href="{{ routes.account_url }}"
+          data-disable-scramble="true"
+          aria-label="Compte"
+        >
+          <span class="header-link__icon header-link__icon--account" aria-hidden="true"></span>
+          <span class="visually-hidden">Compte</span>
+        </a>
+        <a
+          class="header-link header-link--cart{% if cart.item_count > 0 %} is-has-count{% endif %}"
+          href="{{ routes.cart_url }}"
+          data-header-cart-link
+          data-cart-drawer-trigger
+          data-disable-scramble="true"
+          aria-controls="HeaderCartDrawer-{{ section.id }}"
+          aria-expanded="false"
+        >
+          <span class="header-link__icon header-link__icon--cart" aria-hidden="true"></span>
+          <span class="visually-hidden">Panier</span>
+          <span class="header-link__count" data-header-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+        </a>
       </div>
     </div>
 
@@ -59,26 +81,326 @@
     >
       <div class="header-search-overlay__backdrop" data-search-close></div>
       <div class="header-search-overlay__dialog" role="dialog" aria-modal="true" aria-labelledby="HeaderSearchTitle-{{ section.id }}">
-        <div class="header-search-overlay__head">
-          <p class="header-search-overlay__kicker" id="HeaderSearchTitle-{{ section.id }}">[ RECHERCHE ]</p>
-          <button class="header-search-overlay__close" type="button" aria-label="Fermer la recherche" data-search-close>
-            <span></span>
-            <span></span>
-          </button>
+        <div class="header-search-overlay__panel">
+          <div class="header-search-overlay__head">
+            <p class="header-search-overlay__kicker" id="HeaderSearchTitle-{{ section.id }}">[ RECHERCHE ]</p>
+            <button class="header-search-overlay__close" type="button" aria-label="Fermer la recherche" data-search-close>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+          <form action="{{ routes.search_url }}" method="get" class="site-search-form header-search-overlay__form" role="search">
+            <input type="hidden" name="options[prefix]" value="last">
+            <label class="visually-hidden" for="HeaderSearchInput-{{ section.id }}">Recherche</label>
+            <div class="header-search-overlay__input-wrap">
+              <input id="HeaderSearchInput-{{ section.id }}" type="search" name="q" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off" data-search-input>
+              <button class="header-search-overlay__clear" type="button" aria-label="Effacer la recherche" data-search-clear hidden>
+                <span></span>
+                <span></span>
+              </button>
+            </div>
+            <button class="header-search-overlay__submit" type="submit">
+              <span class="header-search-overlay__submit-label">LANCER</span>
+            </button>
+          </form>
         </div>
-        <form action="{{ routes.search_url }}" method="get" class="site-search-form header-search-overlay__form" role="search">
-          <input type="hidden" name="options[prefix]" value="last">
-          <label class="visually-hidden" for="HeaderSearchInput-{{ section.id }}">Recherche</label>
-          <input id="HeaderSearchInput-{{ section.id }}" type="search" name="q" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off" data-search-input>
-          <button class="header-search-overlay__submit" type="submit">
-            <span class="header-search-overlay__submit-label">LANCER</span>
-          </button>
-        </form>
         <div class="header-search-predictive" data-search-results hidden></div>
       </div>
     </div>
   </div>
 </header>
+
+<aside
+  class="header-cart-drawer"
+  id="HeaderCartDrawer-{{ section.id }}"
+  data-cart-drawer
+  data-lenis-prevent="true"
+  aria-labelledby="HeaderCartDrawerTitle-{{ section.id }}"
+  aria-hidden="true"
+>
+  <button class="header-cart-drawer__backdrop" type="button" aria-label="Fermer le panier" data-cart-drawer-close></button>
+  <div class="header-cart-drawer__panel" role="dialog" aria-modal="true">
+    <div class="header-cart-drawer__head">
+      <p class="header-cart-drawer__kicker" id="HeaderCartDrawerTitle-{{ section.id }}">[ PANIER ]</p>
+      <button class="header-cart-drawer__close" type="button" aria-label="Fermer le panier" data-cart-drawer-close>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="header-cart-drawer__body" data-cart-drawer-body>
+      <p class="header-cart-drawer__loading">CHARGEMENT...</p>
+    </div>
+  </div>
+</aside>
+
+<div class="header-menu__panel" id="HeaderMenuPanel-{{ section.id }}" data-mobile-nav-panel>
+  <button
+    class="header-menu__close"
+    type="button"
+    data-mobile-nav-close
+    aria-label="Fermer le menu"
+  >
+    <span aria-hidden="true">&times;</span>
+  </button>
+
+  {% if section.settings.drawer_image != blank %}
+    <div class="header-menu__hero">
+      {{
+        section.settings.drawer_image
+        | image_url: width: 1400
+        | image_tag:
+          loading: 'lazy',
+          alt: '',
+          class: 'header-menu__hero-image'
+      }}
+    </div>
+  {% endif %}
+
+  <div class="header-menu__views" data-menu-views>
+    <div class="header-menu__view is-active" data-menu-view="root">
+      <div class="header-menu__view-head">
+        <h2 class="header-menu__view-title">
+          {{ section.settings.drawer_title | default: 'Nos Produits' }}
+        </h2>
+        {% assign view_all_url = section.settings.drawer_view_all_url | default: routes.all_products_collection_url %}
+        <a class="header-menu__view-all" href="{{ view_all_url }}">
+          {{ section.settings.drawer_view_all_label | default: 'Tout voir' }}
+        </a>
+      </div>
+
+      <ul class="header-menu__list">
+        {% if section.blocks.size > 0 %}
+          {% for block in section.blocks %}
+            {% liquid
+              assign has_sub = false
+              if block.settings.sub_menu != blank and block.settings.sub_menu.links.size > 0
+                assign has_sub = true
+              endif
+              assign block_label = block.settings.label | default: 'Categorie'
+            %}
+            <li class="header-menu__list-item" {{ block.shopify_attributes }}>
+              {% if has_sub %}
+                <button
+                  type="button"
+                  class="header-menu__list-row"
+                  data-menu-drill="view-{{ forloop.index }}"
+                >
+                  {% if block.settings.thumbnail != blank %}
+                    <span class="header-menu__list-thumb">
+                      {{ block.settings.thumbnail | image_url: width: 120 | image_tag: alt: '', loading: 'lazy' }}
+                    </span>
+                  {% elsif block.settings.badge != blank %}
+                    <span class="header-menu__list-badge">{{ block.settings.badge }}</span>
+                  {% else %}
+                    <span class="header-menu__list-thumb header-menu__list-thumb--empty" aria-hidden="true"></span>
+                  {% endif %}
+                  <span class="header-menu__list-label">{{ block_label }}</span>
+                  <span class="header-menu__list-chevron" aria-hidden="true">&rsaquo;</span>
+                </button>
+              {% else %}
+                <a class="header-menu__list-row" href="{{ block.settings.link | default: '#' }}">
+                  {% if block.settings.thumbnail != blank %}
+                    <span class="header-menu__list-thumb">
+                      {{ block.settings.thumbnail | image_url: width: 120 | image_tag: alt: '', loading: 'lazy' }}
+                    </span>
+                  {% elsif block.settings.badge != blank %}
+                    <span class="header-menu__list-badge">{{ block.settings.badge }}</span>
+                  {% else %}
+                    <span class="header-menu__list-thumb header-menu__list-thumb--empty" aria-hidden="true"></span>
+                  {% endif %}
+                  <span class="header-menu__list-label">{{ block_label }}</span>
+                </a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        {% else %}
+          {% for link in section.settings.menu.links %}
+            {% assign menu_idx = forloop.index %}
+            {% assign menu_has_children = false %}
+            {% if link.links and link.links.size > 0 %}
+              {% assign menu_has_children = true %}
+            {% endif %}
+            <li class="header-menu__list-item">
+              {% if menu_has_children %}
+                <button
+                  type="button"
+                  class="header-menu__list-row"
+                  data-menu-drill="menu-{{ menu_idx }}"
+                >
+                  <span class="header-menu__list-label">{{ link.title }}</span>
+                  <span class="header-menu__list-chevron" aria-hidden="true">&rsaquo;</span>
+                </button>
+              {% else %}
+                <a class="header-menu__list-row" href="{{ link.url }}">
+                  <span class="header-menu__list-label">{{ link.title }}</span>
+                </a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        {% endif %}
+      </ul>
+    </div>
+
+    {% unless section.blocks.size > 0 %}
+      {% for link in section.settings.menu.links %}
+        {% assign menu_idx = forloop.index %}
+        {% if link.links and link.links.size > 0 %}
+          <div class="header-menu__view" data-menu-view="menu-{{ menu_idx }}">
+            <div class="header-menu__view-head">
+              <button class="header-menu__view-back" type="button" data-menu-back="root" aria-label="Retour">
+                <span aria-hidden="true">&lsaquo;</span>
+              </button>
+              <h2 class="header-menu__view-title">{{ link.title }}</h2>
+              {% if link.url != blank and link.url != '#' %}
+                <a class="header-menu__view-all" href="{{ link.url }}">Tout voir</a>
+              {% endif %}
+            </div>
+            <ul class="header-menu__list">
+              {% for child in link.links %}
+                {% assign child_idx = forloop.index %}
+                {% assign child_has_children = false %}
+                {% if child.links and child.links.size > 0 %}
+                  {% assign child_has_children = true %}
+                {% endif %}
+                <li class="header-menu__list-item">
+                  {% if child_has_children %}
+                    <button
+                      type="button"
+                      class="header-menu__list-row"
+                      data-menu-drill="menu-{{ menu_idx }}-{{ child_idx }}"
+                    >
+                      <span class="header-menu__list-label">{{ child.title }}</span>
+                      <span class="header-menu__list-chevron" aria-hidden="true">&rsaquo;</span>
+                    </button>
+                  {% else %}
+                    <a class="header-menu__list-row" href="{{ child.url }}">
+                      <span class="header-menu__list-label">{{ child.title }}</span>
+                    </a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          {% for child in link.links %}
+            {% assign child_idx = forloop.index %}
+            {% if child.links and child.links.size > 0 %}
+              <div class="header-menu__view" data-menu-view="menu-{{ menu_idx }}-{{ child_idx }}">
+                <div class="header-menu__view-head">
+                  <button class="header-menu__view-back" type="button" data-menu-back="menu-{{ menu_idx }}" aria-label="Retour">
+                    <span aria-hidden="true">&lsaquo;</span>
+                  </button>
+                  <h2 class="header-menu__view-title">{{ child.title }}</h2>
+                  {% if child.url != blank and child.url != '#' %}
+                    <a class="header-menu__view-all" href="{{ child.url }}">Tout voir</a>
+                  {% endif %}
+                </div>
+                <ul class="header-menu__list">
+                  {% for grandchild in child.links %}
+                    <li class="header-menu__list-item">
+                      <a class="header-menu__list-row" href="{{ grandchild.url }}">
+                        <span class="header-menu__list-label">{{ grandchild.title }}</span>
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    {% endunless %}
+
+    {% for block in section.blocks %}
+      {% assign block_idx = forloop.index %}
+      {% if block.settings.sub_menu != blank and block.settings.sub_menu.links.size > 0 %}
+        <div class="header-menu__view" data-menu-view="view-{{ block_idx }}">
+          <div class="header-menu__view-head">
+            <button class="header-menu__view-back" type="button" data-menu-back="root" aria-label="Retour">
+              <span aria-hidden="true">&lsaquo;</span>
+            </button>
+            <h2 class="header-menu__view-title">{{ block.settings.label | default: 'Categorie' }}</h2>
+            {% if block.settings.link != blank %}
+              <a class="header-menu__view-all" href="{{ block.settings.link }}">Tout voir</a>
+            {% endif %}
+          </div>
+          <ul class="header-menu__list">
+            {% for sublink in block.settings.sub_menu.links %}
+              {% assign sublink_idx = forloop.index %}
+              {% assign sublink_has_children = false %}
+              {% if sublink.links and sublink.links.size > 0 %}
+                {% assign sublink_has_children = true %}
+              {% endif %}
+              <li class="header-menu__list-item">
+                {% if sublink_has_children %}
+                  <button
+                    type="button"
+                    class="header-menu__list-row"
+                    data-menu-drill="view-{{ block_idx }}-{{ sublink_idx }}"
+                  >
+                    <span class="header-menu__list-label">{{ sublink.title }}</span>
+                    <span class="header-menu__list-chevron" aria-hidden="true">&rsaquo;</span>
+                  </button>
+                {% else %}
+                  <a class="header-menu__list-row" href="{{ sublink.url }}">
+                    <span class="header-menu__list-label">{{ sublink.title }}</span>
+                  </a>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        {% for sublink in block.settings.sub_menu.links %}
+          {% assign sublink_idx = forloop.index %}
+          {% if sublink.links and sublink.links.size > 0 %}
+            <div class="header-menu__view" data-menu-view="view-{{ block_idx }}-{{ sublink_idx }}">
+              <div class="header-menu__view-head">
+                <button class="header-menu__view-back" type="button" data-menu-back="view-{{ block_idx }}" aria-label="Retour">
+                  <span aria-hidden="true">&lsaquo;</span>
+                </button>
+                <h2 class="header-menu__view-title">{{ sublink.title }}</h2>
+                {% if sublink.url != blank and sublink.url != '#' %}
+                  <a class="header-menu__view-all" href="{{ sublink.url }}">Tout voir</a>
+                {% endif %}
+              </div>
+              <ul class="header-menu__list">
+                {% for nestedlink in sublink.links %}
+                  <li class="header-menu__list-item">
+                    <a class="header-menu__list-row" href="{{ nestedlink.url }}">
+                      <span class="header-menu__list-label">{{ nestedlink.title }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+
+    <ul class="header-menu__quick-actions">
+      <li class="header-menu__mobile-only"><a href="{{ routes.search_url }}" data-search-trigger aria-controls="HeaderSearchOverlay-{{ section.id }}">RECHERCHER</a></li>
+      <li class="header-menu__mobile-only header-menu__mobile-account"><a href="{{ routes.account_url }}">COMPTE</a></li>
+    </ul>
+  </div>
+
+  {% if section.settings.drawer_image_bottom != blank %}
+    <a class="header-menu__hero header-menu__hero--bottom" href="{{ section.settings.drawer_image_bottom_url | default: '#' }}">
+      {{
+        section.settings.drawer_image_bottom
+        | image_url: width: 1400
+        | image_tag:
+          loading: 'lazy',
+          alt: '',
+          class: 'header-menu__hero-image'
+      }}
+      {% if section.settings.drawer_image_bottom_caption != blank %}
+        <span class="header-menu__hero-caption">{{ section.settings.drawer_image_bottom_caption }}</span>
+      {% endif %}
+    </a>
+  {% endif %}
+</div>
 
 {% schema %}
 {
@@ -87,7 +409,7 @@
     {
       "type": "link_list",
       "id": "menu",
-      "label": "Menu",
+      "label": "Menu (fallback si aucun block)",
       "default": "main-menu"
     },
     {
@@ -104,7 +426,84 @@
       "step": 10,
       "default": 180,
       "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Drawer menu"
+    },
+    {
+      "type": "image_picker",
+      "id": "drawer_image",
+      "label": "Image en haut du drawer"
+    },
+    {
+      "type": "text",
+      "id": "drawer_title",
+      "label": "Titre",
+      "default": "Nos Produits"
+    },
+    {
+      "type": "text",
+      "id": "drawer_view_all_label",
+      "label": "Texte 'Tout voir'",
+      "default": "Tout voir"
+    },
+    {
+      "type": "url",
+      "id": "drawer_view_all_url",
+      "label": "Lien 'Tout voir' (defaut: tous les produits)"
+    },
+    {
+      "type": "image_picker",
+      "id": "drawer_image_bottom",
+      "label": "Image en bas du drawer"
+    },
+    {
+      "type": "url",
+      "id": "drawer_image_bottom_url",
+      "label": "Lien de l'image du bas"
+    },
+    {
+      "type": "text",
+      "id": "drawer_image_bottom_caption",
+      "label": "Texte sur l'image du bas (optionnel)"
     }
-  ]
+  ],
+  "blocks": [
+    {
+      "type": "menu_item",
+      "name": "Item de menu",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Titre",
+          "default": "Categorie"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Lien (optionnel si sous-menu)"
+        },
+        {
+          "type": "text",
+          "id": "badge",
+          "label": "Badge (ex: SALES, NEW)"
+        },
+        {
+          "type": "image_picker",
+          "id": "thumbnail",
+          "label": "Miniature (optionnelle)"
+        },
+        {
+          "type": "link_list",
+          "id": "sub_menu",
+          "label": "Sous-menu (optionnel)",
+          "info": "Si rempli, l'item affiche un chevron et ouvre les sous-categories."
+        }
+      ]
+    }
+  ],
+  "max_blocks": 12
 }
 {% endschema %}

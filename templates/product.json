@@ -3,9 +3,58 @@
     "main": {
       "type": "main-product",
       "settings": {}
+    },
+    "product_reassurance": {
+      "type": "product-reassurance",
+      "settings": {
+        "kicker": "REASSURANCE",
+        "title": "ACHETEZ EN TOUTE CONFIANCE"
+      },
+      "blocks": {
+        "authenticity": {
+          "type": "item",
+          "settings": {
+            "label": "AUTHENTICITÉ",
+            "text": "Chaque paire est contrôlée avant expédition."
+          }
+        },
+        "shipping": {
+          "type": "item",
+          "settings": {
+            "label": "EXPÉDITION",
+            "text": "Préparation rapide et envoi suivi en France et à l'international."
+          }
+        },
+        "payment": {
+          "type": "item",
+          "settings": {
+            "label": "PAIEMENT",
+            "text": "Paiement sécurisé et options express disponibles."
+          }
+        },
+        "pickup": {
+          "type": "item",
+          "settings": {
+            "label": "RETRAIT",
+            "text": "Retrait en boutique possible selon disponibilité."
+          }
+        }
+      },
+      "block_order": [
+        "authenticity",
+        "shipping",
+        "payment",
+        "pickup"
+      ]
+    },
+    "product_suggestions": {
+      "type": "product-collection-slider",
+      "settings": {}
     }
   },
   "order": [
-    "main"
+    "main",
+    "product_reassurance",
+    "product_suggestions"
   ]
 }

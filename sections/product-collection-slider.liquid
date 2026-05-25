@@ -1,35 +1,25 @@
 {% liquid
   assign row_products_limit = 5
-  assign fallback_view_all_url = routes.all_products_collection_url
-  assign coll = collections[section.settings.collection]
-
+  assign current_collection = product.collections | first
   assign row_label = section.settings.row_label
   if row_label == blank
-    if coll != blank
-      assign row_label = coll.title
-    else
-      assign row_label = 'Drop New'
-    endif
+    assign row_label = 'VOUS AIMEREZ AUSSI'
   endif
   assign row_label = row_label | strip | upcase
-
   assign view_all_label = section.settings.view_all_label | strip
   if view_all_label == blank
     assign view_all_label = 'TOUT VOIR'
   endif
   assign view_all_label = view_all_label | upcase
-
-  assign view_all_url = section.settings.view_all_url
-  if view_all_url == blank and coll != blank
-    assign view_all_url = coll.url
-  endif
-  if view_all_url == blank
-    assign view_all_url = fallback_view_all_url
+  if current_collection != blank
+    assign view_all_url = current_collection.url
+  else
+    assign view_all_url = routes.all_products_collection_url
   endif
 %}
 
 <section
-  class="collection-slider collection-slider--single"
+  class="collection-slider collection-slider--product-suggestions"
   data-collection-stacks
   style="
     --collection-slider-bg: #D9DBDD;
@@ -45,12 +35,14 @@
   <div class="collection-slider__inner">
     {% for row_number in (1..2) %}
       {% liquid
-        assign product_offset = 0
+        assign row_start_index = 1
+        assign row_end_index = row_products_limit
         if row_number == 2
-          assign product_offset = row_products_limit
+          assign row_start_index = row_products_limit | plus: 1
+          assign row_end_index = row_products_limit | times: 2
         endif
       %}
-      <article class="collection-slider__row{% if row_number == 2 %} collection-slider__row--secondary{% endif %}" {{ section.shopify_attributes }}>
+      <article class="collection-slider__row{% if row_number == 2 %} collection-slider__row--secondary{% endif %}">
         <div class="collection-slider__overlay">
           {% if row_number == 1 %}
             <div class="collection-slider__badge collection-slider__badge--title">
@@ -96,6 +88,7 @@
             >
               <span class="collection-slider__fixed-quick-add-icon" aria-hidden="true">+</span>
               <span class="collection-slider__fixed-quick-add-label" aria-hidden="true">AJOUTER AU PANIER</span>
+              <span class="collection-slider__fixed-quick-add-sold-out" aria-hidden="true">ÉPUISÉ</span>
             </button>
           {% endfor %}
         </div>
@@ -107,12 +100,17 @@
 
         <div class="collection-slider__viewport" data-stack-viewport>
           <div class="collection-slider__track" data-stack-track data-loop-size="{{ row_products_limit }}">
-            {% if coll != blank %}
+            {% if current_collection != blank %}
               {% for pass in (1..3) %}
                 {% assign rendered_count = 0 %}
-                {% for product in coll.products limit: row_products_limit offset: product_offset %}
+                {% assign visible_index = 0 %}
+                {% for p in current_collection.products %}
+                  {% if p.id == product.id %}{% continue %}{% endif %}
+                  {% assign visible_index = visible_index | plus: 1 %}
+                  {% if visible_index < row_start_index %}{% continue %}{% endif %}
+                  {% if visible_index > row_end_index %}{% break %}{% endif %}
                   {% liquid
-                    assign quick_variant = product.selected_or_first_available_variant
+                    assign quick_variant = p.selected_or_first_available_variant
                     assign rendered_count = rendered_count | plus: 1
                   %}
                   <article class="collection-slider__card" data-product-card>
@@ -120,13 +118,13 @@
                       <form
                         class="collection-slider__quick-add"
                         data-quick-add-form
-                        data-quick-add-title="{{ product.title | escape }}"
-                        data-quick-add-image="{% if product.featured_image %}{{ product.featured_image | image_url: width: 320 }}{% endif %}"
+                        data-quick-add-title="{{ p.title | escape }}"
+                        data-quick-add-image="{% if p.featured_image %}{{ p.featured_image | image_url: width: 320 }}{% endif %}"
                       >
                         <input type="hidden" name="id" value="{{ quick_variant.id }}">
                         <script type="application/json" data-quick-add-variants>
                           [
-                            {% for variant in product.variants %}
+                            {% for variant in p.variants %}
                               {
                                 "id": {{ variant.id }},
                                 "title": {{ variant.title | json }},
@@ -139,7 +137,7 @@
                         <button
                           class="collection-slider__quick-add-button"
                           type="submit"
-                          aria-label="Ajouter {{ product.title }} au panier"
+                          aria-label="Ajouter {{ p.title }} au panier"
                           {% unless quick_variant.available %}disabled{% endunless %}
                         >
                           <span aria-hidden="true">+</span>
@@ -147,15 +145,15 @@
                       </form>
                     {% endif %}
 
-                    <a class="collection-slider__product-link" href="{{ product.url }}">
+                    <a class="collection-slider__product-link" href="{{ p.url }}">
                       <div class="collection-slider__media">
-                        {% if product.featured_image %}
+                        {% if p.featured_image %}
                           {{
-                            product.featured_image
+                            p.featured_image
                             | image_url: width: 1200
                             | image_tag:
                               loading: 'lazy',
-                              alt: product.title,
+                              alt: p.title,
                               class: 'collection-slider__product-image'
                           }}
                         {% else %}
@@ -163,9 +161,9 @@
                         {% endif %}
                       </div>
                       <div class="collection-slider__meta">
-                        <p class="collection-slider__brand">{{ product.vendor | default: 'Original' | upcase }}</p>
-                        <h3>{{ product.title | upcase }}</h3>
-                        <p class="collection-slider__price">{{ product.price | money }}</p>
+                        <p class="collection-slider__brand">{{ p.vendor | default: 'Original' | upcase }}</p>
+                        <h3>{{ p.title | upcase }}</h3>
+                        <p class="collection-slider__price">{{ p.price | money }}</p>
                       </div>
                     </a>
                   </article>
@@ -176,7 +174,7 @@
                 %}
                 {% if missing_cards > 0 %}
                   {% for i in (1..missing_cards) %}
-                    <article class="collection-slider__card" data-product-card>
+                    <article class="collection-slider__card collection-slider__card--placeholder" data-product-card>
                       <div class="collection-slider__quick-add">
                         <button class="collection-slider__quick-add-button" type="button" disabled aria-hidden="true">
                           <span aria-hidden="true">+</span>
@@ -199,7 +197,7 @@
             {% else %}
               {% for pass in (1..3) %}
                 {% for i in (1..row_products_limit) %}
-                  <article class="collection-slider__card" data-product-card>
+                  <article class="collection-slider__card collection-slider__card--placeholder" data-product-card>
                     <div class="collection-slider__quick-add">
                       <button class="collection-slider__quick-add-button" type="button" disabled aria-hidden="true">
                         <span aria-hidden="true">+</span>
@@ -228,29 +226,19 @@
 
 {% schema %}
 {
-  "name": "Collection slider single",
+  "name": "Suggestions produits",
   "settings": [
-    {
-      "type": "collection",
-      "id": "collection",
-      "label": "Collection"
-    },
     {
       "type": "text",
       "id": "row_label",
-      "label": "Texte defilant gauche (optionnel)",
-      "default": "DROP NEW"
+      "label": "Texte defilant",
+      "default": "VOUS AIMEREZ AUSSI"
     },
     {
       "type": "text",
       "id": "view_all_label",
-      "label": "Texte defilant droite",
+      "label": "Texte bouton tout voir",
       "default": "TOUT VOIR"
-    },
-    {
-      "type": "url",
-      "id": "view_all_url",
-      "label": "Lien tout voir (optionnel)"
     },
     {
       "type": "color",
@@ -309,7 +297,7 @@
   ],
   "presets": [
     {
-      "name": "Collection slider single"
+      "name": "Suggestions produits"
     }
   ]
 }

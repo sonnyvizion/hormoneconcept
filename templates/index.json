@@ -36,6 +36,41 @@
         "mobile_breakpoint": 768
       }
     },
+    "category_sticky_1": {
+      "type": "category-sticky-showcase",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    },
+    "collections_duo": {
+      "type": "collections-duo-showcase",
+      "blocks": {
+        "tile_1": {
+          "type": "collection_tile",
+          "settings": {
+            "title": "COLLECTION A",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "VOIR"
+          }
+        },
+        "tile_2": {
+          "type": "collection_tile",
+          "settings": {
+            "title": "COLLECTION B",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "VOIR"
+          }
+        }
+      },
+      "block_order": ["tile_1", "tile_2"],
+      "settings": {}
+    },
+    "category_sticky_2": {
+      "type": "category-sticky-showcase",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    },
     "featured_collection": {
       "type": "featured-collection",
       "settings": {
@@ -45,5 +80,11 @@
       }
     }
   },
-  "order": ["video_hero", "featured_collection"]
+  "order": [
+    "video_hero",
+    "category_sticky_1",
+    "collections_duo",
+    "category_sticky_2",
+    "featured_collection"
+  ]
 }

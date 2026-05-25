@@ -1,64 +1,334 @@
 {% liquid
   assign current_sort = collection.sort_by | default: collection.default_sort_by
+  assign default_cols = section.settings.grid_columns | plus: 0
+  assign products_per_page = section.settings.products_per_page
+  assign desc_plain = collection.description | strip_html
+  assign desc_needs_accordion = false
+  if desc_plain.size > 180
+    assign desc_needs_accordion = true
+  endif
 %}
 
-<section class="main-collection">
-  <div class="container">
-    <div class="site-page-shell site-page-shell--catalog">
-      <header class="site-page-head">
-        <p class="site-page-kicker">[ COLLECTION ]</p>
-        <h1>{{ collection.title }}</h1>
-        {% if collection.description != blank %}
-          <div class="rte site-page-lead">{{ collection.description }}</div>
-        {% endif %}
-      </header>
+<section
+  class="main-collection"
+  data-collection-page
+  style="--catalog-cols: {{ default_cols }};"
+>
 
-      {% paginate collection.products by section.settings.products_per_page %}
-        <div class="catalog-toolbar">
-          <p class="catalog-toolbar__count">{{ collection.products_count }} PRODUITS</p>
-          <form class="catalog-toolbar__sort" method="get" action="{{ collection.url }}">
-            <label for="SortBy">TRI</label>
-            <select id="SortBy" name="sort_by" onchange="this.form.submit()">
-              {% for option in collection.sort_options %}
-                <option value="{{ option.value | escape }}" {% if option.value == current_sort %}selected{% endif %}>
-                  {{ option.name | upcase }}
-                </option>
-              {% endfor %}
-            </select>
-          </form>
-        </div>
+  <div class="catalog-page-head">
+    <p class="site-page-kicker">[ COLLECTION ]</p>
+    <h1 class="catalog-page-head__title">{{ collection.title }}</h1>
 
-        <div class="catalog-grid">
-          {% for product in collection.products %}
-            {% render 'product-card', product: product %}
-          {% else %}
-            <div class="catalog-empty">
-              <p>AUCUN PRODUIT DISPONIBLE DANS CETTE COLLECTION.</p>
-              <a class="button" href="{{ routes.all_products_collection_url }}">VOIR TOUTES LES PIECES</a>
+    {% if collection.description != blank %}
+      {% if desc_needs_accordion %}
+        <details class="catalog-desc" data-catalog-desc>
+          <summary class="catalog-desc__summary">
+            <span class="catalog-desc__preview">{{ desc_plain | truncate: 160 }}</span>
+            <span class="catalog-desc__toggle" aria-hidden="true">
+              <span class="catalog-desc__open-label">LIRE LA SUITE</span>
+              <span class="catalog-desc__close-label">RÉDUIRE</span>
+              <span class="catalog-desc__arrow"></span>
+            </span>
+          </summary>
+          <div class="catalog-desc__body rte">{{ collection.description }}</div>
+        </details>
+      {% else %}
+        <div class="rte catalog-desc__short">{{ collection.description }}</div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="catalog-page-body">
+    {% paginate collection.products by products_per_page %}
+
+      <div class="catalog-filters">
+        <form
+          class="catalog-filters__bar"
+          method="get"
+          action="{{ collection.url }}"
+          data-catalog-filter-form
+        >
+
+          {% if collection.filters.size > 0 %}
+            {%- liquid
+              assign total_active_filters = 0
+              for filter in collection.filters
+                if filter.type == 'price_range'
+                  if filter.min_value.value or filter.max_value.value
+                    assign total_active_filters = total_active_filters | plus: 1
+                  endif
+                else
+                  for v in filter.values
+                    if v.active
+                      assign total_active_filters = total_active_filters | plus: 1
+                    endif
+                  endfor
+                endif
+              endfor
+            -%}
+            <details class="catalog-filters__mobile-accordion{% if total_active_filters > 0 %} catalog-filters__mobile-accordion--active{% endif %}" data-catalog-filters-mobile open>
+              <summary class="catalog-filters__mobile-trigger">
+                <span>FILTRER</span>
+                {% if total_active_filters > 0 %}
+                  <span class="catalog-filters__mobile-count">{{ total_active_filters }}</span>
+                {% endif %}
+                <span class="catalog-filters__mobile-arrow" aria-hidden="true"></span>
+              </summary>
+
+              <div class="catalog-filters__mobile-panel">
+                <div class="catalog-filters__groups">
+                  <span class="catalog-filters__sep-label">FILTRER</span>
+
+                  {% for filter in collection.filters %}
+                    {%- liquid
+                      assign active_count = 0
+                      if filter.type == 'price_range'
+                        if filter.min_value.value or filter.max_value.value
+                          assign active_count = 1
+                        endif
+                      else
+                        for v in filter.values
+                          if v.active
+                            assign active_count = active_count | plus: 1
+                          endif
+                        endfor
+                      endif
+                    -%}
+                    <details class="catalog-filter-group{% if active_count > 0 %} catalog-filter-group--active{% endif %}" data-filter-group>
+                      <summary class="catalog-filter-group__trigger">
+                        {{ filter.label | upcase }}
+                        {% if active_count > 0 %}
+                          <span class="catalog-filter-group__count">{{ active_count }}</span>
+                        {% endif %}
+                        <span class="catalog-filter-group__arrow" aria-hidden="true"></span>
+                      </summary>
+
+                      <div class="catalog-filter-group__panel">
+                        {% if filter.type == 'price_range' %}
+                          <div class="catalog-filter-price">
+                            <div class="catalog-filter-price__row">
+                              <label class="catalog-filter-price__field">
+                                <span class="catalog-filter-price__field-label">MIN</span>
+                                <input
+                                  class="catalog-filter-price__input"
+                                  type="number"
+                                  name="{{ filter.min_value.param_name }}"
+                                  {% if filter.min_value.value %}value="{{ filter.min_value.value | divided_by: 100.0 | round }}"{% endif %}
+                                  placeholder="{{ filter.range_min | divided_by: 100.0 | round }}"
+                                  min="{{ filter.range_min | divided_by: 100.0 | round }}"
+                                  max="{{ filter.range_max | divided_by: 100.0 | round }}"
+                                >
+                              </label>
+                              <span class="catalog-filter-price__dash">—</span>
+                              <label class="catalog-filter-price__field">
+                                <span class="catalog-filter-price__field-label">MAX</span>
+                                <input
+                                  class="catalog-filter-price__input"
+                                  type="number"
+                                  name="{{ filter.max_value.param_name }}"
+                                  {% if filter.max_value.value %}value="{{ filter.max_value.value | divided_by: 100.0 | round }}"{% endif %}
+                                  placeholder="{{ filter.range_max | divided_by: 100.0 | round }}"
+                                  min="{{ filter.range_min | divided_by: 100.0 | round }}"
+                                  max="{{ filter.range_max | divided_by: 100.0 | round }}"
+                                >
+                              </label>
+                            </div>
+                            <button type="submit" class="catalog-filter-price__apply">APPLIQUER</button>
+                          </div>
+                        {% else %}
+                          {% for value in filter.values %}
+                            <label class="catalog-filter-option{% if value.count == 0 and value.active == false %} catalog-filter-option--disabled{% endif %}">
+                              <input
+                                class="catalog-filter-option__checkbox"
+                                type="checkbox"
+                                name="{{ value.param_name }}"
+                                value="{{ value.value }}"
+                                {% if value.active %}checked{% endif %}
+                                {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                                data-filter-checkbox
+                              >
+                              <span class="catalog-filter-option__label">{{ value.label | upcase }}</span>
+                              <span class="catalog-filter-option__count">({{ value.count }})</span>
+                            </label>
+                          {% endfor %}
+                        {% endif %}
+                      </div>
+                    </details>
+                  {% endfor %}
+                </div>
+              </div>
+            </details>
+          {% endif %}
+
+          <div class="catalog-filters__right">
+            <div class="catalog-toolbar__sort">
+              <label for="SortBy" class="catalog-toolbar__sort-label">TRI</label>
+              <select id="SortBy" name="sort_by" onchange="this.closest('form').submit()">
+                {% for option in collection.sort_options %}
+                  <option value="{{ option.value | escape }}" {% if option.value == current_sort %}selected{% endif %}>
+                    {{ option.name | upcase }}
+                  </option>
+                {% endfor %}
+              </select>
             </div>
-          {% endfor %}
-        </div>
 
-        {% if paginate.pages > 1 %}
-          <nav class="site-pagination" role="navigation" aria-label="Pagination collection">
-            {% if paginate.previous %}
-              <a class="site-pagination__item" href="{{ paginate.previous.url }}">PRECEDENT</a>
-            {% endif %}
-            {% for part in paginate.parts %}
-              {% if part.is_link %}
-                <a class="site-pagination__item" href="{{ part.url }}">{{ part.title }}</a>
+            <div class="catalog-toolbar__columns" data-col-toggle aria-label="Colonnes">
+              {% for n in (2..4) %}
+                <button
+                  type="button"
+                  class="catalog-col-btn{% if n == default_cols %} is-active{% endif %}"
+                  data-cols="{{ n }}"
+                  aria-label="{{ n }} colonnes"
+                ><span class="catalog-col-icon" aria-hidden="true">{% for i in (1..n) %}<span></span>{% endfor %}</span></button>
+              {% endfor %}
+            </div>
+          </div>
+        </form>
+
+        {%- liquid
+          assign has_active_filters = false
+          for filter in collection.filters
+            if filter.type == 'price_range'
+              if filter.min_value.value or filter.max_value.value
+                assign has_active_filters = true
+              endif
+            else
+              for v in filter.values
+                if v.active
+                  assign has_active_filters = true
+                endif
+              endfor
+            endif
+          endfor
+        -%}
+        {% if has_active_filters %}
+          <div class="catalog-active-filters">
+            <span class="catalog-active-filters__label">ACTIFS</span>
+            {% for filter in collection.filters %}
+              {% if filter.type == 'price_range' %}
+                {% if filter.min_value.value or filter.max_value.value %}
+                  <a href="{{ filter.url_to_remove }}" class="catalog-active-filter">
+                    PRIX{% if filter.min_value.value %} ≥ {{ filter.min_value.value | divided_by: 100.0 | round | money_without_currency }}{% endif %}{% if filter.max_value.value %} ≤ {{ filter.max_value.value | divided_by: 100.0 | round | money_without_currency }}{% endif %}
+                    <span aria-hidden="true">×</span>
+                  </a>
+                {% endif %}
               {% else %}
-                <span class="site-pagination__item {% if part.title == paginate.current_page %}is-active{% endif %}">{{ part.title }}</span>
+                {% for value in filter.values %}
+                  {% if value.active %}
+                    <a href="{{ value.url_to_remove }}" class="catalog-active-filter">
+                      {{ value.label | upcase }}
+                      <span aria-hidden="true">×</span>
+                    </a>
+                  {% endif %}
+                {% endfor %}
               {% endif %}
             {% endfor %}
-            {% if paginate.next %}
-              <a class="site-pagination__item" href="{{ paginate.next.url }}">SUIVANT</a>
-            {% endif %}
-          </nav>
+            <a href="{{ collection.url }}" class="catalog-active-filter catalog-active-filter--clear">TOUT EFFACER</a>
+          </div>
         {% endif %}
-      {% endpaginate %}
-    </div>
+      </div>
+
+      <p class="catalog-count">{{ collection.products_count }} PRODUIT{% if collection.products_count != 1 %}S{% endif %}</p>
+
+      <div class="catalog-grid" data-catalog-grid>
+        {% for product in collection.products %}
+          {% assign pv = product.selected_or_first_available_variant %}
+          <article class="catalog-grid__card">
+            {% if pv != blank %}
+              <form
+                class="catalog-grid__quick-add"
+                data-quick-add-form
+                data-quick-add-title="{{ product.title | escape }}"
+                data-quick-add-image="{% if product.featured_image %}{{ product.featured_image | image_url: width: 320 }}{% endif %}"
+              >
+                <input type="hidden" name="id" value="{{ pv.id }}">
+                <script type="application/json" data-quick-add-variants>
+                  [
+                    {% for variant in product.variants %}
+                      {
+                        "id": {{ variant.id }},
+                        "title": {{ variant.title | json }},
+                        "available": {{ variant.available | json }},
+                        "price": {{ variant.price | money | json }}
+                      }{% unless forloop.last %},{% endunless %}
+                    {% endfor %}
+                  ]
+                </script>
+                <button
+                  type="submit"
+                  class="catalog-grid__quick-add-btn"
+                  aria-label="Ajouter {{ product.title }} au panier"
+                  {% unless pv.available %}disabled{% endunless %}
+                >
+                  <span class="catalog-grid__quick-add-icon" aria-hidden="true"></span>
+                  <span class="catalog-grid__quick-add-label" aria-hidden="true">AJOUTER AU PANIER</span>
+                </button>
+              </form>
+            {% endif %}
+
+            <a class="catalog-grid__link" href="{{ product.url }}">
+              <div class="catalog-grid__media">
+                {% if product.featured_image %}
+                  {{
+                    product.featured_image
+                    | image_url: width: 1200
+                    | image_tag:
+                      loading: 'lazy',
+                      alt: product.title,
+                      class: 'catalog-grid__image'
+                  }}
+                {% else %}
+                  <div class="catalog-grid__image catalog-grid__image--placeholder"></div>
+                {% endif %}
+                {% unless product.available %}
+                  <span class="catalog-grid__badge">ÉPUISÉ</span>
+                {% endunless %}
+              </div>
+              <div class="catalog-grid__meta">
+                <p class="catalog-grid__vendor">{{ product.vendor | default: shop.name | upcase }}</p>
+                <h3 class="catalog-grid__title">{{ product.title | upcase }}</h3>
+                <p class="catalog-grid__price">
+                  {% if product.price_varies %}
+                    À PARTIR DE {{ product.price_min | money }}
+                  {% else %}
+                    {{ product.price | money }}
+                  {% endif %}
+                  {% if product.compare_at_price > product.price %}
+                    <s class="catalog-grid__compare-price">{{ product.compare_at_price | money }}</s>
+                  {% endif %}
+                </p>
+              </div>
+            </a>
+          </article>
+        {% else %}
+          <div class="catalog-empty">
+            <p>AUCUN PRODUIT DISPONIBLE DANS CETTE COLLECTION.</p>
+            <a class="button" href="{{ routes.all_products_collection_url }}">VOIR TOUTES LES PIÈCES</a>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if paginate.pages > 1 %}
+        <nav class="site-pagination" role="navigation" aria-label="Pagination collection">
+          {% if paginate.previous %}
+            <a class="site-pagination__item" href="{{ paginate.previous.url }}">PRÉCÉDENT</a>
+          {% endif %}
+          {% for part in paginate.parts %}
+            {% if part.is_link %}
+              <a class="site-pagination__item" href="{{ part.url }}">{{ part.title }}</a>
+            {% else %}
+              <span class="site-pagination__item{% if part.title == paginate.current_page %} is-active{% endif %}">{{ part.title }}</span>
+            {% endif %}
+          {% endfor %}
+          {% if paginate.next %}
+            <a class="site-pagination__item" href="{{ paginate.next.url }}">SUIVANT</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+
+    {% endpaginate %}
   </div>
+
 </section>
 
 {% schema %}
@@ -70,9 +340,20 @@
       "id": "products_per_page",
       "label": "Produits par page",
       "min": 8,
-      "max": 36,
+      "max": 48,
       "step": 4,
       "default": 16
+    },
+    {
+      "type": "select",
+      "id": "grid_columns",
+      "label": "Colonnes par défaut",
+      "options": [
+        { "value": "2", "label": "2 colonnes" },
+        { "value": "3", "label": "3 colonnes" },
+        { "value": "4", "label": "4 colonnes" }
+      ],
+      "default": "4"
     }
   ]
 }

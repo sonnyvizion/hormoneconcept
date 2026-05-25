@@ -1,56 +1,190 @@
+{% liquid
+  assign product_results_count = 0
+  assign editorial_results_count = 0
+  assign has_search_term = false
+
+  if search.performed
+    if search.terms != blank
+      assign has_search_term = true
+    endif
+
+    for item in search.results
+      if item.object_type == 'product'
+        assign product_results_count = product_results_count | plus: 1
+      elsif item.object_type == 'collection' or item.object_type == 'page' or item.object_type == 'article'
+        assign editorial_results_count = editorial_results_count | plus: 1
+      endif
+    endfor
+  endif
+%}
+
 <section class="main-page main-search">
-  <div class="container">
-    <div class="site-page-shell site-page-shell--catalog">
-      <header class="site-page-head">
-        <p class="site-page-kicker">[ RECHERCHE ]</p>
-        <h1>TROUVER UNE PAIRE</h1>
-      </header>
+  <div class="main-search__frame">
+    <header class="catalog-page-head main-search__head">
+      <p class="site-page-kicker">[ RECHERCHE ]</p>
+      <h1 class="catalog-page-head__title">{% if has_search_term %}{{ search.terms | upcase }}{% else %}TROUVER UNE PAIRE{% endif %}</h1>
+    </header>
 
-      <form action="{{ routes.search_url }}" method="get" class="site-search-form" role="search">
-        <input type="hidden" name="options[prefix]" value="last">
-        <label class="visually-hidden" for="SearchInput">Recherche</label>
-        <input id="SearchInput" type="search" name="q" value="{{ search.terms | escape }}" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off">
-        <button class="button" type="submit">LANCER</button>
-      </form>
+    <div class="catalog-page-body main-search__body">
+      <div class="main-search__layout">
+        <aside class="main-search__rail">
+          <div class="main-search__panel main-search__panel--search">
+            <p class="main-search__panel-kicker">[ RECHERCHER ]</p>
+            <form action="{{ routes.search_url }}" method="get" class="site-search-form main-search__form" role="search">
+              <input type="hidden" name="options[prefix]" value="last">
+              <label class="visually-hidden" for="SearchInput">Recherche</label>
+              <input id="SearchInput" type="search" name="q" value="{{ search.terms | escape }}" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off">
+              <button class="button main-search__submit" type="submit">LANCER</button>
+            </form>
+            <p class="main-search__panel-copy">
+              {% if has_search_term %}
+                RESULTATS POUR "{{ search.terms | upcase }}", AVEC UNE SEPARATION CLAIRE ENTRE PRODUITS ET CONTENUS.
+              {% else %}
+                UTILISE LA RECHERCHE COMME UN INDEX RAPIDE POUR NAVIGUER DANS L'UNIVERS HORMONE.
+              {% endif %}
+            </p>
+          </div>
 
-      {% if search.performed %}
-        <div class="catalog-toolbar">
-          <p class="catalog-toolbar__count">{{ search.results_count }} RESULTATS</p>
-        </div>
+          <div class="main-search__panel main-search__panel--summary">
+            <p class="main-search__panel-kicker">[ INDEX ]</p>
+            <div class="main-search__stats">
+              <div class="main-search__stat">
+                <span class="main-search__stat-value">{{ search.results_count }}</span>
+                <span class="main-search__stat-label">RESULTAT{% if search.results_count != 1 %}S{% endif %}</span>
+              </div>
+              <div class="main-search__stat">
+                <span class="main-search__stat-value">{{ product_results_count }}</span>
+                <span class="main-search__stat-label">PRODUIT{% if product_results_count != 1 %}S{% endif %}</span>
+              </div>
+              <div class="main-search__stat">
+                <span class="main-search__stat-value">{{ editorial_results_count }}</span>
+                <span class="main-search__stat-label">CONTENU{% if editorial_results_count != 1 %}S{% endif %}</span>
+              </div>
+            </div>
+          </div>
+        </aside>
 
-        <div class="catalog-grid">
-          {% for item in search.results %}
-            {% if item.object_type == 'product' %}
-              {% render 'product-card', product: item %}
-            {% elsif item.object_type == 'collection' %}
-              <article class="catalog-entry">
-                <a class="catalog-entry__link" href="{{ item.url }}">
-                  <p class="catalog-entry__type">[ COLLECTION ]</p>
-                  <h3>{{ item.title | upcase }}</h3>
-                </a>
-              </article>
-            {% elsif item.object_type == 'page' %}
-              <article class="catalog-entry">
-                <a class="catalog-entry__link" href="{{ item.url }}">
-                  <p class="catalog-entry__type">[ PAGE ]</p>
-                  <h3>{{ item.title | upcase }}</h3>
-                </a>
-              </article>
-            {% elsif item.object_type == 'article' %}
-              <article class="catalog-entry">
-                <a class="catalog-entry__link" href="{{ item.url }}">
-                  <p class="catalog-entry__type">[ ARTICLE ]</p>
-                  <h3>{{ item.title | upcase }}</h3>
-                </a>
-              </article>
+        <div class="main-search__content">
+          {% if search.performed %}
+            {% if product_results_count > 0 %}
+              {% liquid
+                assign product_columns_desktop = 3
+                assign product_results_remainder = product_results_count | modulo: product_columns_desktop
+                assign product_placeholder_count = 0
+                if product_results_remainder > 0
+                  assign product_placeholder_count = product_columns_desktop | minus: product_results_remainder
+                endif
+              %}
+              <section class="main-search__block">
+                <div class="main-search__block-head">
+                  <p class="main-search__block-kicker">[ PRODUITS ]</p>
+                  <p class="main-search__block-count">{{ product_results_count }} RESULTAT{% if product_results_count != 1 %}S{% endif %}</p>
+                </div>
+                <div class="main-search__results main-search__results--products">
+                  {% for item in search.results %}
+                    {% if item.object_type == 'product' %}
+                      {% assign result_variant = item.selected_or_first_available_variant %}
+                      <article class="search-card search-card--product">
+                        <a class="search-card__link" href="{{ item.url }}">
+                          <div class="search-card__media">
+                            {% if item.featured_image %}
+                              {{
+                                item.featured_image
+                                | image_url: width: 1200
+                                | image_tag:
+                                  loading: 'lazy',
+                                  alt: item.title,
+                                  class: 'search-card__image'
+                              }}
+                            {% else %}
+                              <div class="search-card__image search-card__image--placeholder"></div>
+                            {% endif %}
+                            {% unless item.available %}
+                              <span class="search-card__badge">ÉPUISÉ</span>
+                            {% endunless %}
+                          </div>
+                          <div class="search-card__meta">
+                            <p class="search-card__vendor">{{ item.vendor | default: shop.name | upcase }}</p>
+                            <h3>{{ item.title | upcase }}</h3>
+                            <p class="search-card__price">
+                              {% if item.price_varies %}
+                                À PARTIR DE {{ item.price_min | money }}
+                              {% else %}
+                                {{ result_variant.price | money }}
+                              {% endif %}
+                            </p>
+                          </div>
+                        </a>
+                      </article>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if product_placeholder_count > 0 %}
+                    {% for i in (1..product_placeholder_count) %}
+                      <article class="search-card search-card--product search-card--placeholder" aria-hidden="true">
+                        <div class="search-card__media search-card__media--placeholder-shell"></div>
+                        <div class="search-card__meta search-card__meta--placeholder-shell"></div>
+                      </article>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+              </section>
+            {% endif %}
+
+            {% if editorial_results_count > 0 %}
+              <section class="main-search__block">
+                <div class="main-search__block-head">
+                  <p class="main-search__block-kicker">[ CONTENUS ]</p>
+                  <p class="main-search__block-count">{{ editorial_results_count }} ENTREE{% if editorial_results_count != 1 %}S{% endif %}</p>
+                </div>
+                <div class="main-search__results main-search__results--entries">
+                  {% for item in search.results %}
+                    {% if item.object_type == 'collection' or item.object_type == 'page' or item.object_type == 'article' %}
+                      <article class="search-card search-card--entry">
+                        <a class="search-card__entry" href="{{ item.url }}">
+                          <p class="search-card__entry-type">
+                            {% if item.object_type == 'collection' %}
+                              [ COLLECTION ]
+                            {% elsif item.object_type == 'page' %}
+                              [ PAGE ]
+                            {% else %}
+                              [ ARTICLE ]
+                            {% endif %}
+                          </p>
+                          <h3>{{ item.title | upcase }}</h3>
+                          <p class="search-card__entry-text">
+                            {% if item.object_type == 'collection' %}
+                              OUVRIR LA SELECTION COMPLETE ET PARCOURIR LES PIECES LIEES.
+                            {% elsif item.object_type == 'page' %}
+                              ACCEDER AU CONTENU ET AUX INFORMATIONS DETAILLEES DE CETTE PAGE.
+                            {% else %}
+                              LIRE LA NOTE EDITORIALE ASSOCIEE A CETTE RECHERCHE.
+                            {% endif %}
+                          </p>
+                        </a>
+                      </article>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </section>
+            {% endif %}
+
+            {% if search.results_count == 0 %}
+              <div class="main-search__empty">
+                <p class="main-search__empty-kicker">[ VIDE ]</p>
+                <p>AUCUN ARTICLE TROUVE POUR "{{ search.terms | upcase }}".</p>
+                <p>ESSAIE UNE AUTRE ORTHOGRAPHE, UN NOM DE MARQUE PLUS COURT OU UNE RECHERCHE PLUS LARGE.</p>
+              </div>
             {% endif %}
           {% else %}
-            <div class="catalog-empty">
-              <p>AUCUN RESULTAT POUR \"{{ search.terms | upcase }}\".</p>
+            <div class="main-search__empty">
+              <p class="main-search__empty-kicker">[ DEPART ]</p>
+              <p>LANCE UNE RECHERCHE POUR AFFICHER LES PRODUITS ET CONTENUS LIES.</p>
+              <p>MARQUE, MODELE, SILHOUETTE OU COLLECTION: LA PAGE AGIT COMME UN INDEX DU SITE.</p>
             </div>
-          {% endfor %}
+          {% endif %}
         </div>
-      {% endif %}
+      </div>
     </div>
   </div>
 </section>

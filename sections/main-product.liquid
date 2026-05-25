@@ -1,69 +1,284 @@
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign selector_label = 'OPTIONS'
+  assign featured_image = current_variant.featured_image | default: product.featured_image
+
+  if product.has_only_default_variant == false and product.options.size == 1
+    assign selector_label = product.options.first | upcase
+  endif
+%}
+
 <section class="main-product">
   <div class="container">
     <div class="site-page-shell site-page-shell--product">
-      <header class="site-page-head site-page-head--product">
-        <p class="site-page-kicker">[ PRODUIT ]</p>
-        <h1>{{ product.title }}</h1>
-      </header>
-
-      <div class="product-view">
+      <div class="product-view" data-product-view>
         <div class="product-view__media">
           <div class="product-view__media-frame">
-            {% if product.featured_image %}
-              {{ product.featured_image | image_url: width: 1800 | image_tag: loading: 'eager', alt: product.title }}
+            {% if featured_image %}
+              <img
+                class="product-view__media-image"
+                src="{{ featured_image | image_url: width: 1800 }}"
+                alt="{{ featured_image.alt | default: product.title | escape }}"
+                loading="eager"
+                data-product-main-media
+                data-media-id="{{ featured_image.id }}"
+              >
             {% else %}
               <div class="ph-img"></div>
             {% endif %}
           </div>
+
+          {% if featured_image and product.images.size > 1 %}
+            <div class="product-view__media-controls collection-slider__badge collection-slider__badge--controls">
+              <button class="collection-slider__control is-disabled" type="button" data-product-media-prev aria-label="Image precedente">
+                <span aria-hidden="true"></span>
+              </button>
+              <button class="collection-slider__control" type="button" data-product-media-next aria-label="Image suivante">
+                <span aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div
+              class="product-view__media-thumbs"
+              aria-label="Galerie produit"
+              style="--product-media-thumb-count: {{ product.images.size }};"
+            >
+              {% for image in product.images %}
+                {% if forloop.index <= 5 %}
+                  <button
+                    class="product-view__media-thumb{% if image.id == featured_image.id %} is-active{% endif %}"
+                    data-media-id="{{ image.id }}"
+                    data-media-index="{{ forloop.index0 }}"
+                    data-product-media-thumb
+                    data-media-src="{{ image | image_url: width: 1800 }}"
+                    data-media-alt="{{ image.alt | default: product.title | escape }}"
+                    aria-pressed="{% if image.id == featured_image.id %}true{% else %}false{% endif %}"
+                    aria-label="Afficher l'image {{ forloop.index }}"
+                    type="button"
+                  >
+                    <span
+                      class="product-view__media-thumb-frame"
+                      style="--product-thumb-image: url('{{ image | image_url: width: 240 }}');"
+                    >
+                      <span class="product-view__media-thumb-image" aria-hidden="true"></span>
+                    </span>
+                  </button>
+                {% elsif forloop.index == 6 %}
+                  <button
+                    class="product-view__media-thumb product-view__media-thumb--overflow"
+                    data-media-id="{{ image.id }}"
+                    data-media-index="{{ forloop.index0 }}"
+                    data-product-media-thumb
+                    data-product-media-overflow
+                    data-media-src="{{ image | image_url: width: 1800 }}"
+                    data-media-alt="{{ image.alt | default: product.title | escape }}"
+                    aria-pressed="false"
+                    aria-label="Afficher les images suivantes"
+                    type="button"
+                  >
+                    <span class="product-view__media-thumb-frame">
+                      <span class="product-view__media-thumb-more" aria-hidden="true">...</span>
+                    </span>
+                  </button>
+                {% else %}
+                  <button
+                    class="product-view__media-thumb product-view__media-thumb--hidden"
+                    data-media-id="{{ image.id }}"
+                    data-media-index="{{ forloop.index0 }}"
+                    data-product-media-thumb
+                    data-media-src="{{ image | image_url: width: 1800 }}"
+                    data-media-alt="{{ image.alt | default: product.title | escape }}"
+                    aria-pressed="false"
+                    aria-hidden="true"
+                    tabindex="-1"
+                    type="button"
+                  >
+                    <span
+                      class="product-view__media-thumb-frame"
+                      style="--product-thumb-image: url('{{ image | image_url: width: 240 }}');"
+                    >
+                      <span class="product-view__media-thumb-image" aria-hidden="true"></span>
+                    </span>
+                  </button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
 
         <div class="product-view__details">
-          <div class="product-view__panel">
-            <div class="product-view__price-line">
-              <p class="product-view__price">{{ product.selected_or_first_available_variant.price | money }}</p>
-              <p class="product-view__status">
-                {% if product.available %}
-                  EN STOCK
-                {% else %}
-                  RUPTURE
-                {% endif %}
-              </p>
-            </div>
-
-            {% form 'product', product, class: 'product-form-v2' %}
-              {% if product.has_only_default_variant %}
-                <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-              {% else %}
-                <label class="field-label" for="ProductVariant">OPTIONS</label>
-                <select id="ProductVariant" name="id">
-                  {% for variant in product.variants %}
-                    <option value="{{ variant.id }}" {% if variant == product.selected_or_first_available_variant %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
-                      {{ variant.title | upcase }} - {{ variant.price | money }}
-                    </option>
-                  {% endfor %}
-                </select>
-              {% endif %}
-
-              <label class="field-label" for="ProductQuantity">QUANTITE</label>
-              <input id="ProductQuantity" type="number" name="quantity" min="1" value="1">
-
-              <button class="button product-form-v2__submit" type="submit" {% unless product.available %}disabled{% endunless %}>
-                {% if product.available %}
-                  AJOUTER AU PANIER
-                {% else %}
-                  INDISPONIBLE
-                {% endif %}
-              </button>
-            {% endform %}
+          <div class="product-view__panel product-view__panel--intro">
+            <p class="product-view__brand">{{ product.vendor | default: shop.name | upcase }}</p>
+            <h1 class="product-view__title">{{ product.title | upcase }}</h1>
           </div>
 
-          {% if product.description != blank %}
-            <div class="product-view__panel product-view__panel--description">
-              <p class="site-page-kicker">[ DESCRIPTION ]</p>
-              <div class="rte product-description">
-                {{ product.description }}
+          {% form 'product', product, class: 'product-form-v2', data-product-form: '' %}
+            <input
+              type="hidden"
+              name="id"
+              value="{{ current_variant.id }}"
+              data-product-variant-id
+            >
+            <input type="hidden" name="quantity" value="1">
+
+            {% unless product.has_only_default_variant %}
+              <div class="product-view__panel product-view__panel--selector">
+                <p class="site-page-kicker">[ {{ selector_label }} ]</p>
+                <div class="product-form-v2__selector-tools">
+                  <div class="product-form-v2__unit-switch" role="group" aria-label="Changer l'unite de pointure">
+                    <button
+                      class="product-form-v2__unit-button is-active"
+                      type="button"
+                      data-size-unit-toggle
+                      data-size-unit="EU"
+                      aria-pressed="true"
+                    >
+                      EU
+                    </button>
+                    <button
+                      class="product-form-v2__unit-button"
+                      type="button"
+                      data-size-unit-toggle
+                      data-size-unit="US"
+                      aria-pressed="false"
+                    >
+                      US
+                    </button>
+                  </div>
+                  <button
+                    class="product-form-v2__guide-link"
+                    type="button"
+                    data-size-guide-open
+                    aria-controls="ProductSizeGuide-{{ section.id }}"
+                    aria-expanded="false"
+                  >
+                    GUIDE DES TAILLES
+                  </button>
+                </div>
+                <div class="product-form-v2__pills" role="radiogroup" aria-label="{{ selector_label }}">
+                  {% for variant in product.variants %}
+                    {% assign pill_id = 'ProductVariant-' | append: section.id | append: '-' | append: variant.id %}
+                    <input
+                      class="product-form-v2__pill-input visually-hidden"
+                      type="radio"
+                      id="{{ pill_id }}"
+                      name="product-variant-pill"
+                      value="{{ variant.id }}"
+                      data-variant-pill
+                      data-variant-label="{{ variant.title | escape }}"
+                      data-variant-price="{{ variant.price | money | escape }}"
+                      data-variant-available="{% if variant.available %}true{% else %}false{% endif %}"
+                      {% unless variant.available %}disabled{% endunless %}
+                      {% if variant.id == current_variant.id %}checked{% endif %}
+                    >
+                    <label class="product-form-v2__pill{% unless variant.available %} is-sold-out{% endunless %}" for="{{ pill_id }}" {% unless variant.available %}aria-disabled="true"{% endunless %}>
+                      <span data-variant-pill-label>{{ variant.title | upcase }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+                <div
+                  class="product-size-guide"
+                  id="ProductSizeGuide-{{ section.id }}"
+                  data-size-guide
+                  hidden
+                >
+                  <div class="product-size-guide__backdrop" data-size-guide-close></div>
+                  <div class="product-size-guide__dialog" role="dialog" aria-modal="true" aria-labelledby="ProductSizeGuideTitle-{{ section.id }}">
+                    <div class="product-size-guide__panel">
+                      <div class="product-size-guide__head">
+                        <button class="product-size-guide__close" type="button" aria-label="Fermer le guide des tailles" data-size-guide-close>
+                          <span aria-hidden="true"></span>
+                        </button>
+                        <p class="product-size-guide__title" id="ProductSizeGuideTitle-{{ section.id }}">Guide des tailles</p>
+                      </div>
+                      <div class="product-size-guide__table-wrap">
+                        <table class="product-size-guide__table">
+                          <thead>
+                            <tr>
+                              <th>EU</th>
+                              <th>US MEN</th>
+                              <th>UK</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr><td>35.5</td><td>3.5</td><td>3</td></tr>
+                            <tr><td>36</td><td>4</td><td>3.5</td></tr>
+                            <tr><td>36.5</td><td>4.5</td><td>4</td></tr>
+                            <tr><td>37.5</td><td>5</td><td>4.5</td></tr>
+                            <tr><td>38</td><td>5.5</td><td>5</td></tr>
+                            <tr><td>38.5</td><td>6</td><td>5.5</td></tr>
+                            <tr><td>39</td><td>6.5</td><td>6</td></tr>
+                            <tr><td>40</td><td>7</td><td>6.5</td></tr>
+                            <tr><td>40.5</td><td>7.5</td><td>7</td></tr>
+                            <tr><td>41</td><td>8</td><td>7.5</td></tr>
+                            <tr><td>42</td><td>8.5</td><td>8</td></tr>
+                            <tr><td>42.5</td><td>9</td><td>8.5</td></tr>
+                            <tr><td>43</td><td>9.5</td><td>9</td></tr>
+                            <tr><td>44</td><td>10</td><td>9.5</td></tr>
+                            <tr><td>44.5</td><td>10.5</td><td>10</td></tr>
+                            <tr><td>45</td><td>11</td><td>10.5</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endunless %}
+
+            <div class="product-view__purchase-sticky-placeholder" data-product-purchase-placeholder hidden></div>
+            <div class="product-view__panel product-view__panel--purchase" data-product-purchase-panel>
+              <button
+                class="button product-form-v2__submit product-form-v2__submit--split"
+                type="submit"
+                data-product-submit
+                {% unless current_variant.available %}disabled{% endunless %}
+              >
+                <span class="product-form-v2__submit-label" data-product-submit-label>
+                  {% if current_variant.available %}
+                    AJOUTER AU PANIER
+                  {% else %}
+                    INDISPONIBLE
+                  {% endif %}
+                </span>
+              </button>
+              <div class="product-form-v2__price-card">
+                <span class="product-form-v2__submit-price" data-product-price>{{ current_variant.price | money }}</span>
               </div>
             </div>
+
+            <div
+              class="product-view__panel product-view__panel--express"
+              data-product-payment-panel
+              {% unless current_variant.available %}hidden{% endunless %}
+            >
+              <div class="product-view__express-grid">
+                <div class="product-view__express-payment">
+                  {{ form | payment_button }}
+                </div>
+                <button
+                  class="product-form-v2__pickup-button"
+                  type="submit"
+                  name="properties[Retrait]"
+                  value="Boutique"
+                >
+                  RETIRER EN BOUTIQUE
+                </button>
+              </div>
+            </div>
+          {% endform %}
+
+          {% if product.description != blank %}
+            <details class="product-accordion">
+              <summary class="product-accordion__summary">
+                <span>[ DESCRIPTION ]</span>
+              </summary>
+              <div class="product-accordion__body">
+                <div class="rte product-description">
+                  {{ product.description }}
+                </div>
+              </div>
+            </details>
           {% endif %}
         </div>
       </div>

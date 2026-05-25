@@ -4,6 +4,23 @@
   assign page_results = predictive_search.resources.pages
   assign article_results = predictive_search.resources.articles
   assign query_results = predictive_search.resources.queries
+  assign predictive_product_limit = 8
+  assign predictive_product_count = product_results.size
+  assign predictive_collection_limit = 6
+  assign predictive_collection_count = collection_results.size
+  assign predictive_loop_size = 0
+
+  if predictive_product_count > predictive_product_limit
+    assign predictive_product_count = predictive_product_limit
+  endif
+
+  if predictive_collection_count > predictive_collection_limit
+    assign predictive_collection_count = predictive_collection_limit
+  endif
+
+  if predictive_product_count > 1
+    assign predictive_loop_size = predictive_product_count
+  endif
 
   assign total_results = product_results.size
   assign total_results = total_results | plus: collection_results.size
@@ -20,7 +37,6 @@
   {% if total_results > 0 %}
     {% if query_results.size > 0 %}
       <section class="header-search-predictive__group">
-        <p class="header-search-predictive__label">Suggestions</p>
         <div class="header-search-predictive__stack">
           {% for query in query_results limit: 3 %}
             <a class="header-search-predictive__query" href="{{ query.url }}">
@@ -32,53 +48,100 @@
       </section>
     {% endif %}
 
-    {% if product_results.size > 0 %}
+    {% if collection_results.size > 0 %}
       <section class="header-search-predictive__group">
-        <p class="header-search-predictive__label">Produits</p>
-        <div class="header-search-predictive__stack">
-          {% for product in product_results limit: 4 %}
-            <a class="header-search-predictive__product" href="{{ product.url }}">
-              <span class="header-search-predictive__thumb">
-                {% if product.featured_media %}
-                  {{
-                    product.featured_media.preview_image
-                    | image_url: width: 120
-                    | image_tag:
-                      alt: product.title,
-                      loading: 'lazy',
-                      widths: '60, 120',
-                      sizes: '60px'
-                  }}
-                {% else %}
-                  <span class="header-search-predictive__thumb-placeholder"></span>
-                {% endif %}
-              </span>
-              <span class="header-search-predictive__meta">
-                {% if product.vendor != blank %}
-                  <span class="header-search-predictive__eyebrow">{{ product.vendor }}</span>
-                {% endif %}
-                <span class="header-search-predictive__title">{{ product.title }}</span>
-                <span class="header-search-predictive__price">
-                  {% if product.price_varies %}A partir de {% endif %}{{ product.price | money }}
-                </span>
-              </span>
+        <div class="header-search-predictive__collection-pills">
+          {% for collection in collection_results limit: predictive_collection_count %}
+            <a class="header-search-predictive__pill" href="{{ collection.url }}">
+              {{ collection.title }}
             </a>
           {% endfor %}
         </div>
       </section>
     {% endif %}
 
-    {% if collection_results.size > 0 or page_results.size > 0 or article_results.size > 0 %}
+    {% if product_results.size > 0 %}
       <section class="header-search-predictive__group">
-        <p class="header-search-predictive__label">Univers</p>
-        <div class="header-search-predictive__stack">
-          {% for collection in collection_results limit: 2 %}
-            <a class="header-search-predictive__link" href="{{ collection.url }}">
-              <span class="header-search-predictive__type">Collection</span>
-              <span class="header-search-predictive__title">{{ collection.title }}</span>
-            </a>
-          {% endfor %}
+        <div
+          class="collection-slider collection-slider--predictive"
+          data-collection-stacks
+          style="
+            --collection-slider-bg: transparent;
+            --collection-slider-cell-bg: #D8DBDD;
+            --collection-slider-ticker-bg: rgba(244, 247, 249, .92);
+            --collection-slider-meta-bg: rgba(244, 247, 249, .94);
+            --collection-slider-card-separator: rgba(255, 255, 255, .86);
+            --collection-slider-desktop-peek-ratio: 0.62;
+            --collection-slider-visible-slots: 4;
+            --collection-slider-min-card-width: 0;
+            --collection-slider-row-height: 318px;
+            --collection-slider-card-width: 220px;
+            --collection-slider-ticker-duration: 24s;
+          "
+        >
+          <div class="collection-slider__inner">
+            <article class="collection-slider__row collection-slider__row--predictive">
+              <div class="collection-slider__overlay">
+                <div class="collection-slider__overlay-right">
+                  <div class="collection-slider__badge collection-slider__badge--controls">
+                    <button class="collection-slider__control" type="button" data-stack-prev aria-label="Produits precedents">
+                      <span aria-hidden="true">&lt;</span>
+                    </button>
+                    <button class="collection-slider__control" type="button" data-stack-next aria-label="Produits suivants">
+                      <span aria-hidden="true">&gt;</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
+              <div class="collection-slider__swipe-hints" aria-hidden="true">
+                <span class="collection-slider__swipe-hint collection-slider__swipe-hint--left"></span>
+                <span class="collection-slider__swipe-hint collection-slider__swipe-hint--right"></span>
+              </div>
+
+              <div class="collection-slider__viewport" data-stack-viewport>
+                <div class="collection-slider__track" data-stack-track data-loop-size="{{ predictive_loop_size }}">
+                  {% for pass in (1..3) %}
+                    {% for product in product_results limit: predictive_product_count %}
+                      <article class="collection-slider__card collection-slider__card--predictive" data-product-card>
+                        <a class="collection-slider__product-link collection-slider__product-link--predictive" href="{{ product.url }}">
+                          <div class="collection-slider__media collection-slider__media--predictive">
+                            {% if product.featured_media %}
+                              {{
+                                product.featured_media.preview_image
+                                | image_url: width: 560
+                                | image_tag:
+                                  class: 'collection-slider__product-image',
+                                  alt: product.title,
+                                  loading: 'lazy',
+                                  widths: '220, 320, 440, 560',
+                                  sizes: '(max-width: 980px) 50vw, 220px'
+                              }}
+                            {% else %}
+                              <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+                            {% endif %}
+                          </div>
+                          <div class="collection-slider__meta collection-slider__meta--predictive">
+                            <h3>{{ product.title | upcase }}</h3>
+                            <p class="collection-slider__price">
+                              {% if product.price_varies %}A PARTIR DE {% endif %}{{ product.price | money }}
+                            </p>
+                          </div>
+                        </a>
+                      </article>
+                    {% endfor %}
+                  {% endfor %}
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if page_results.size > 0 or article_results.size > 0 %}
+      <section class="header-search-predictive__group">
+        <div class="header-search-predictive__stack">
           {% for page in page_results limit: 2 %}
             <a class="header-search-predictive__link" href="{{ page.url }}">
               <span class="header-search-predictive__type">Page</span>

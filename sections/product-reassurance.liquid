@@ -1,0 +1,120 @@
+<section class="product-reassurance">
+  <div class="container">
+    <div class="product-reassurance__shell">
+      <div class="product-reassurance__head">
+        {% if section.settings.kicker != blank %}
+          <p class="site-page-kicker">[ {{ section.settings.kicker | escape }} ]</p>
+        {% endif %}
+        {% if section.settings.title != blank %}
+          <h2 class="product-reassurance__title">{{ section.settings.title | escape }}</h2>
+        {% endif %}
+      </div>
+
+      <div class="product-reassurance__grid">
+        {% for block in section.blocks %}
+          <article class="product-reassurance__item{% if block.settings.icon != blank %} product-reassurance__item--custom-icon{% endif %}" {{ block.shopify_attributes }}>
+            {% if block.settings.icon != blank %}
+              {{
+                block.settings.icon
+                | image_url: width: 96
+                | image_tag:
+                  class: 'product-reassurance__icon',
+                  widths: '32, 48, 64, 96',
+                  sizes: '(max-width: 749px) 24px, 34px',
+                  alt: block.settings.label,
+                  loading: 'lazy'
+              }}
+            {% endif %}
+            {% if block.settings.label != blank %}
+              <p class="product-reassurance__label">{{ block.settings.label | escape }}</p>
+            {% endif %}
+            {% if block.settings.text != blank %}
+              <p class="product-reassurance__text">{{ block.settings.text | escape }}</p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product reassurance",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "REASSURANCE"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "ACHETEZ EN TOUTE CONFIANCE"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Point",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icône"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "AUTHENTICITÉ"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Texte",
+          "default": "Chaque paire est contrôlée avant expédition."
+        }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [
+    {
+      "name": "Product reassurance",
+      "blocks": [
+        {
+          "type": "item",
+          "settings": {
+            "label": "AUTHENTICITÉ",
+            "text": "Chaque paire est contrôlée avant expédition."
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "label": "EXPÉDITION",
+            "text": "Préparation rapide et envoi suivi en France et à l'international."
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "label": "PAIEMENT",
+            "text": "Paiement sécurisé et options express disponibles."
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "label": "RETRAIT",
+            "text": "Retrait en boutique possible selon disponibilité."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

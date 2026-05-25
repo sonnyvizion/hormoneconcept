@@ -28,6 +28,7 @@
         {% assign newsletter_cta_label = section.settings.newsletter_cta | replace: '↘', '' | strip %}
         {% form 'customer', id: newsletter_form_id, class: 'site-footer-v2__newsletter-form' %}
           <input type="hidden" name="contact[tags]" value="newsletter">
+          <input type="hidden" name="contact[accepts_marketing]" value="true">
           <div class="site-footer-v2__field-shell">
             <input
               id="FooterNewsletterEmail-{{ section.id }}"
@@ -52,7 +53,9 @@
           {% if form.posted_successfully? %}
             <p class="site-footer-v2__form-message">{{ section.settings.newsletter_success }}</p>
           {% elsif form.errors %}
-            <p class="site-footer-v2__form-message site-footer-v2__form-message--error">{{ section.settings.newsletter_error }}</p>
+            <div class="site-footer-v2__form-message site-footer-v2__form-message--error">
+              {{ form.errors | default_errors }}
+            </div>
           {% endif %}
         {% endform %}
       </div>

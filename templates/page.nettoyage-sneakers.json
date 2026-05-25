@@ -1,0 +1,84 @@
+{
+  "sections": {
+    "cleaning_page": {
+      "type": "sneaker-cleaning-page",
+      "settings": {
+        "kicker": "SERVICE",
+        "title": "NETTOYAGE SNEAKERS",
+        "text": "Un nettoyage minutieux pour prolonger la vie de vos paires, raviver les matieres et retrouver une silhouette propre.",
+        "pricing_kicker": "TARIFS",
+        "pricing_title": "GRILLE TARIFAIRE"
+      },
+      "blocks": {
+        "gallery_1": {
+          "type": "image",
+          "settings": {
+            "caption": "AVANT / APRES"
+          }
+        },
+        "gallery_2": {
+          "type": "image",
+          "settings": {
+            "caption": "DETAIL MATIERE"
+          }
+        },
+        "gallery_3": {
+          "type": "image",
+          "settings": {
+            "caption": "FINITION"
+          }
+        },
+        "price_1": {
+          "type": "price",
+          "settings": {
+            "service": "NETTOYAGE STANDARD",
+            "description": "Nettoyage exterieur, semelle intermediaire et lacets.",
+            "price": "A PARTIR DE 25 EUR"
+          }
+        },
+        "price_2": {
+          "type": "price",
+          "settings": {
+            "service": "NETTOYAGE PREMIUM",
+            "description": "Nettoyage approfondi, traitement des matieres et finition.",
+            "price": "A PARTIR DE 39 EUR"
+          }
+        },
+        "price_3": {
+          "type": "price",
+          "settings": {
+            "service": "DEEP CLEAN",
+            "description": "Interieur, exterieur, lacets, semelles et controle final.",
+            "price": "A PARTIR DE 55 EUR"
+          }
+        }
+      },
+      "block_order": [
+        "gallery_1",
+        "gallery_2",
+        "gallery_3",
+        "price_1",
+        "price_2",
+        "price_3"
+      ]
+    },
+    "before_after": {
+      "type": "sneaker-cleaning-compare",
+      "settings": {
+        "kicker": "RESULTAT",
+        "title": "AVANT / APRES NETTOYAGE",
+        "text": "Faites glisser le curseur pour reveler le resultat.",
+        "before_label": "AVANT",
+        "after_label": "APRES",
+        "before_video_asset": "apres_02-scrub.mp4",
+        "after_video_asset": "avant_01-scrub.mp4",
+        "initial_reveal": 0,
+        "cta_label": "RESERVER UN NETTOYAGE"
+      }
+    }
+  },
+  "order": [
+    "cleaning_page",
+    "before_after"
+  ]
+}

@@ -112,8 +112,25 @@
                     %}
                     <article class="collection-slider__card" data-product-card>
                       {% if quick_variant != blank %}
-                        <form class="collection-slider__quick-add" data-quick-add-form>
+                        <form
+                          class="collection-slider__quick-add"
+                          data-quick-add-form
+                          data-quick-add-title="{{ product.title | escape }}"
+                          data-quick-add-image="{% if product.featured_image %}{{ product.featured_image | image_url: width: 320 }}{% endif %}"
+                        >
                           <input type="hidden" name="id" value="{{ quick_variant.id }}">
+                          <script type="application/json" data-quick-add-variants>
+                            [
+                              {% for variant in product.variants %}
+                                {
+                                  "id": {{ variant.id }},
+                                  "title": {{ variant.title | json }},
+                                  "available": {{ variant.available | json }},
+                                  "price": {{ variant.price | money | json }}
+                                }{% unless forloop.last %},{% endunless %}
+                              {% endfor %}
+                            ]
+                          </script>
                           <button
                             class="collection-slider__quick-add-button"
                             type="submit"

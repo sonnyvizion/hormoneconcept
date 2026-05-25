@@ -1,0 +1,3 @@
+[environments.development]
+store = "hormone-concept.myshopify.com"
+theme = "181101723915"

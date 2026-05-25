@@ -149,14 +149,15 @@
           <div class="video-hero__footer">
             <div class="video-hero__controls" role="group" aria-label="Navigation produits">
               <button
-                class="video-hero__prev"
+                class="video-hero__prev is-disabled"
                 type="button"
                 data-prev-trigger
                 data-disable-scramble="true"
                 aria-label="{{ section.settings.prev_label }}"
-                hidden
+                aria-disabled="true"
+                disabled
               >
-                ←
+                <span class="video-hero__chevron video-hero__chevron--left" aria-hidden="true"></span>
               </button>
               <button
                 class="video-hero__next"
@@ -165,7 +166,7 @@
                 data-disable-scramble="true"
                 aria-label="{{ section.settings.next_label }}"
               >
-                →
+                <span class="video-hero__chevron video-hero__chevron--right" aria-hidden="true"></span>
               </button>
             </div>
             <div class="video-hero__steps" role="tablist" aria-label="Navigation paires">

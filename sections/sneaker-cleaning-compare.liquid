@@ -1,0 +1,325 @@
+{% liquid
+  assign before_image = section.settings.before_image
+  assign after_image = section.settings.after_image
+  assign before_alt = section.settings.before_alt | default: 'Sneaker avant nettoyage'
+  assign after_alt = section.settings.after_alt | default: 'Sneaker apres nettoyage'
+  assign before_video_asset = section.settings.before_video_asset | strip
+  assign after_video_asset = section.settings.after_video_asset | strip
+  assign before_video_url = ''
+  assign after_video_url = ''
+  if before_video_asset != blank
+    assign before_video_url = before_video_asset | asset_url
+  endif
+  if after_video_asset != blank
+    assign after_video_url = after_video_asset | asset_url
+  endif
+  assign has_videos = false
+  if before_video_url != blank and after_video_url != blank
+    assign has_videos = true
+  endif
+%}
+
+<section class="sneaker-cleaning-compare-section" data-sneaker-cleaning-compare-section>
+  <div class="sneaker-cleaning-compare" style="--sneaker-cleaning-reveal: {{ section.settings.initial_reveal }}%;" data-sneaker-cleaning-compare>
+    <div class="sneaker-cleaning-compare__stage{% if has_videos %} sneaker-cleaning-compare__stage--has-video{% endif %}" data-has-video="{{ has_videos }}">
+      {% if before_video_url != blank %}
+        <video
+          class="sneaker-cleaning-compare__video sneaker-cleaning-compare__video--before"
+          data-sneaker-cleaning-video="before"
+          muted
+          playsinline
+          preload="auto"
+          disablepictureinpicture
+          aria-hidden="true"
+        >
+          <source src="{{ before_video_url }}" type="video/mp4">
+        </video>
+      {% endif %}
+      {% if before_image != blank %}
+        {{
+          before_image
+          | image_url: width: 2400
+          | image_tag:
+            class: 'sneaker-cleaning-compare__image sneaker-cleaning-compare__image--before',
+            loading: 'lazy',
+            alt: before_alt
+        }}
+      {% else %}
+        <div class="sneaker-cleaning-compare__placeholder sneaker-cleaning-compare__placeholder--before">
+          <span>AVANT</span>
+        </div>
+      {% endif %}
+
+      <div class="sneaker-cleaning-compare__after">
+        {% if after_video_url != blank %}
+          <video
+            class="sneaker-cleaning-compare__video sneaker-cleaning-compare__video--after"
+            data-sneaker-cleaning-video="after"
+            muted
+            playsinline
+            preload="auto"
+            disablepictureinpicture
+            aria-hidden="true"
+          >
+            <source src="{{ after_video_url }}" type="video/mp4">
+          </video>
+        {% endif %}
+        {% if after_image != blank %}
+          {{
+            after_image
+            | image_url: width: 2400
+            | image_tag:
+              class: 'sneaker-cleaning-compare__image sneaker-cleaning-compare__image--after',
+              loading: 'lazy',
+              alt: after_alt
+          }}
+        {% else %}
+          <div class="sneaker-cleaning-compare__placeholder sneaker-cleaning-compare__placeholder--after">
+            <span>APRES</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="sneaker-cleaning-compare__handle" aria-hidden="true">
+        <span></span>
+      </div>
+
+      <div class="sneaker-cleaning-compare__labels" aria-hidden="true">
+        <span>{{ section.settings.before_label | escape }}</span>
+        <span>{{ section.settings.after_label | escape }}</span>
+      </div>
+
+      <header class="sneaker-cleaning-compare-section__head">
+        {% if section.settings.kicker != blank %}
+          <p class="site-page-kicker">[ {{ section.settings.kicker | escape }} ]</p>
+        {% endif %}
+        {% if section.settings.title != blank %}
+          <h2>{{ section.settings.title | escape }}</h2>
+        {% endif %}
+        {% if section.settings.text != blank %}
+          <p class="sneaker-cleaning-compare-section__text">{{ section.settings.text | escape }}</p>
+        {% endif %}
+      </header>
+
+      {% if section.settings.cta_label != blank %}
+        <div class="sneaker-cleaning-compare-section__cta-wrap">
+          {% if section.settings.cta_link != blank %}
+            <a class="sneaker-cleaning-compare-section__cta video-hero__availability" href="{{ section.settings.cta_link }}">
+              <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+              <span class="video-hero__availability-label">{{ section.settings.cta_label | escape }}</span>
+              <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+            </a>
+          {% else %}
+            <span class="sneaker-cleaning-compare-section__cta video-hero__availability">
+              <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+              <span class="video-hero__availability-label">{{ section.settings.cta_label | escape }}</span>
+              <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+            </span>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <input
+        class="sneaker-cleaning-compare__range"
+        type="range"
+        min="0"
+        max="100"
+        step="0.1"
+        value="{{ section.settings.initial_reveal }}"
+        aria-label="Comparer avant et apres nettoyage"
+        data-sneaker-cleaning-range
+      >
+    </div>
+  </div>
+</section>
+
+<script>
+  (() => {
+    const VIDEO_BREAKPOINT = '(min-width: 750px)';
+
+    const initSneakerCleaningCompare = (root = document) => {
+      root.querySelectorAll('[data-sneaker-cleaning-compare]').forEach((compareEl) => {
+        const rangeEl = compareEl.querySelector('[data-sneaker-cleaning-range]');
+        if (!rangeEl || rangeEl.dataset.sneakerCleaningInit === 'true') return;
+        rangeEl.dataset.sneakerCleaningInit = 'true';
+
+        const stageEl = compareEl.querySelector('.sneaker-cleaning-compare__stage');
+        const beforeVideo = compareEl.querySelector('[data-sneaker-cleaning-video="before"]');
+        const afterVideo = compareEl.querySelector('[data-sneaker-cleaning-video="after"]');
+        const videos = [beforeVideo, afterVideo].filter(Boolean);
+        const desktopQuery = window.matchMedia(VIDEO_BREAKPOINT);
+
+        let rafId = null;
+        let pendingValue = null;
+
+        const seekVideos = (value) => {
+          videos.forEach((video) => {
+            const duration = video.duration;
+            if (!Number.isFinite(duration) || duration <= 0) return;
+            const target = Math.max(0, Math.min(duration, (value / 100) * duration));
+            if (Math.abs(video.currentTime - target) > 1 / 240) {
+              try {
+                video.currentTime = target;
+              } catch (_) {}
+            }
+          });
+        };
+
+        const scheduleSeek = (value) => {
+          pendingValue = value;
+          if (rafId !== null) return;
+          rafId = requestAnimationFrame(() => {
+            rafId = null;
+            const v = pendingValue;
+            pendingValue = null;
+            seekVideos(v);
+          });
+        };
+
+        const sync = () => {
+          const value = parseFloat(rangeEl.value);
+          compareEl.style.setProperty('--sneaker-cleaning-reveal', `${value}%`);
+          if (videos.length && desktopQuery.matches) {
+            scheduleSeek(value);
+          }
+        };
+
+        videos.forEach((video) => {
+          video.muted = true;
+          video.playsInline = true;
+          video.pause();
+          if (video.readyState >= 1) {
+            sync();
+          } else {
+            video.addEventListener('loadedmetadata', sync, { once: true });
+          }
+        });
+
+        const onMediaChange = () => {
+          if (desktopQuery.matches) {
+            sync();
+          } else {
+            videos.forEach((video) => {
+              try { video.currentTime = 0; } catch (_) {}
+            });
+          }
+        };
+        if (typeof desktopQuery.addEventListener === 'function') {
+          desktopQuery.addEventListener('change', onMediaChange);
+        } else if (typeof desktopQuery.addListener === 'function') {
+          desktopQuery.addListener(onMediaChange);
+        }
+
+        rangeEl.addEventListener('input', sync);
+        sync();
+      });
+    };
+
+    initSneakerCleaningCompare();
+    document.addEventListener('shopify:section:load', (event) => initSneakerCleaningCompare(event.target));
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Sneaker cleaning compare",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "NETTOYAGE SNEAKERS"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "AVANT / APRES NETTOYAGE"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Texte",
+      "default": "Faites glisser le curseur pour reveler le resultat."
+    },
+    {
+      "type": "header",
+      "content": "Medias (desktop : video, mobile : image)"
+    },
+    {
+      "type": "image_picker",
+      "id": "before_image",
+      "label": "Image avant (fallback mobile)"
+    },
+    {
+      "type": "image_picker",
+      "id": "after_image",
+      "label": "Image apres (fallback mobile)"
+    },
+    {
+      "type": "text",
+      "id": "before_video_asset",
+      "label": "Video avant (nom du fichier dans /assets)",
+      "info": "Doit etre encodee frame-par-frame (toutes keyframes). Fournie : avant_01-scrub.mp4",
+      "default": "avant_01-scrub.mp4"
+    },
+    {
+      "type": "text",
+      "id": "after_video_asset",
+      "label": "Video apres (nom du fichier dans /assets)",
+      "info": "Doit etre encodee frame-par-frame (toutes keyframes). Fournie : apres_02-scrub.mp4",
+      "default": "apres_02-scrub.mp4"
+    },
+    {
+      "type": "text",
+      "id": "before_alt",
+      "label": "Texte alternatif avant",
+      "default": "Sneaker sale avant nettoyage"
+    },
+    {
+      "type": "text",
+      "id": "after_alt",
+      "label": "Texte alternatif apres",
+      "default": "Sneaker nettoyee apres prestation"
+    },
+    {
+      "type": "text",
+      "id": "before_label",
+      "label": "Label avant",
+      "default": "AVANT"
+    },
+    {
+      "type": "text",
+      "id": "after_label",
+      "label": "Label apres",
+      "default": "APRES"
+    },
+    {
+      "type": "range",
+      "id": "initial_reveal",
+      "label": "Position initiale du curseur (%)",
+      "info": "0 = videos a t=0 (recommande quand videos actives)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 0
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Texte CTA",
+      "default": "RESERVER UN NETTOYAGE"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "Lien CTA"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sneaker cleaning compare"
+    }
+  ]
+}
+{% endschema %}

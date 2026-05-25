@@ -1,0 +1,290 @@
+{% liquid
+  assign fallback_titles = 'GAUCHE|DROITE' | split: '|'
+  assign fallback_subtitles = 'COLLECTION|COLLECTION' | split: '|'
+%}
+
+<section
+  class="collections-trio collections-duo"
+  style="
+    --collections-trio-height: {{ section.settings.desktop_height }};
+    --collections-trio-overlay-opacity: {{ section.settings.overlay_opacity | times: 0.01 }};
+    --collections-trio-grid-gap: {{ section.settings.grid_gap }}px;
+    --collections-trio-line-color: {{ section.settings.line_color }};
+    --collections-trio-card-bg: {{ section.settings.card_bg }};
+  "
+>
+  <div class="collections-trio__inner">
+    <div class="collections-trio__grid">
+      {% for slot in (1..2) %}
+        {% liquid
+          assign slot_index = forloop.index0
+          assign block = section.blocks[slot_index]
+          assign collection_ref = blank
+          assign desktop_video = blank
+          assign mobile_video = blank
+          assign desktop_image = blank
+          assign mobile_image = blank
+          assign image_focus = '50% 50%'
+          assign title = fallback_titles[slot_index]
+          assign subtitle = fallback_subtitles[slot_index]
+          assign cta_label = ''
+          assign cta_link = ''
+
+          if block != blank
+            assign collection_ref = block.settings.collection
+            assign title = block.settings.title | default: collection_ref.title | default: fallback_titles[slot_index]
+            assign subtitle = block.settings.subtitle | default: fallback_subtitles[slot_index]
+            assign cta_label = block.settings.cta_label | default: title
+            assign cta_link = block.settings.cta_link | default: collection_ref.url
+            assign image_focus = block.settings.image_focus | default: '50% 50%'
+            assign desktop_video = block.settings.video_desktop
+            assign mobile_video = block.settings.video_mobile
+
+            if block.settings.image_desktop != blank
+              assign desktop_image = block.settings.image_desktop
+            elsif collection_ref != blank and collection_ref.image != blank
+              assign desktop_image = collection_ref.image
+            endif
+
+            if block.settings.image_mobile != blank
+              assign mobile_image = block.settings.image_mobile
+            else
+              assign mobile_image = desktop_image
+            endif
+          endif
+
+          if slot == 1
+            assign slot_class = 'collections-trio__item--primary'
+          else
+            assign slot_class = 'collections-trio__item--secondary-top'
+          endif
+        %}
+
+        <article class="collections-trio__item {{ slot_class }}" {% if block != blank %}{{ block.shopify_attributes }}{% endif %}>
+          <div class="collections-trio__media">
+            {% if desktop_video != blank or mobile_video != blank %}
+              {% if desktop_video != blank %}
+                {% liquid
+                  assign desktop_video_class = 'collections-trio__video collections-trio__video--desktop'
+                  if mobile_video != blank
+                    assign desktop_video_class = desktop_video_class | append: ' collections-trio__video--has-mobile'
+                  endif
+                %}
+                {{
+                  desktop_video
+                  | video_tag:
+                    autoplay: true,
+                    loop: true,
+                    muted: true,
+                    controls: false,
+                    playsinline: true,
+                    class: desktop_video_class
+                }}
+              {% endif %}
+              {% if mobile_video != blank %}
+                {% liquid
+                  assign mobile_video_class = 'collections-trio__video'
+                  if desktop_video != blank
+                    assign mobile_video_class = mobile_video_class | append: ' collections-trio__video--mobile'
+                  endif
+                %}
+                {{
+                  mobile_video
+                  | video_tag:
+                    autoplay: true,
+                    loop: true,
+                    muted: true,
+                    controls: false,
+                    playsinline: true,
+                    class: mobile_video_class
+                }}
+              {% endif %}
+            {% elsif desktop_image != blank %}
+              <picture class="collections-trio__picture" style="--collections-trio-image-focus: {{ image_focus | escape }};">
+                {% if mobile_image != blank %}
+                  <source media="(max-width: 640px)" srcset="{{ mobile_image | image_url: width: 1400 }}">
+                {% endif %}
+                {{
+                  desktop_image
+                  | image_url: width: 2600
+                  | image_tag:
+                    loading: 'lazy',
+                    alt: title,
+                    class: 'collections-trio__image'
+                }}
+              </picture>
+            {% else %}
+              <div class="collections-trio__placeholder"></div>
+            {% endif %}
+            <span class="collections-trio__shade"></span>
+            <span class="collections-trio__grain"></span>
+          </div>
+
+          <span class="collections-trio__corners" aria-hidden="true"></span>
+
+          <div class="collections-trio__copy">
+            {% if title != blank %}
+              <h3>{{ title }}</h3>
+            {% endif %}
+            {% if subtitle != blank %}
+              <p class="collections-trio__subtitle">
+                <span class="collections-trio__subtitle-bracket">[ {{ subtitle }} ]</span>
+              </p>
+            {% endif %}
+          </div>
+
+          {% if cta_label != blank %}
+            <div class="collections-trio__footer">
+              {% if cta_link != blank %}
+                <a class="collections-trio__cta video-hero__availability" href="{{ cta_link }}">
+                  <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                  <span class="video-hero__availability-label">{{ cta_label }}</span>
+                  <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                </a>
+              {% else %}
+                <span class="collections-trio__cta video-hero__availability">
+                  <span class="video-hero__availability-bracket" aria-hidden="true">[</span>
+                  <span class="video-hero__availability-label">{{ cta_label }}</span>
+                  <span class="video-hero__availability-bracket" aria-hidden="true">]</span>
+                </span>
+              {% endif %}
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collections duo showcase",
+  "settings": [
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "label": "Hauteur desktop (vh)",
+      "min": 40,
+      "max": 98,
+      "step": 1,
+      "default": 75
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay sombre (%)",
+      "min": 0,
+      "max": 70,
+      "step": 1,
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "label": "Epaisseur des traits (px)",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "color",
+      "id": "line_color",
+      "label": "Couleur des lignes",
+      "default": "#E4EDF5"
+    },
+    {
+      "type": "color",
+      "id": "card_bg",
+      "label": "Fond des cards",
+      "default": "#121A25"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection_tile",
+      "name": "Card collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titre",
+          "default": "COLLECTION"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Sous-titre",
+          "default": "DISPONIBLE"
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "Texte CTA",
+          "default": "VOIR LA COLLECTION"
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "Lien CTA"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_desktop",
+          "label": "Image desktop"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_mobile",
+          "label": "Image mobile"
+        },
+        {
+          "type": "video",
+          "id": "video_desktop",
+          "label": "Video desktop"
+        },
+        {
+          "type": "video",
+          "id": "video_mobile",
+          "label": "Video mobile"
+        },
+        {
+          "type": "text",
+          "id": "image_focus",
+          "label": "Position image (CSS object-position)",
+          "default": "50% 50%"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 2,
+  "presets": [
+    {
+      "name": "Collections duo showcase",
+      "blocks": [
+        {
+          "type": "collection_tile",
+          "settings": {
+            "title": "COLLECTION A",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "VOIR"
+          }
+        },
+        {
+          "type": "collection_tile",
+          "settings": {
+            "title": "COLLECTION B",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "VOIR"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
