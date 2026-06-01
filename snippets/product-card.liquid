@@ -1,12 +1,32 @@
 {% assign product_variant = product.selected_or_first_available_variant %}
+{% assign hover_image = product.images[1] %}
 
 <article class="product-card product-card--v2">
   <a class="product-card__link" href="{{ product.url }}">
-    {% if product.featured_image %}
-      {{ product.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: product.title }}
-    {% else %}
-      <div class="ph-img"></div>
-    {% endif %}
+    <div class="product-card__media">
+      {% if product.featured_image %}
+        {{
+          product.featured_image
+          | image_url: width: 900
+          | image_tag:
+            loading: 'lazy',
+            alt: product.title,
+            class: 'product-card__image product-card__image--primary'
+        }}
+        {% if hover_image %}
+          {{
+            hover_image
+            | image_url: width: 900
+            | image_tag:
+              loading: 'lazy',
+              alt: product.title,
+              class: 'product-card__image product-card__image--secondary'
+          }}
+        {% endif %}
+      {% else %}
+        <div class="ph-img"></div>
+      {% endif %}
+    </div>
 
     <div class="product-card__meta">
       <p class="product-card__vendor">{{ product.vendor | default: shop.name | upcase }}</p>

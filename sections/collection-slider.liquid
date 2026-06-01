@@ -104,12 +104,13 @@
             <div class="collection-slider__track" data-stack-track data-loop-size="{{ loop_products_limit }}">
               {% if coll != blank %}
                 {% for pass in (1..3) %}
-                  {% assign rendered_count = 0 %}
-                  {% for product in coll.products limit: loop_products_limit %}
-                    {% liquid
-                      assign quick_variant = product.selected_or_first_available_variant
-                      assign rendered_count = rendered_count | plus: 1
-                    %}
+                    {% assign rendered_count = 0 %}
+                    {% for product in coll.products limit: loop_products_limit %}
+                      {% liquid
+                        assign quick_variant = product.selected_or_first_available_variant
+                        assign hover_image = product.images[1]
+                        assign rendered_count = rendered_count | plus: 1
+                      %}
                     <article class="collection-slider__card" data-product-card>
                       {% if quick_variant != blank %}
                         <form
@@ -149,13 +150,23 @@
                               product.featured_image
                               | image_url: width: 1200
                               | image_tag:
-                                loading: 'lazy',
-                                alt: product.title,
-                                class: 'collection-slider__product-image'
-                            }}
-                          {% else %}
-                            <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
-                          {% endif %}
+                                  loading: 'lazy',
+                                  alt: product.title,
+                                  class: 'collection-slider__product-image collection-slider__product-image--primary'
+                              }}
+                              {% if hover_image %}
+                                {{
+                                  hover_image
+                                  | image_url: width: 1200
+                                  | image_tag:
+                                    loading: 'lazy',
+                                    alt: product.title,
+                                    class: 'collection-slider__product-image collection-slider__product-image--secondary'
+                                }}
+                              {% endif %}
+                            {% else %}
+                              <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+                            {% endif %}
                         </div>
                         <div class="collection-slider__meta">
                           <p class="collection-slider__brand">{{ product.vendor | default: 'Original' | upcase }}</p>

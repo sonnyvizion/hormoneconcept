@@ -1,69 +1,17 @@
-<section class="sneaker-cleaning-page">
+<section class="sneaker-cleaning-page sneaker-cleaning-page--simple">
   <div class="container">
     <div class="sneaker-cleaning-page__inner">
-      <div class="sneaker-cleaning-page__hero">
-        <header class="sneaker-cleaning-page__head">
-          {% if section.settings.kicker != blank %}
-            <p class="site-page-kicker">[ {{ section.settings.kicker | escape }} ]</p>
-          {% endif %}
-          {% if section.settings.title != blank %}
-            <h1>{{ section.settings.title | escape }}</h1>
-          {% endif %}
-          {% if section.settings.text != blank %}
-            <p>{{ section.settings.text | escape }}</p>
-          {% endif %}
-
-          <div class="sneaker-cleaning-page__proofs" aria-label="Points forts du service">
-            <span>Diagnostic matiere</span>
-            <span>Lacets inclus</span>
-            <span>Finition main</span>
-          </div>
-        </header>
-
-        <div class="sneaker-cleaning-page__gallery" aria-label="Apercu du service nettoyage sneakers">
-          {% for block in section.blocks %}
-            {% if block.type == 'image' %}
-              <article class="sneaker-cleaning-page__image-card" {{ block.shopify_attributes }}>
-                {% if block.settings.image != blank %}
-                  {{
-                    block.settings.image
-                    | image_url: width: 1600
-                    | image_tag:
-                      class: 'sneaker-cleaning-page__image',
-                      loading: 'lazy',
-                      alt: block.settings.alt
-                  }}
-                {% else %}
-                  <div class="sneaker-cleaning-page__image-placeholder">
-                    <span>{{ block.settings.caption | default: 'NETTOYAGE' | escape }}</span>
-                  </div>
-                {% endif %}
-                {% if block.settings.caption != blank %}
-                  <p class="sneaker-cleaning-page__caption">{{ block.settings.caption | escape }}</p>
-                {% endif %}
-              </article>
-            {% endif %}
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="sneaker-cleaning-page__process" aria-label="Etapes du nettoyage">
-        <article>
-          <span>01</span>
-          <h2>Diagnostic</h2>
-          <p>Controle des matieres, coutures, zones marquees et niveau de nettoyage adapte.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>Nettoyage</h2>
-          <p>Travail manuel sur la tige, les semelles, les lacets et les details sensibles.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>Finition</h2>
-          <p>Brossage, sechage controle, remise en forme et verification avant restitution.</p>
-        </article>
-      </div>
+      <header class="sneaker-cleaning-page__head">
+        {% if section.settings.kicker != blank %}
+          <p class="site-page-kicker">[ {{ section.settings.kicker | escape }} ]</p>
+        {% endif %}
+        {% if section.settings.title != blank %}
+          <h1>{{ section.settings.title | escape }}</h1>
+        {% endif %}
+        {% if section.settings.text != blank %}
+          <p>{{ section.settings.text | escape }}</p>
+        {% endif %}
+      </header>
 
       <div class="sneaker-cleaning-page__pricing">
         <div class="sneaker-cleaning-page__pricing-head">
@@ -87,6 +35,42 @@
                 {% endif %}
                 {% if block.settings.price != blank %}
                   <span>{{ block.settings.price | escape }}</span>
+                {% endif %}
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="sneaker-cleaning-page__carousel-wrap">
+        <div class="sneaker-cleaning-page__carousel-head">
+          <p class="site-page-kicker">[ RESULTATS ]</p>
+        </div>
+
+        <div class="sneaker-cleaning-page__carousel" aria-label="Apercu du service nettoyage sneakers">
+          {% for block in section.blocks %}
+            {% if block.type == 'image' %}
+              <article class="sneaker-cleaning-page__image-card" {{ block.shopify_attributes }}>
+                <div class="sneaker-cleaning-page__image-media">
+                  {% if block.settings.image != blank %}
+                    {{
+                      block.settings.image
+                      | image_url: width: 1400
+                      | image_tag:
+                        class: 'sneaker-cleaning-page__image',
+                        loading: 'lazy',
+                        sizes: '(max-width: 749px) 78vw, 34vw',
+                        alt: block.settings.alt
+                    }}
+                  {% else %}
+                    <div class="sneaker-cleaning-page__image-placeholder">
+                      <span>{{ block.settings.caption | default: 'NETTOYAGE' | escape }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+
+                {% if block.settings.caption != blank %}
+                  <p class="sneaker-cleaning-page__caption">{{ block.settings.caption | escape }}</p>
                 {% endif %}
               </article>
             {% endif %}

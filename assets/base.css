@@ -3924,6 +3924,7 @@ body .header-cart-drawer .header-cart-drawer__note {
 }
 
 .collection-slider__media {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -3945,7 +3946,30 @@ body .header-cart-drawer .header-cart-drawer__note {
 }
 
 .collection-slider__product-image {
-  mix-blend-mode: darken;
+  transition: opacity .24s ease;
+}
+
+.collection-slider__product-image--secondary {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  padding: clamp(56px, 5.2vw, 72px) clamp(14px, 2vw, 24px) 10px;
+  box-sizing: border-box;
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .collection-slider__product-link:hover .collection-slider__product-image--secondary {
+    opacity: 1;
+  }
+
+  .collection-slider__product-link:hover .collection-slider__media:has(.collection-slider__product-image--secondary) .collection-slider__product-image--primary {
+    opacity: 0;
+  }
 }
 
 .collection-slider__product-image--placeholder {
@@ -4216,6 +4240,13 @@ body .header-cart-drawer .header-cart-drawer__note {
   box-shadow: 0 14px 26px rgba(16, 24, 32, .12);
 }
 
+.product-card__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1 / 1.2;
+  background: linear-gradient(140deg, #c6cdd3, #eff2f5);
+}
+
 .product-card img,
 .ph-img {
   width: 100%;
@@ -4223,6 +4254,28 @@ body .header-cart-drawer .header-cart-drawer__note {
   object-fit: cover;
   display: block;
   background: linear-gradient(140deg, #c6cdd3, #eff2f5);
+}
+
+.product-card__image {
+  height: 100%;
+  transition: opacity .24s ease;
+}
+
+.product-card__image--secondary {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .product-card__link:hover .product-card__image--secondary {
+    opacity: 1;
+  }
+
+  .product-card__link:hover .product-card__media:has(.product-card__image--secondary) .product-card__image--primary {
+    opacity: 0;
+  }
 }
 
 .product-card__meta,
@@ -4723,6 +4776,12 @@ body.template-collection .main-collection::before {
   padding: clamp(14px, 1.6vw, 22px) var(--hero-shell-inset) clamp(40px, 5vw, 72px);
 }
 
+.catalog-page-description {
+  margin-top: clamp(32px, 4vw, 56px);
+  padding-top: clamp(18px, 2vw, 28px);
+  border-top: 1px solid rgba(190, 198, 206, .54);
+}
+
 /* ── Description accordion ───────────────────────────── */
 
 .catalog-desc {
@@ -4992,7 +5051,6 @@ body.template-collection .main-collection::before {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  mix-blend-mode: darken;
 }
 
 .quick-add-sheet__kicker {
@@ -5119,7 +5177,29 @@ body.template-collection .main-collection::before {
   height: 100%;
   object-fit: contain;
   display: block;
-  mix-blend-mode: darken;
+  transition: opacity .24s ease;
+}
+
+.catalog-grid__image--secondary {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: clamp(28px, 3.6vw, 48px) clamp(12px, 1.8vw, 22px) 10px;
+  box-sizing: border-box;
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .catalog-grid__link:hover .catalog-grid__image--secondary {
+    opacity: 1;
+  }
+
+  .catalog-grid__link:hover .catalog-grid__media:has(.catalog-grid__image--secondary) .catalog-grid__image--primary {
+    opacity: 0;
+  }
 }
 
 .catalog-grid__image--placeholder {
@@ -5626,8 +5706,6 @@ body.template-collection .main-collection::before {
   object-position: center center;
   margin: 0 auto;
   pointer-events: none;
-  mix-blend-mode: multiply;
-  -webkit-mix-blend-mode: multiply;
 }
 
 .product-view__media-frame > .ph-img {
@@ -5752,8 +5830,6 @@ body.template-collection .main-collection::before {
   background-position: center center;
   background-repeat: no-repeat;
   background-size: contain;
-  mix-blend-mode: multiply;
-  -webkit-mix-blend-mode: multiply;
 }
 
 .product-view__media-thumb--hidden {
@@ -6408,11 +6484,6 @@ body.template-collection .main-collection::before {
   object-fit: contain;
 }
 
-.cart-item-v2__media img {
-  mix-blend-mode: multiply;
-  filter: contrast(1.04) saturate(.92);
-}
-
 .cart-item-v2__info {
   display: grid;
   align-content: center;
@@ -6913,8 +6984,6 @@ body.template-search .site-footer.site-footer--showcase {
   max-height: 100%;
   object-fit: contain;
   display: block;
-  mix-blend-mode: darken;
-  filter: contrast(1.08) brightness(.94) saturate(.9);
 }
 
 .search-card__media img {
@@ -6924,8 +6993,6 @@ body.template-search .site-footer.site-footer--showcase {
   max-height: 100% !important;
   object-fit: contain !important;
   display: block;
-  mix-blend-mode: darken;
-  filter: contrast(1.08) brightness(.94) saturate(.9);
 }
 
 .search-card__image--placeholder {
@@ -7783,6 +7850,44 @@ body.template-search .site-footer.site-footer--showcase {
 
   [data-collection-page] .catalog-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-collection-page] .catalog-grid__card,
+  [data-collection-page] .catalog-grid__link,
+  [data-collection-page] .catalog-grid__meta {
+    min-width: 0;
+  }
+
+  [data-collection-page] .catalog-grid__meta {
+    min-height: 102px;
+    align-content: start;
+    grid-template-rows: 1em minmax(2.25em, auto) auto;
+  }
+
+  [data-collection-page] .catalog-grid__vendor,
+  [data-collection-page] .catalog-grid__price {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-collection-page] .catalog-grid__title {
+    min-width: 0;
+    max-width: 100%;
+    min-height: 2.25em;
+    max-height: 2.25em;
+    overflow: hidden;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  [data-collection-page] .catalog-grid__price {
+    align-self: end;
   }
 
   [data-collection-page] .catalog-toolbar__columns {
@@ -9140,6 +9245,157 @@ body.template-search .site-footer.site-footer--showcase {
   text-transform: uppercase;
 }
 
+.sneaker-cleaning-page--simple {
+  padding: clamp(48px, 6vw, 88px) 0 clamp(56px, 7vw, 104px);
+}
+
+.sneaker-cleaning-page--simple::before {
+  display: none;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__inner {
+  display: grid;
+  gap: clamp(28px, 4vw, 58px);
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__head {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  gap: clamp(10px, 1.4vw, 18px);
+  max-width: 760px;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__head h1 {
+  font-size: clamp(2rem, 4.8vw, 4.8rem);
+  line-height: .9;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__head p:not(.site-page-kicker) {
+  max-width: 58ch;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing {
+  gap: clamp(16px, 2vw, 26px);
+  margin-top: 0;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing-head {
+  padding-top: 0;
+  border-top: 0;
+  align-items: center;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing-head h2 {
+  max-width: none;
+  font-size: clamp(1.35rem, 2.4vw, 2.7rem);
+  line-height: .94;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  background: rgba(18, 27, 37, .14);
+  border: 1px solid rgba(18, 27, 37, .14);
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__price-card {
+  min-height: clamp(150px, 15vw, 220px);
+  padding: clamp(18px, 2vw, 28px);
+  background: #eef0f1;
+  border: 0;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel-wrap {
+  display: grid;
+  gap: 14px;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 34vw);
+  gap: 1px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1px;
+  background: rgba(18, 27, 37, .14);
+  border: 1px solid rgba(18, 27, 37, .14);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-card {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  background: #d5d9dd;
+  scroll-snap-align: start;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-card:first-child,
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-card:nth-child(n+3) {
+  grid-row: auto;
+  border: 0;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-media {
+  aspect-ratio: 4 / 5;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image,
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-placeholder {
+  display: grid;
+  place-items: center;
+  background: #d5d9dd;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__image-placeholder span {
+  max-width: 16ch;
+  color: rgba(18, 27, 37, .42);
+  font-size: clamp(1rem, 2vw, 2rem);
+  font-weight: 700;
+  line-height: .95;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.sneaker-cleaning-page--simple .sneaker-cleaning-page__caption {
+  position: static;
+  margin: 0;
+  padding: 16px 18px 18px;
+  min-height: 52px;
+  color: rgba(18, 27, 37, .72);
+  background: #eef0f1;
+  font-size: .62rem !important;
+  font-weight: 700;
+  letter-spacing: .16em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase;
+}
+
 .sneaker-cleaning-compare {
   --sneaker-cleaning-reveal: 50%;
   --sneaker-cleaning-media-bleed: clamp(28px, 6vh, 64px);
@@ -9157,6 +9413,7 @@ body.template-search .site-footer.site-footer--showcase {
 }
 
 .sneaker-cleaning-compare__image,
+.sneaker-cleaning-compare__picture,
 .sneaker-cleaning-compare__video,
 .sneaker-cleaning-compare__placeholder {
   position: absolute;
@@ -9165,6 +9422,14 @@ body.template-search .site-footer.site-footer--showcase {
   height: calc(100% + var(--sneaker-cleaning-media-bleed));
   transform: translate3d(0, var(--sneaker-cleaning-media-parallax-y), 0);
   will-change: transform;
+}
+
+.sneaker-cleaning-compare__picture .sneaker-cleaning-compare__image {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  transform: none;
 }
 
 .sneaker-cleaning-compare__after {
@@ -9191,6 +9456,7 @@ body.template-search .site-footer.site-footer--showcase {
   }
 
   .sneaker-cleaning-compare__stage--has-video .sneaker-cleaning-compare__image,
+  .sneaker-cleaning-compare__stage--has-video .sneaker-cleaning-compare__picture,
   .sneaker-cleaning-compare__stage--has-video .sneaker-cleaning-compare__placeholder {
     display: none;
   }
@@ -9402,6 +9668,47 @@ body.template-search .site-footer.site-footer--showcase {
 
   .sneaker-cleaning-page__pricing-head h2 {
     font-size: clamp(2rem, 12vw, 3.8rem);
+  }
+
+  .sneaker-cleaning-page--simple {
+    padding: 38px 0 64px;
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__inner {
+    gap: 32px;
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__head {
+    padding: 0;
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__head h1 {
+    font-size: clamp(2rem, 11vw, 3.5rem);
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing-head {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing-head h2 {
+    font-size: clamp(1.55rem, 8vw, 2.5rem);
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__price-card {
+    min-height: 138px;
+  }
+
+  .sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel {
+    grid-auto-columns: minmax(240px, 78vw);
+    margin-inline: -12px;
+    padding-inline: 12px;
+    border-inline: 0;
   }
 
   .sneaker-cleaning-compare__stage {

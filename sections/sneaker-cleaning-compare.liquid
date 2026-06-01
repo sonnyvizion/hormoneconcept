@@ -1,6 +1,8 @@
 {% liquid
   assign before_image = section.settings.before_image
   assign after_image = section.settings.after_image
+  assign before_mobile_image = section.settings.before_mobile_image
+  assign after_mobile_image = section.settings.after_mobile_image
   assign before_alt = section.settings.before_alt | default: 'Sneaker avant nettoyage'
   assign after_alt = section.settings.after_alt | default: 'Sneaker apres nettoyage'
   assign before_video_asset = section.settings.before_video_asset | strip
@@ -36,14 +38,23 @@
         </video>
       {% endif %}
       {% if before_image != blank %}
-        {{
-          before_image
-          | image_url: width: 2400
-          | image_tag:
-            class: 'sneaker-cleaning-compare__image sneaker-cleaning-compare__image--before',
-            loading: 'lazy',
-            alt: before_alt
-        }}
+        <picture class="sneaker-cleaning-compare__picture sneaker-cleaning-compare__picture--before">
+          {% if before_mobile_image != blank %}
+            <source
+              media="(max-width: 749px)"
+              srcset="{{ before_mobile_image | image_url: width: 900 }} 900w, {{ before_mobile_image | image_url: width: 1400 }} 1400w"
+              sizes="100vw"
+            >
+          {% endif %}
+          {{
+            before_image
+            | image_url: width: 2400
+            | image_tag:
+              class: 'sneaker-cleaning-compare__image sneaker-cleaning-compare__image--before',
+              loading: 'lazy',
+              alt: before_alt
+          }}
+        </picture>
       {% else %}
         <div class="sneaker-cleaning-compare__placeholder sneaker-cleaning-compare__placeholder--before">
           <span>AVANT</span>
@@ -65,14 +76,23 @@
           </video>
         {% endif %}
         {% if after_image != blank %}
-          {{
-            after_image
-            | image_url: width: 2400
-            | image_tag:
-              class: 'sneaker-cleaning-compare__image sneaker-cleaning-compare__image--after',
-              loading: 'lazy',
-              alt: after_alt
-          }}
+          <picture class="sneaker-cleaning-compare__picture sneaker-cleaning-compare__picture--after">
+            {% if after_mobile_image != blank %}
+              <source
+                media="(max-width: 749px)"
+                srcset="{{ after_mobile_image | image_url: width: 900 }} 900w, {{ after_mobile_image | image_url: width: 1400 }} 1400w"
+                sizes="100vw"
+              >
+            {% endif %}
+            {{
+              after_image
+              | image_url: width: 2400
+              | image_tag:
+                class: 'sneaker-cleaning-compare__image sneaker-cleaning-compare__image--after',
+                loading: 'lazy',
+                alt: after_alt
+            }}
+          </picture>
         {% else %}
           <div class="sneaker-cleaning-compare__placeholder sneaker-cleaning-compare__placeholder--after">
             <span>APRES</span>
@@ -255,6 +275,18 @@
       "type": "image_picker",
       "id": "after_image",
       "label": "Image apres (fallback mobile)"
+    },
+    {
+      "type": "image_picker",
+      "id": "before_mobile_image",
+      "label": "Image avant mobile",
+      "info": "Optionnel. Si vide, l'image avant principale est utilisee sur mobile."
+    },
+    {
+      "type": "image_picker",
+      "id": "after_mobile_image",
+      "label": "Image apres mobile",
+      "info": "Optionnel. Si vide, l'image apres principale est utilisee sur mobile."
     },
     {
       "type": "text",

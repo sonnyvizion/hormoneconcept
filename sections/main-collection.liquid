@@ -18,24 +18,6 @@
   <div class="catalog-page-head">
     <p class="site-page-kicker">[ COLLECTION ]</p>
     <h1 class="catalog-page-head__title">{{ collection.title }}</h1>
-
-    {% if collection.description != blank %}
-      {% if desc_needs_accordion %}
-        <details class="catalog-desc" data-catalog-desc>
-          <summary class="catalog-desc__summary">
-            <span class="catalog-desc__preview">{{ desc_plain | truncate: 160 }}</span>
-            <span class="catalog-desc__toggle" aria-hidden="true">
-              <span class="catalog-desc__open-label">LIRE LA SUITE</span>
-              <span class="catalog-desc__close-label">RÉDUIRE</span>
-              <span class="catalog-desc__arrow"></span>
-            </span>
-          </summary>
-          <div class="catalog-desc__body rte">{{ collection.description }}</div>
-        </details>
-      {% else %}
-        <div class="rte catalog-desc__short">{{ collection.description }}</div>
-      {% endif %}
-    {% endif %}
   </div>
 
   <div class="catalog-page-body">
@@ -233,6 +215,7 @@
       <div class="catalog-grid" data-catalog-grid>
         {% for product in collection.products %}
           {% assign pv = product.selected_or_first_available_variant %}
+          {% assign hover_image = product.images[1] %}
           <article class="catalog-grid__card">
             {% if pv != blank %}
               <form
@@ -275,8 +258,18 @@
                     | image_tag:
                       loading: 'lazy',
                       alt: product.title,
-                      class: 'catalog-grid__image'
+                      class: 'catalog-grid__image catalog-grid__image--primary'
                   }}
+                  {% if hover_image %}
+                    {{
+                      hover_image
+                      | image_url: width: 1200
+                      | image_tag:
+                        loading: 'lazy',
+                        alt: product.title,
+                        class: 'catalog-grid__image catalog-grid__image--secondary'
+                    }}
+                  {% endif %}
                 {% else %}
                   <div class="catalog-grid__image catalog-grid__image--placeholder"></div>
                 {% endif %}
@@ -327,6 +320,26 @@
       {% endif %}
 
     {% endpaginate %}
+
+    {% if collection.description != blank %}
+      <div class="catalog-page-description">
+        {% if desc_needs_accordion %}
+          <details class="catalog-desc" data-catalog-desc>
+            <summary class="catalog-desc__summary">
+              <span class="catalog-desc__preview">{{ desc_plain | truncate: 160 }}</span>
+              <span class="catalog-desc__toggle" aria-hidden="true">
+                <span class="catalog-desc__open-label">LIRE LA SUITE</span>
+                <span class="catalog-desc__close-label">RÉDUIRE</span>
+                <span class="catalog-desc__arrow"></span>
+              </span>
+            </summary>
+            <div class="catalog-desc__body rte">{{ collection.description }}</div>
+          </details>
+        {% else %}
+          <div class="rte catalog-desc__short">{{ collection.description }}</div>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 
 </section>

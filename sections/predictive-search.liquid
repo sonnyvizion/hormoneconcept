@@ -9,6 +9,7 @@
   assign predictive_collection_limit = 6
   assign predictive_collection_count = collection_results.size
   assign predictive_loop_size = 0
+  assign predictive_product_passes = 1
 
   if predictive_product_count > predictive_product_limit
     assign predictive_product_count = predictive_product_limit
@@ -18,8 +19,9 @@
     assign predictive_collection_count = predictive_collection_limit
   endif
 
-  if predictive_product_count > 1
+  if predictive_product_count > 4
     assign predictive_loop_size = predictive_product_count
+    assign predictive_product_passes = 3
   endif
 
   assign total_results = product_results.size
@@ -81,27 +83,31 @@
         >
           <div class="collection-slider__inner">
             <article class="collection-slider__row collection-slider__row--predictive">
-              <div class="collection-slider__overlay">
-                <div class="collection-slider__overlay-right">
-                  <div class="collection-slider__badge collection-slider__badge--controls">
-                    <button class="collection-slider__control" type="button" data-stack-prev aria-label="Produits precedents">
-                      <span aria-hidden="true">&lt;</span>
-                    </button>
-                    <button class="collection-slider__control" type="button" data-stack-next aria-label="Produits suivants">
-                      <span aria-hidden="true">&gt;</span>
-                    </button>
+              {% if predictive_loop_size > 0 %}
+                <div class="collection-slider__overlay">
+                  <div class="collection-slider__overlay-right">
+                    <div class="collection-slider__badge collection-slider__badge--controls">
+                      <button class="collection-slider__control" type="button" data-stack-prev aria-label="Produits precedents">
+                        <span aria-hidden="true">&lt;</span>
+                      </button>
+                      <button class="collection-slider__control" type="button" data-stack-next aria-label="Produits suivants">
+                        <span aria-hidden="true">&gt;</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              {% endif %}
 
-              <div class="collection-slider__swipe-hints" aria-hidden="true">
-                <span class="collection-slider__swipe-hint collection-slider__swipe-hint--left"></span>
-                <span class="collection-slider__swipe-hint collection-slider__swipe-hint--right"></span>
-              </div>
+              {% if predictive_loop_size > 0 %}
+                <div class="collection-slider__swipe-hints" aria-hidden="true">
+                  <span class="collection-slider__swipe-hint collection-slider__swipe-hint--left"></span>
+                  <span class="collection-slider__swipe-hint collection-slider__swipe-hint--right"></span>
+                </div>
+              {% endif %}
 
               <div class="collection-slider__viewport" data-stack-viewport>
                 <div class="collection-slider__track" data-stack-track data-loop-size="{{ predictive_loop_size }}">
-                  {% for pass in (1..3) %}
+                  {% for pass in (1..predictive_product_passes) %}
                     {% for product in product_results limit: predictive_product_count %}
                       <article class="collection-slider__card collection-slider__card--predictive" data-product-card>
                         <a class="collection-slider__product-link collection-slider__product-link--predictive" href="{{ product.url }}">
