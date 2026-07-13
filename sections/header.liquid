@@ -143,19 +143,6 @@
     <span aria-hidden="true">&times;</span>
   </button>
 
-  {% if section.settings.drawer_image != blank %}
-    <div class="header-menu__hero">
-      {{
-        section.settings.drawer_image
-        | image_url: width: 1400
-        | image_tag:
-          loading: 'lazy',
-          alt: '',
-          class: 'header-menu__hero-image'
-      }}
-    </div>
-  {% endif %}
-
   <div class="header-menu__views" data-menu-views>
     <div class="header-menu__view is-active" data-menu-view="root">
       <div class="header-menu__view-head">
@@ -185,11 +172,7 @@
                   class="header-menu__list-row"
                   data-menu-drill="view-{{ forloop.index }}"
                 >
-                  {% if block.settings.thumbnail != blank %}
-                    <span class="header-menu__list-thumb">
-                      {{ block.settings.thumbnail | image_url: width: 120 | image_tag: alt: '', loading: 'lazy' }}
-                    </span>
-                  {% elsif block.settings.badge != blank %}
+                  {% if block.settings.badge != blank %}
                     <span class="header-menu__list-badge">{{ block.settings.badge }}</span>
                   {% else %}
                     <span class="header-menu__list-thumb header-menu__list-thumb--empty" aria-hidden="true"></span>
@@ -199,11 +182,7 @@
                 </button>
               {% else %}
                 <a class="header-menu__list-row" href="{{ block.settings.link | default: '#' }}">
-                  {% if block.settings.thumbnail != blank %}
-                    <span class="header-menu__list-thumb">
-                      {{ block.settings.thumbnail | image_url: width: 120 | image_tag: alt: '', loading: 'lazy' }}
-                    </span>
-                  {% elsif block.settings.badge != blank %}
+                  {% if block.settings.badge != blank %}
                     <span class="header-menu__list-badge">{{ block.settings.badge }}</span>
                   {% else %}
                     <span class="header-menu__list-thumb header-menu__list-thumb--empty" aria-hidden="true"></span>
@@ -384,22 +363,6 @@
       <li class="header-menu__mobile-only header-menu__mobile-account"><a href="{{ routes.account_url }}">COMPTE</a></li>
     </ul>
   </div>
-
-  {% if section.settings.drawer_image_bottom != blank %}
-    <a class="header-menu__hero header-menu__hero--bottom" href="{{ section.settings.drawer_image_bottom_url | default: '#' }}">
-      {{
-        section.settings.drawer_image_bottom
-        | image_url: width: 1400
-        | image_tag:
-          loading: 'lazy',
-          alt: '',
-          class: 'header-menu__hero-image'
-      }}
-      {% if section.settings.drawer_image_bottom_caption != blank %}
-        <span class="header-menu__hero-caption">{{ section.settings.drawer_image_bottom_caption }}</span>
-      {% endif %}
-    </a>
-  {% endif %}
 </div>
 
 {% schema %}
