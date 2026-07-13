@@ -6,6 +6,12 @@
   if product.has_only_default_variant == false and product.options.size == 1
     assign selector_label = product.options.first | upcase
   endif
+
+  assign product_type_lower = product.type | downcase
+  assign is_sneaker = false
+  if product_type_lower contains 'sneaker' or product_type_lower contains 'chaussure' or product_type_lower contains 'footwear' or product_type_lower contains 'boot' or product_type_lower contains 'sandal' or product_type_lower contains 'mule'
+    assign is_sneaker = true
+  endif
 %}
 
 <section class="main-product">
@@ -19,6 +25,8 @@
                 class="product-view__media-image"
                 src="{{ featured_image | image_url: width: 1800 }}"
                 alt="{{ featured_image.alt | default: product.title | escape }}"
+                width="{{ featured_image.width }}"
+                height="{{ featured_image.height }}"
                 loading="eager"
                 data-product-main-media
                 data-media-id="{{ featured_image.id }}"
@@ -125,26 +133,28 @@
               <div class="product-view__panel product-view__panel--selector">
                 <p class="site-page-kicker">[ {{ selector_label }} ]</p>
                 <div class="product-form-v2__selector-tools">
-                  <div class="product-form-v2__unit-switch" role="group" aria-label="Changer l'unite de pointure">
-                    <button
-                      class="product-form-v2__unit-button is-active"
-                      type="button"
-                      data-size-unit-toggle
-                      data-size-unit="EU"
-                      aria-pressed="true"
-                    >
-                      EU
-                    </button>
-                    <button
-                      class="product-form-v2__unit-button"
-                      type="button"
-                      data-size-unit-toggle
-                      data-size-unit="US"
-                      aria-pressed="false"
-                    >
-                      US
-                    </button>
-                  </div>
+                  {% if is_sneaker %}
+                    <div class="product-form-v2__unit-switch" role="group" aria-label="Changer l'unite de pointure">
+                      <button
+                        class="product-form-v2__unit-button is-active"
+                        type="button"
+                        data-size-unit-toggle
+                        data-size-unit="EU"
+                        aria-pressed="true"
+                      >
+                        EU
+                      </button>
+                      <button
+                        class="product-form-v2__unit-button"
+                        type="button"
+                        data-size-unit-toggle
+                        data-size-unit="US"
+                        aria-pressed="false"
+                      >
+                        US
+                      </button>
+                    </div>
+                  {% endif %}
                   <button
                     class="product-form-v2__guide-link"
                     type="button"
@@ -192,39 +202,91 @@
                         <p class="product-size-guide__title" id="ProductSizeGuideTitle-{{ section.id }}">Guide des tailles</p>
                       </div>
                       <div class="product-size-guide__table-wrap">
-                        <table class="product-size-guide__table">
-                          <thead>
-                            <tr>
-                              <th>EU</th>
-                              <th>US MEN</th>
-                              <th>UK</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr><td>35.5</td><td>3.5</td><td>3</td></tr>
-                            <tr><td>36</td><td>4</td><td>3.5</td></tr>
-                            <tr><td>36.5</td><td>4.5</td><td>4</td></tr>
-                            <tr><td>37.5</td><td>5</td><td>4.5</td></tr>
-                            <tr><td>38</td><td>5.5</td><td>5</td></tr>
-                            <tr><td>38.5</td><td>6</td><td>5.5</td></tr>
-                            <tr><td>39</td><td>6.5</td><td>6</td></tr>
-                            <tr><td>40</td><td>7</td><td>6.5</td></tr>
-                            <tr><td>40.5</td><td>7.5</td><td>7</td></tr>
-                            <tr><td>41</td><td>8</td><td>7.5</td></tr>
-                            <tr><td>42</td><td>8.5</td><td>8</td></tr>
-                            <tr><td>42.5</td><td>9</td><td>8.5</td></tr>
-                            <tr><td>43</td><td>9.5</td><td>9</td></tr>
-                            <tr><td>44</td><td>10</td><td>9.5</td></tr>
-                            <tr><td>44.5</td><td>10.5</td><td>10</td></tr>
-                            <tr><td>45</td><td>11</td><td>10.5</td></tr>
-                          </tbody>
-                        </table>
+                        {% if is_sneaker %}
+                          <table class="product-size-guide__table">
+                            <thead>
+                              <tr>
+                                <th>EU</th>
+                                <th>US MEN</th>
+                                <th>UK</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td>35.5</td><td>3.5</td><td>3</td></tr>
+                              <tr><td>36</td><td>4</td><td>3.5</td></tr>
+                              <tr><td>36.5</td><td>4.5</td><td>4</td></tr>
+                              <tr><td>37.5</td><td>5</td><td>4.5</td></tr>
+                              <tr><td>38</td><td>5.5</td><td>5</td></tr>
+                              <tr><td>38.5</td><td>6</td><td>5.5</td></tr>
+                              <tr><td>39</td><td>6.5</td><td>6</td></tr>
+                              <tr><td>40</td><td>7</td><td>6.5</td></tr>
+                              <tr><td>40.5</td><td>7.5</td><td>7</td></tr>
+                              <tr><td>41</td><td>8</td><td>7.5</td></tr>
+                              <tr><td>42</td><td>8.5</td><td>8</td></tr>
+                              <tr><td>42.5</td><td>9</td><td>8.5</td></tr>
+                              <tr><td>43</td><td>9.5</td><td>9</td></tr>
+                              <tr><td>44</td><td>10</td><td>9.5</td></tr>
+                              <tr><td>44.5</td><td>10.5</td><td>10</td></tr>
+                              <tr><td>45</td><td>11</td><td>10.5</td></tr>
+                              <tr><td>45.5</td><td>11.5</td><td>11</td></tr>
+                              <tr><td>46</td><td>12</td><td>11.5</td></tr>
+                              <tr><td>47</td><td>12.5</td><td>12</td></tr>
+                              <tr><td>47.5</td><td>13</td><td>12.5</td></tr>
+                            </tbody>
+                          </table>
+                        {% else %}
+                          <table class="product-size-guide__table">
+                            <thead>
+                              <tr>
+                                <th>TAILLE</th>
+                                <th>TOUR DE POITRINE</th>
+                                <th>TOUR DE TAILLE</th>
+                                <th>TOUR DE HANCHES</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td>XS</td><td>82 – 87 cm</td><td>66 – 71 cm</td><td>88 – 93 cm</td></tr>
+                              <tr><td>S</td><td>88 – 93 cm</td><td>72 – 77 cm</td><td>94 – 99 cm</td></tr>
+                              <tr><td>M</td><td>94 – 99 cm</td><td>78 – 83 cm</td><td>100 – 105 cm</td></tr>
+                              <tr><td>L</td><td>100 – 105 cm</td><td>84 – 89 cm</td><td>106 – 111 cm</td></tr>
+                              <tr><td>XL</td><td>106 – 111 cm</td><td>90 – 95 cm</td><td>112 – 117 cm</td></tr>
+                              <tr><td>XXL</td><td>112 – 117 cm</td><td>96 – 101 cm</td><td>118 – 123 cm</td></tr>
+                            </tbody>
+                          </table>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             {% endunless %}
+
+            {% liquid
+              assign product_tags_normalized = product.tags | join: ',' | downcase
+              assign has_stockx_tag = false
+              if product_tags_normalized contains 'stockx'
+                assign has_stockx_tag = true
+              endif
+            %}
+            <div class="product-service-pills" aria-label="Informations de service">
+              <span class="product-service-pill product-service-pill--auth">
+                <span>AUTHENTIFIÉ</span>
+              </span>
+              <span class="product-service-pill product-service-pill--payment">
+                <span>PAIEMENT SÉCURISÉ</span>
+              </span>
+              <span class="product-service-pill product-service-pill--delivery{% if has_stockx_tag %} is-muted{% endif %}">
+                <span>LIVRAISON 24/48H</span>
+              </span>
+              <span class="product-service-pill product-service-pill--stockx{% unless has_stockx_tag %} is-muted{% endunless %}"{% if has_stockx_tag %} tabindex="0"{% endif %}>
+                <span>LIVRAISON 5 À 12 JOURS</span>
+                {% if has_stockx_tag %}
+                  <span class="product-service-pill__tooltip" role="tooltip">
+                    Approvisionné via notre réseau de revendeurs partenaires. Jours ouvrés uniquement.
+                  </span>
+                {% endif %}
+              </span>
+            </div>
 
             <div class="product-view__purchase-sticky-placeholder" data-product-purchase-placeholder hidden></div>
             <div class="product-view__panel product-view__panel--purchase" data-product-purchase-panel>
@@ -280,6 +342,21 @@
               </div>
             </details>
           {% endif %}
+
+          <details class="product-accordion">
+            <summary class="product-accordion__summary">
+              <span>[ LIVRAISON ET RETOURS ]</span>
+            </summary>
+            <div class="product-accordion__body">
+              <div class="rte product-description">
+                {% if has_stockx_tag %}
+                  <p>Livraison sous 5 à 12 jours ouvrés. Approvisionné via notre réseau de revendeurs partenaires. Retours gratuits sous 14 jours.</p>
+                {% else %}
+                  <p>Livraison standard 24/48h en France métropolitaine. Retours gratuits sous 14 jours.</p>
+                {% endif %}
+              </div>
+            </div>
+          </details>
         </div>
       </div>
     </div>

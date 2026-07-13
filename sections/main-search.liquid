@@ -81,8 +81,20 @@
                   <p class="main-search__block-count">{{ product_results_count }} RESULTAT{% if product_results_count != 1 %}S{% endif %}</p>
                 </div>
                 <div class="main-search__results main-search__results--products">
+                  {%- assign search_tokens = search.terms | downcase | split: ' ' -%}
                   {% for item in search.results %}
                     {% if item.object_type == 'product' %}
+                      {%- assign item_title_lower = item.title | downcase -%}
+                      {%- assign item_vendor_lower = item.vendor | downcase -%}
+                      {%- assign item_token_match = false -%}
+                      {%- for token in search_tokens -%}
+                        {%- if token.size > 1 -%}
+                          {%- if item_title_lower contains token or item_vendor_lower contains token -%}
+                            {%- assign item_token_match = true -%}
+                          {%- endif -%}
+                        {%- endif -%}
+                      {%- endfor -%}
+                      {%- unless item_token_match -%}{%- continue -%}{%- endunless -%}
                       {% assign result_variant = item.selected_or_first_available_variant %}
                       <article class="search-card search-card--product">
                         <a class="search-card__link" href="{{ item.url }}">

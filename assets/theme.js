@@ -741,6 +741,7 @@
     const backButtons = Array.from(panelEl.querySelectorAll('[data-menu-back]'));
     const views = Array.from(panelEl.querySelectorAll('[data-menu-view]'));
     const viewsContainer = panelEl.querySelector('[data-menu-views]');
+    let lockedScrollY = 0;
 
     const panelScrambleTargets = '.header-menu__view.is-active .header-menu__view-title, .header-menu__view.is-active .header-menu__view-all, .header-menu__view.is-active .header-menu__list-label, .header-menu__view.is-active .header-menu__list-badge';
 
@@ -765,11 +766,28 @@
     };
 
     const syncOpenState = (isOpen) => {
+      const wasOpen = document.body.classList.contains('mobile-menu-open');
+
+      if (isOpen && !wasOpen) {
+        lockedScrollY = Math.max(window.scrollY || window.pageYOffset || 0, 0);
+        document.body.style.top = `-${lockedScrollY}px`;
+      }
+
       navEl.classList.toggle('is-open', isOpen);
       headerEl.classList.toggle('has-mobile-menu-open', isOpen);
+      document.documentElement.classList.toggle('mobile-menu-open', isOpen);
       document.body.classList.toggle('mobile-menu-open', isOpen);
       toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      if (!isOpen) setActiveView('root');
+
+      if (!isOpen) {
+        setActiveView('root');
+
+        if (wasOpen) {
+          document.body.style.top = '';
+          window.scrollTo(0, lockedScrollY);
+          lockedScrollY = 0;
+        }
+      }
     };
 
     const closeMenu = () => {
@@ -1143,6 +1161,28 @@
 
       const renderedPredictiveRoot = resultsEl.querySelector('[data-predictive-search-root]');
       if (!renderedPredictiveRoot) return;
+
+      // Filtre post-insertion : retire les cartes dont le titre ne contient
+      // aucun token de la query (Shopify renvoie des populaires en fallback)
+      const tokens = searchTerm.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+      if (tokens.length > 0) {
+        renderedPredictiveRoot.querySelectorAll('[data-product-card]').forEach(card => {
+          const title = (card.dataset.productTitle || '').toLowerCase();
+          const hasMatch = tokens.some(t => title.includes(t));
+          if (!hasMatch) card.remove();
+        });
+
+        if (renderedPredictiveRoot.querySelectorAll('[data-product-card]').length === 0) {
+          renderedPredictiveRoot.querySelector('.collection-slider--predictive')?.closest('section')?.remove();
+          const hasOther = renderedPredictiveRoot.querySelector(
+            '.header-search-predictive__query, .header-search-predictive__pill, .header-search-predictive__link'
+          );
+          if (!hasOther) {
+            resultsEl.innerHTML = `<div data-predictive-search-root data-predictive-search-state="empty"><div class="header-search-predictive__empty"><p>Aucun resultat pour "${searchTerm}".</p><a class="header-search-predictive__all" href="/search?q=${encodeURIComponent(searchTerm)}&options%5Bprefix%5D=last">LANCER LA RECHERCHE COMPLETE</a></div></div>`;
+            return;
+          }
+        }
+      }
 
       initCollectionStacks(renderedPredictiveRoot);
       initInteractiveScramble(renderedPredictiveRoot);
