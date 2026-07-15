@@ -1162,28 +1162,6 @@
       const renderedPredictiveRoot = resultsEl.querySelector('[data-predictive-search-root]');
       if (!renderedPredictiveRoot) return;
 
-      // Filtre post-insertion : retire les cartes dont le titre ne contient
-      // aucun token de la query (Shopify renvoie des populaires en fallback)
-      const tokens = searchTerm.toLowerCase().split(/\s+/).filter(t => t.length > 1);
-      if (tokens.length > 0) {
-        renderedPredictiveRoot.querySelectorAll('[data-product-card]').forEach(card => {
-          const title = (card.dataset.productTitle || '').toLowerCase();
-          const hasMatch = tokens.some(t => title.includes(t));
-          if (!hasMatch) card.remove();
-        });
-
-        if (renderedPredictiveRoot.querySelectorAll('[data-product-card]').length === 0) {
-          renderedPredictiveRoot.querySelector('.collection-slider--predictive')?.closest('section')?.remove();
-          const hasOther = renderedPredictiveRoot.querySelector(
-            '.header-search-predictive__query, .header-search-predictive__pill, .header-search-predictive__link'
-          );
-          if (!hasOther) {
-            resultsEl.innerHTML = `<div data-predictive-search-root data-predictive-search-state="empty"><div class="header-search-predictive__empty"><p>Aucun resultat pour "${searchTerm}".</p><a class="header-search-predictive__all" href="/search?q=${encodeURIComponent(searchTerm)}&options%5Bprefix%5D=last">LANCER LA RECHERCHE COMPLETE</a></div></div>`;
-            return;
-          }
-        }
-      }
-
       initCollectionStacks(renderedPredictiveRoot);
       initInteractiveScramble(renderedPredictiveRoot);
       initCollectionTickerScramble(renderedPredictiveRoot);
@@ -3509,19 +3487,47 @@
     '49.5': '15 US'
   };
 
-  const normalizeVariantSizeLabel = (label) => (label || '')
+  const PRODUCT_SIZE_EU_MAP = Object.entries(PRODUCT_SIZE_US_MAP).reduce((map, [euSize, usSize]) => {
+    map[usSize.replace(/\s*US$/i, '')] = euSize;
+    return map;
+  }, {});
+
+  const normalizeSizeValue = (value) => (value || '')
     .replace(/,/g, '.')
     .replace(/\s+/g, ' ')
-    .replace(/\b(EU|US|UK)\b/gi, '')
+    .replace(/\.0\b/g, '')
     .trim();
 
+  const getExplicitSizeValue = (label, unitPattern) => {
+    const normalizedLabel = normalizeSizeValue(label).toUpperCase();
+    const numberPattern = '(\\d+(?:\\.\\d+)?(?:\\s+2\\/3)?)';
+    const groupedUnitPattern = `(?:${unitPattern})`;
+    const unitBeforeMatch = normalizedLabel.match(new RegExp(`\\b${groupedUnitPattern}\\s*${numberPattern}\\b`, 'i'));
+    const unitAfterMatch = normalizedLabel.match(new RegExp(`\\b${numberPattern}\\s*${groupedUnitPattern}\\b`, 'i'));
+    return normalizeSizeValue(unitBeforeMatch?.[1] || unitAfterMatch?.[1] || '');
+  };
+
+  const getFallbackSizeValue = (label) => normalizeSizeValue(label)
+    .replace(/\b(EU|UE|US|UK)\b/gi, '')
+    .replace(/[()[\]]/g, '')
+    .split(/[/-]/)
+    .map((part) => normalizeSizeValue(part))
+    .find((part) => /^\d+(?:\.\d+)?(?:\s+2\/3)?$/.test(part)) || '';
+
   const formatVariantSizeLabel = (label, unit) => {
-    const normalizedLabel = normalizeVariantSizeLabel(label);
-    if (!normalizedLabel) return '';
+    const euValue = getExplicitSizeValue(label, 'EU|UE') || getFallbackSizeValue(label);
+    const usValue = getExplicitSizeValue(label, 'US');
+    const fallbackValue = normalizeSizeValue(label)
+      .replace(/\b(EU|UE|US|UK)\b/gi, '')
+      .trim();
+
     if (unit === 'US') {
-      return PRODUCT_SIZE_US_MAP[normalizedLabel] || `${normalizedLabel} US`;
+      const convertedUsValue = usValue || PRODUCT_SIZE_US_MAP[euValue]?.replace(/\s*US$/i, '');
+      return convertedUsValue ? `${convertedUsValue} US` : `${fallbackValue} US`;
     }
-    return `${normalizedLabel} EU`;
+
+    const convertedEuValue = euValue || PRODUCT_SIZE_EU_MAP[usValue];
+    return convertedEuValue ? `${convertedEuValue} EU` : `${fallbackValue} EU`;
   };
 
   const syncProductSizeUnit = (formEl, unit = 'EU') => {
