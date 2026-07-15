@@ -479,19 +479,19 @@ body.mobile-menu-open .header-menu__panel {
 }
 
 .header-menu__close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 3;
+  position: relative;
+  align-self: flex-end;
   width: 34px;
   height: 34px;
+  margin: 12px 14px 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(246, 247, 249, .85);
+  flex: 0 0 auto;
+  border: 1px solid rgba(201, 209, 216, .9);
   border-radius: 0;
   background: transparent;
-  color: #f6f7f9;
+  color: #151c25;
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
@@ -499,8 +499,8 @@ body.mobile-menu-open .header-menu__panel {
 }
 
 .header-menu__close:hover {
-  border-color: #f6f7f9;
-  background: rgba(11, 16, 22, .25);
+  border-color: rgba(21, 28, 37, .72);
+  background: rgba(11, 16, 22, .04);
 }
 
 .header-menu__hero {
