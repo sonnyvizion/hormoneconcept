@@ -3750,7 +3750,8 @@
         });
       });
 
-      mediaPrevEl?.addEventListener('click', () => {
+      mediaPrevEl?.addEventListener('click', (event) => {
+        event.stopPropagation();
         const activeIndex = getProductViewActiveMediaIndex(productViewEl);
         const targetIndex = activeIndex > 0 ? activeIndex - 1 : 0;
         const targetThumbEl = mediaThumbEls[targetIndex];
@@ -3759,7 +3760,8 @@
         }
       });
 
-      mediaNextEl?.addEventListener('click', () => {
+      mediaNextEl?.addEventListener('click', (event) => {
+        event.stopPropagation();
         const activeIndex = getProductViewActiveMediaIndex(productViewEl);
         const targetIndex = activeIndex >= 0 ? Math.min(mediaThumbEls.length - 1, activeIndex + 1) : 0;
         const targetThumbEl = mediaThumbEls[targetIndex];
