@@ -7588,7 +7588,7 @@ body.template-search .site-footer.site-footer--showcase {
     min-width: 0;
     max-width: none;
     min-height: 0;
-    background: transparent;
+    background: transparent !important;
     overflow: visible;
     gap: 0;
   }
@@ -7602,9 +7602,9 @@ body.template-search .site-footer.site-footer--showcase {
     height: 44px;
     min-height: 44px;
     padding: 0;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
     color: transparent;
     opacity: 1;
     pointer-events: auto !important;
@@ -7612,6 +7612,15 @@ body.template-search .site-footer.site-footer--showcase {
     clip-path: none;
     overflow: visible;
     transform: none;
+  }
+
+  .product-view__media-arrow:hover,
+  .product-view__media-arrow:focus,
+  .product-view__media-arrow:focus-visible,
+  .product-view__media-arrow.is-disabled {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
   }
 
   .product-view__media-arrow.is-disabled {
