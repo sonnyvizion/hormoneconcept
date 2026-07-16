@@ -1669,15 +1669,17 @@ body .header-cart-drawer .header-cart-drawer__note {
 .header-search-overlay__clear {
   position: absolute;
   right: 10px;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   width: 24px;
   height: 24px;
+  margin: auto 0;
   border: 0;
   padding: 0;
   background: transparent;
   color: rgba(21, 30, 40, .72);
   cursor: pointer;
-  transform: translateY(-50%);
+  transform: none;
   appearance: none;
 }
 
@@ -6826,6 +6828,11 @@ body.template-collection .main-collection::before {
   display: none;
   width: 0;
   height: 0;
+}
+
+.header-search-overlay__form input[type="search"] {
+  min-height: var(--header-search-overlay-control-height);
+  padding: 14px 48px 14px 18px;
 }
 
 .catalog-entry {
