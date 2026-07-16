@@ -7978,7 +7978,28 @@ body.template-search .site-footer.site-footer--showcase {
     --site-header-height: 48px;
     --site-header-gap: 12px;
     --site-header-shell-padding: 8px;
-    --header-mobile-side-width: 110px;
+    --header-mobile-side-width: clamp(72px, 24vw, 96px);
+  }
+
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  @supports not (overflow: clip) {
+    html,
+    body {
+      overflow-x: hidden;
+    }
+  }
+
+  .site-header {
+    left: var(--hero-shell-inset);
+    right: var(--hero-shell-inset);
+    width: auto;
+    max-width: none;
+    transform: translate3d(0, var(--site-header-scroll-offset), 0);
   }
 
   .container {
@@ -8251,10 +8272,14 @@ body.template-search .site-footer.site-footer--showcase {
     min-height: var(--site-header-height);
     gap: 0;
     background: rgba(246, 247, 249, .95);
+    min-width: 0;
+    max-width: 100%;
   }
 
   .site-header-shell {
     overflow: visible;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .header-search-overlay {
