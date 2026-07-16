@@ -8752,6 +8752,23 @@ body.template-search .site-footer.site-footer--showcase {
     scroll-snap-stop: always;
   }
 
+  .collection-slider__media {
+    margin: 8px 6px 0;
+    padding: 34px 4px 4px;
+  }
+
+  .collection-slider__product-image,
+  .collection-slider__product-image--placeholder {
+    width: 112%;
+    height: 112%;
+    max-width: none;
+    max-height: none;
+  }
+
+  .collection-slider__product-image--secondary {
+    padding: 34px 4px 4px;
+  }
+
   .collection-slider__ticker {
     padding: 0 8px;
   }
