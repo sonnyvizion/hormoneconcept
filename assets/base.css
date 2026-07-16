@@ -7635,8 +7635,8 @@ body.template-search .site-footer.site-footer--showcase {
     height: 13px;
     border-right-width: 1.5px;
     border-bottom-width: 1.5px;
-    border-right-color: rgba(92, 101, 112, .78);
-    border-bottom-color: rgba(92, 101, 112, .78);
+    border-right-color: rgba(246, 247, 249, .92);
+    border-bottom-color: rgba(246, 247, 249, .92);
   }
 
   .product-view__media-arrow--prev span {
