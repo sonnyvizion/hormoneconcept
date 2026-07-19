@@ -68,35 +68,23 @@
             {% endif %}
 
             <ul class="site-footer-v2__links-list" role="list">
-              {% if section.settings.social_link_1_label != blank %}
-                <li>
-                  {% if section.settings.social_link_1_url != blank %}
-                    <a href="{{ section.settings.social_link_1_url }}">{{ section.settings.social_link_1_label }}</a>
-                  {% else %}
-                    <span>{{ section.settings.social_link_1_label }}</span>
-                  {% endif %}
-                </li>
-              {% endif %}
-
-              {% if section.settings.social_link_2_label != blank %}
-                <li>
-                  {% if section.settings.social_link_2_url != blank %}
-                    <a href="{{ section.settings.social_link_2_url }}">{{ section.settings.social_link_2_label }}</a>
-                  {% else %}
-                    <span>{{ section.settings.social_link_2_label }}</span>
-                  {% endif %}
-                </li>
-              {% endif %}
-
-              {% if section.settings.social_link_3_label != blank %}
-                <li>
-                  {% if section.settings.social_link_3_url != blank %}
-                    <a href="{{ section.settings.social_link_3_url }}">{{ section.settings.social_link_3_label }}</a>
-                  {% else %}
-                    <span>{{ section.settings.social_link_3_label }}</span>
-                  {% endif %}
-                </li>
-              {% endif %}
+              {% for index in (1..5) %}
+                {% liquid
+                  assign label_setting = 'social_link_' | append: index | append: '_label'
+                  assign url_setting = 'social_link_' | append: index | append: '_url'
+                  assign social_label = section.settings[label_setting]
+                  assign social_url = section.settings[url_setting]
+                %}
+                {% if social_label != blank %}
+                  <li>
+                    {% if social_url != blank %}
+                      <a href="{{ social_url }}">{{ social_label }}</a>
+                    {% else %}
+                      <span>{{ social_label }}</span>
+                    {% endif %}
+                  </li>
+                {% endif %}
+              {% endfor %}
             </ul>
           </div>
 
@@ -288,6 +276,28 @@
       "type": "url",
       "id": "social_link_3_url",
       "label": "Reseau 3 - URL"
+    },
+    {
+      "type": "text",
+      "id": "social_link_4_label",
+      "label": "Reseau 4 - libelle",
+      "default": "TIKTOK"
+    },
+    {
+      "type": "url",
+      "id": "social_link_4_url",
+      "label": "Reseau 4 - URL"
+    },
+    {
+      "type": "text",
+      "id": "social_link_5_label",
+      "label": "Reseau 5 - libelle",
+      "default": "YOUTUBE"
+    },
+    {
+      "type": "url",
+      "id": "social_link_5_url",
+      "label": "Reseau 5 - URL"
     },
     {
       "type": "text",
