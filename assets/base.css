@@ -9571,7 +9571,7 @@ body.template-search .site-footer.site-footer--showcase {
   min-height: 0;
   padding: clamp(16px, 1.8vw, 22px) clamp(16px, 2.2vw, 28px);
   display: grid;
-  grid-template-columns: minmax(160px, .72fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(180px, 1fr) minmax(300px, 1.25fr) minmax(90px, .45fr);
   align-items: center;
   align-content: center;
   gap: clamp(14px, 2vw, 28px);
@@ -9582,13 +9582,17 @@ body.template-search .site-footer.site-footer--showcase {
 .sneaker-cleaning-page--simple .sneaker-cleaning-page__price-card h3 {
   font-size: .72rem;
   letter-spacing: .1em;
+  line-height: 1.38;
 }
 
 .sneaker-cleaning-page--simple .sneaker-cleaning-page__price-card p {
-  max-width: 42ch;
+  width: 100%;
+  max-width: 38ch;
   color: rgba(18, 27, 37, .62);
   font-size: .78rem !important;
   line-height: 1.38 !important;
+  text-align: left;
+  justify-self: center;
 }
 
 .sneaker-cleaning-page--simple .sneaker-cleaning-page__price-card span {
@@ -9596,6 +9600,8 @@ body.template-search .site-footer.site-footer--showcase {
   white-space: nowrap;
   font-size: .78rem;
   letter-spacing: .06em;
+  line-height: 1.38;
+  text-align: right;
 }
 
 .sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel-wrap {
@@ -10019,10 +10025,16 @@ body.template-search .site-footer.site-footer--showcase {
   }
 
   .sneaker-cleaning-page--simple .sneaker-cleaning-page__carousel {
-    grid-auto-columns: minmax(240px, 78vw);
-    margin-inline: -12px;
-    padding-inline: 12px;
-    border-inline: 0;
+    width: 100%;
+    max-width: 100%;
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+    grid-template-columns: 1fr;
+    margin-inline: 0;
+    padding: 1px;
+    box-sizing: border-box;
+    overflow: visible;
+    scroll-snap-type: none;
   }
 
   .sneaker-cleaning-compare__stage {
