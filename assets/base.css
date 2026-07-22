@@ -5953,6 +5953,16 @@ body.template-collection .main-collection::before {
   text-transform: uppercase;
 }
 
+.product-view__style-id {
+  margin: -2px 0 0;
+  color: rgba(16, 25, 36, .46);
+  font-size: .54rem;
+  font-weight: 500;
+  letter-spacing: .22em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .product-view__panel--selector {
   gap: 12px;
 }

@@ -3451,44 +3451,30 @@
   };
 
   const PRODUCT_SIZE_US_MAP = {
-    '35.5': '3.5 US',
-    '36': '4 US',
-    '36.5': '4.5 US',
-    '36 2/3': '4.5 US',
-    '37': '5 US',
-    '37.5': '5 US',
-    '38': '5.5 US',
-    '38.5': '6 US',
-    '38 2/3': '6 US',
-    '39': '6.5 US',
-    '39.5': '7 US',
-    '40': '7 US',
-    '40.5': '7.5 US',
-    '40 2/3': '7.5 US',
-    '41': '8 US',
-    '41.5': '8.5 US',
-    '42': '8.5 US',
-    '42.5': '9 US',
-    '42 2/3': '9 US',
-    '43': '9.5 US',
-    '43.5': '10 US',
-    '44': '10 US',
-    '44.5': '10.5 US',
-    '44 2/3': '10.5 US',
-    '45': '11 US',
-    '45.5': '11.5 US',
-    '46': '12 US',
-    '46.5': '12.5 US',
-    '46 2/3': '12 US',
-    '47': '12.5 US',
-    '47.5': '13 US',
-    '48': '13.5 US',
-    '48.5': '14 US',
-    '49.5': '15 US'
+    '35.5': '3.5 US M',
+    '36': '4 US M',
+    '36.5': '4.5 US M',
+    '37.5': '5 US M',
+    '38': '5.5 US M',
+    '38.5': '6 US M',
+    '39': '6.5 US M',
+    '40': '7 US M',
+    '40.5': '7.5 US M',
+    '41': '8 US M',
+    '42': '8.5 US M',
+    '42.5': '9 US M',
+    '43': '9.5 US M',
+    '44': '10 US M',
+    '44.5': '10.5 US M',
+    '45': '11 US M',
+    '45.5': '11.5 US M',
+    '46': '12 US M',
+    '47': '12.5 US M',
+    '47.5': '13 US M'
   };
 
   const PRODUCT_SIZE_EU_MAP = Object.entries(PRODUCT_SIZE_US_MAP).reduce((map, [euSize, usSize]) => {
-    map[usSize.replace(/\s*US$/i, '')] = euSize;
+    map[usSize.replace(/\s*US(?:\s*M)?$/i, '')] = euSize;
     return map;
   }, {});
 
@@ -3512,18 +3498,29 @@
     .replace(/[()[\]]/g, '')
     .split(/[/-]/)
     .map((part) => normalizeSizeValue(part))
-    .find((part) => /^\d+(?:\.\d+)?(?:\s+2\/3)?$/.test(part)) || '';
+    .map((part) => part.match(/\b\d+(?:\.\d+)?(?:\s+2\/3)?\b/)?.[0] || '')
+    .find(Boolean) || '';
+
+  const getAnySizeValue = (label) => {
+    const normalizedLabel = normalizeSizeValue(label);
+    return normalizedLabel.match(/\b\d+(?:\.\d+)?(?:\s+2\/3)?\b/)?.[0] || '';
+  };
 
   const formatVariantSizeLabel = (label, unit) => {
-    const euValue = getExplicitSizeValue(label, 'EU|UE') || getFallbackSizeValue(label);
-    const usValue = getExplicitSizeValue(label, 'US');
-    const fallbackValue = normalizeSizeValue(label)
+    const explicitEuValue = getExplicitSizeValue(label, 'EU|UE');
+    const explicitUsValue = getExplicitSizeValue(label, 'US(?:\\s*M)?');
+    const fallbackSizeValue = getFallbackSizeValue(label);
+    const fallbackSizeNumber = Number(fallbackSizeValue);
+    const fallbackLooksLikeUs = Number.isFinite(fallbackSizeNumber) && fallbackSizeNumber < 20;
+    const euValue = explicitEuValue || (fallbackLooksLikeUs ? PRODUCT_SIZE_EU_MAP[fallbackSizeValue] : fallbackSizeValue);
+    const usValue = explicitUsValue || (fallbackLooksLikeUs ? fallbackSizeValue : '');
+    const fallbackValue = getAnySizeValue(label) || normalizeSizeValue(label)
       .replace(/\b(EU|UE|US|UK)\b/gi, '')
       .trim();
 
     if (unit === 'US') {
-      const convertedUsValue = usValue || PRODUCT_SIZE_US_MAP[euValue]?.replace(/\s*US$/i, '');
-      return convertedUsValue ? `${convertedUsValue} US` : `${fallbackValue} US`;
+      const convertedUsValue = usValue || PRODUCT_SIZE_US_MAP[euValue]?.replace(/\s*US(?:\s*M)?$/i, '');
+      return convertedUsValue ? `${convertedUsValue} US M` : `${fallbackValue} US M`;
     }
 
     const convertedEuValue = euValue || PRODUCT_SIZE_EU_MAP[usValue];
@@ -3736,6 +3733,8 @@
       const mediaThumbEls = getProductViewMediaThumbEls(productViewEl);
       const mediaPrevEl = productViewEl?.querySelector('[data-product-media-prev]');
       const mediaNextEl = productViewEl?.querySelector('[data-product-media-next]');
+      const styleIdEl = productViewEl?.querySelector('[data-product-style-id]');
+      const styleIdValueEl = productViewEl?.querySelector('[data-product-style-id-value]');
 
       initMobileStickyPurchasePanel(formEl);
 
@@ -3803,6 +3802,11 @@
         }
         if (paymentPanelEl) {
           paymentPanelEl.hidden = !isAvailable;
+        }
+        if (styleIdEl && styleIdValueEl) {
+          const styleId = selectedPillEl.dataset.variantStyleId || '';
+          styleIdValueEl.textContent = styleId;
+          styleIdEl.hidden = !styleId;
         }
       };
 
