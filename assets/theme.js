@@ -3625,6 +3625,76 @@
     }
   };
 
+  const initProductQuantitySelector = (formEl) => {
+    if (!formEl || formEl.dataset.productQuantityInit === 'true') return;
+    formEl.dataset.productQuantityInit = 'true';
+
+    const quantityInputEl = formEl.querySelector('[data-product-quantity-input]');
+    const minusEl = formEl.querySelector('[data-product-quantity-minus]');
+    const plusEl = formEl.querySelector('[data-product-quantity-plus]');
+
+    if (!quantityInputEl || !minusEl || !plusEl) return;
+
+    const getQuantity = () => {
+      const quantity = Number.parseInt(quantityInputEl.value, 10);
+      return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+    };
+
+    const setQuantity = (quantity) => {
+      quantityInputEl.value = String(Math.max(1, quantity));
+      quantityInputEl.dispatchEvent(new CustomEvent('product:quantity-change', { bubbles: true }));
+    };
+
+    minusEl.addEventListener('click', () => {
+      setQuantity(getQuantity() - 1);
+    });
+
+    plusEl.addEventListener('click', () => {
+      setQuantity(getQuantity() + 1);
+    });
+
+    quantityInputEl.addEventListener('change', () => {
+      setQuantity(getQuantity());
+    });
+  };
+
+  const initProductReassuranceTabs = (formEl) => {
+    if (!formEl || formEl.dataset.productReassuranceInit === 'true') return;
+    formEl.dataset.productReassuranceInit = 'true';
+
+    const reassuranceEl = formEl.querySelector('[data-product-reassurance]');
+    const tabEls = Array.from(reassuranceEl?.querySelectorAll('[data-product-reassurance-tab]') || []);
+    const panelEls = Array.from(reassuranceEl?.querySelectorAll('[data-product-reassurance-panel]') || []);
+
+    if (!reassuranceEl || !tabEls.length || !panelEls.length) return;
+
+    const activateTab = (tabEl) => {
+      const panelId = tabEl.getAttribute('aria-controls');
+
+      tabEls.forEach((candidateEl) => {
+        const isActive = candidateEl === tabEl;
+        candidateEl.classList.toggle('is-active', isActive);
+        candidateEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      panelEls.forEach((panelEl) => {
+        const isActive = panelEl.id === panelId;
+        panelEl.classList.toggle('is-active', isActive);
+        panelEl.hidden = !isActive;
+      });
+    };
+
+    tabEls.forEach((tabEl) => {
+      tabEl.addEventListener('click', () => activateTab(tabEl));
+    });
+  };
+
+  const formatProductTotalPrice = (cents, fallbackText = '') => {
+    if (!Number.isFinite(cents) || cents <= 0) return fallbackText;
+    const amount = Math.round(cents / 100);
+    return `${amount.toLocaleString('fr-FR').replace(/\s/g, ' ')}€`;
+  };
+
   const getProductViewMediaThumbEls = (productViewEl) => Array.from(productViewEl?.querySelectorAll('[data-product-media-thumb]') || []);
 
   const getProductViewActiveMediaIndex = (productViewEl) => {
@@ -3727,6 +3797,7 @@
       const submitEl = formEl.querySelector('[data-product-submit]');
       const submitLabelEl = formEl.querySelector('[data-product-submit-label]');
       const paymentPanelEl = formEl.querySelector('[data-product-payment-panel]');
+      const quantityInputEl = formEl.querySelector('[data-product-quantity-input]');
       const pillEls = Array.from(formEl.querySelectorAll('[data-variant-pill]'));
       const sizeUnitToggleEls = Array.from(formEl.querySelectorAll('[data-size-unit-toggle]'));
       const mainMediaEl = productViewEl?.querySelector('[data-product-main-media]');
@@ -3736,6 +3807,8 @@
       const styleIdEl = productViewEl?.querySelector('[data-product-style-id]');
       const styleIdValueEl = productViewEl?.querySelector('[data-product-style-id-value]');
 
+      initProductQuantitySelector(formEl);
+      initProductReassuranceTabs(formEl);
       initMobileStickyPurchasePanel(formEl);
 
       const syncActiveMedia = (selectedThumbEl) => {
@@ -3788,14 +3861,96 @@
 
       initProductSizeGuide(formEl);
 
-      if (!variantIdInputEl || !priceEl || !submitEl || !pillEls.length) return;
+      if (!variantIdInputEl || !priceEl || !submitEl) return;
+
+      const getQuantity = () => {
+        const quantity = Number.parseInt(quantityInputEl?.value || '1', 10);
+        return Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+      };
+
+      const syncProductTotalPrice = (unitPriceCents, fallbackText = priceEl.textContent) => {
+        const cents = Number.parseInt(unitPriceCents, 10);
+        priceEl.dataset.productPriceCents = Number.isFinite(cents) ? String(cents) : priceEl.dataset.productPriceCents || '';
+        const activeCents = Number.parseInt(priceEl.dataset.productPriceCents || '', 10);
+        priceEl.textContent = formatProductTotalPrice(activeCents * getQuantity(), fallbackText);
+      };
+
+      quantityInputEl?.addEventListener('product:quantity-change', () => {
+        syncProductTotalPrice(priceEl.dataset.productPriceCents, priceEl.textContent);
+      });
+
+      formEl.addEventListener('submit', async (event) => {
+        const activeEl = document.activeElement?.matches?.('[data-product-submit]')
+          ? document.activeElement
+          : null;
+        const submitterEl = event.submitter || activeEl;
+        const isProductSubmit = submitterEl?.matches?.('[data-product-submit]');
+        if (submitterEl && !isProductSubmit) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === 'function') {
+          event.stopImmediatePropagation();
+        }
+        if (submitEl.disabled) return;
+
+        const selectedPillEl = pillEls.find((pillEl) => pillEl.checked);
+        const variantLabel = selectedPillEl?.dataset.variantLabel || selectedPillEl?.value || '';
+        const previousLabel = submitLabelEl?.textContent || '';
+        const previousDisabled = submitEl.disabled;
+
+        submitEl.disabled = true;
+        if (submitLabelEl) {
+          submitLabelEl.textContent = 'AJOUT...';
+        }
+
+        try {
+          const formData = typeof window.FormData === 'function' && submitterEl
+            ? new window.FormData(formEl, submitterEl)
+            : new window.FormData(formEl);
+
+          const response = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error('Product add request failed');
+          }
+
+          refreshHeaderCartCount();
+          showQuickAddToast(productViewEl?.querySelector('.product-view__title')?.textContent || 'Produit', variantLabel);
+        } catch (_error) {
+          if (submitLabelEl) {
+            submitLabelEl.textContent = 'ERREUR';
+          }
+          window.setTimeout(() => {
+            if (submitLabelEl) {
+              submitLabelEl.textContent = previousLabel;
+            }
+          }, 1200);
+        } finally {
+          window.setTimeout(() => {
+            submitEl.disabled = previousDisabled;
+            if (submitLabelEl && submitLabelEl.textContent !== 'ERREUR') {
+              submitLabelEl.textContent = previousLabel;
+            }
+          }, 300);
+        }
+      });
+
+      if (!pillEls.length) return;
 
       const syncVariantState = (selectedPillEl) => {
         if (!selectedPillEl) return;
 
         const isAvailable = selectedPillEl.dataset.variantAvailable === 'true';
         variantIdInputEl.value = selectedPillEl.value;
-        priceEl.textContent = selectedPillEl.dataset.variantPrice || priceEl.textContent;
+        syncProductTotalPrice(selectedPillEl.dataset.variantPriceCents, selectedPillEl.dataset.variantPrice || priceEl.textContent);
         submitEl.disabled = !isAvailable;
         if (submitLabelEl) {
           submitLabelEl.textContent = isAvailable ? 'AJOUTER AU PANIER' : 'INDISPONIBLE';

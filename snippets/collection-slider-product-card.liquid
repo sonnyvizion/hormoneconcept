@@ -1,0 +1,69 @@
+{% liquid
+  assign quick_variant = card_product.selected_or_first_available_variant
+  assign hover_image = card_product.images[1]
+%}
+
+<article class="collection-slider__card" data-product-card>
+  {% if quick_variant != blank %}
+    <form
+      class="collection-slider__quick-add"
+      data-quick-add-form
+      data-quick-add-title="{{ card_product.title | escape }}"
+      data-quick-add-image="{% if card_product.featured_image %}{{ card_product.featured_image | image_url: width: 320 }}{% endif %}"
+    >
+      <input type="hidden" name="id" value="{{ quick_variant.id }}">
+      <script type="application/json" data-quick-add-variants>
+        [
+          {% for variant in card_product.variants %}
+            {
+              "id": {{ variant.id }},
+              "title": {{ variant.title | json }},
+              "available": {{ variant.available | json }},
+              "price": {{ variant.price | money | json }}
+            }{% unless forloop.last %},{% endunless %}
+          {% endfor %}
+        ]
+      </script>
+      <button
+        class="collection-slider__quick-add-button"
+        type="submit"
+        aria-label="Ajouter {{ card_product.title }} au panier"
+        {% unless quick_variant.available %}disabled{% endunless %}
+      >
+        <span aria-hidden="true">+</span>
+      </button>
+    </form>
+  {% endif %}
+
+  <a class="collection-slider__product-link" href="{{ card_product.url }}">
+    <div class="collection-slider__media">
+      {% if card_product.featured_image %}
+        {{
+          card_product.featured_image
+          | image_url: width: 1200
+          | image_tag:
+              loading: 'lazy',
+              alt: card_product.title,
+              class: 'collection-slider__product-image collection-slider__product-image--primary'
+          }}
+          {% if hover_image %}
+            {{
+              hover_image
+              | image_url: width: 1200
+              | image_tag:
+                loading: 'lazy',
+                alt: card_product.title,
+                class: 'collection-slider__product-image collection-slider__product-image--secondary'
+            }}
+          {% endif %}
+        {% else %}
+          <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
+        {% endif %}
+    </div>
+    <div class="collection-slider__meta">
+      <p class="collection-slider__brand">{{ card_product.vendor | default: 'Original' | upcase }}</p>
+      <h3>{{ card_product.title | upcase }}</h3>
+      <p class="collection-slider__price">{{ card_product.price | money }}</p>
+    </div>
+  </a>
+</article>

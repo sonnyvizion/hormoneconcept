@@ -16,6 +16,15 @@
           </span>
           <span class="header-menu__toggle-label">MENU</span>
         </button>
+        {% if section.settings.header_inline_menu != blank and section.settings.header_inline_menu.links.size > 0 %}
+          <ul class="header-menu__inline-nav" aria-label="{{ section.settings.header_inline_menu.title | escape }}" role="list">
+            {% for link in section.settings.header_inline_menu.links limit: 3 %}
+              <li>
+                <a href="{{ link.url }}">{{ link.title }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
       </nav>
 
       <a class="header-cell header-brand" href="{{ routes.root_url }}">
@@ -43,7 +52,12 @@
           aria-controls="HeaderSearchOverlay-{{ section.id }}"
           aria-label="Rechercher"
         >
-          <span class="header-link__icon header-link__icon--search" aria-hidden="true"></span>
+          <span class="header-link__icon header-link__icon--search" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+              <path d="m21 21-4.34-4.34"/>
+              <circle cx="11" cy="11" r="8"/>
+            </svg>
+          </span>
           <span class="visually-hidden">Rechercher</span>
         </a>
         <a
@@ -52,7 +66,12 @@
           data-disable-scramble="true"
           aria-label="Compte"
         >
-          <span class="header-link__icon header-link__icon--account" aria-hidden="true"></span>
+          <span class="header-link__icon header-link__icon--account" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
           <span class="visually-hidden">Compte</span>
         </a>
         <a
@@ -64,7 +83,13 @@
           aria-controls="HeaderCartDrawer-{{ section.id }}"
           aria-expanded="false"
         >
-          <span class="header-link__icon header-link__icon--cart" aria-hidden="true"></span>
+          <span class="header-link__icon header-link__icon--cart" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+              <path d="M3.103 6.034h17.794"/>
+              <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"/>
+            </svg>
+          </span>
           <span class="visually-hidden">Panier</span>
           <span class="header-link__count" data-header-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
         </a>
@@ -154,6 +179,18 @@
           {{ section.settings.drawer_view_all_label | default: 'Tout voir' }}
         </a>
       </div>
+
+      {% if section.settings.header_inline_menu != blank and section.settings.header_inline_menu.links.size > 0 %}
+        <ul class="header-menu__drawer-featured" aria-label="{{ section.settings.header_inline_menu.title | escape }}" role="list">
+          {% for link in section.settings.header_inline_menu.links limit: 3 %}
+            <li class="header-menu__list-item">
+              <a class="header-menu__list-row" href="{{ link.url }}">
+                <span class="header-menu__list-label">{{ link.title }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
 
       <ul class="header-menu__list">
         {% if section.blocks.size > 0 %}
@@ -374,6 +411,12 @@
       "id": "menu",
       "label": "Menu (fallback si aucun block)",
       "default": "main-menu"
+    },
+    {
+      "type": "link_list",
+      "id": "header_inline_menu",
+      "label": "Menu entre burger et logo",
+      "info": "Les 3 premiers liens sont affichés sur desktop et ajoutés au menu hamburger sur mobile."
     },
     {
       "type": "image_picker",
