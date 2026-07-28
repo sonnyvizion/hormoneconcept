@@ -2,7 +2,31 @@
   assign current_variant = product.selected_or_first_available_variant
   assign selector_label = 'OPTIONS'
   assign featured_image = current_variant.featured_image | default: product.featured_image
-  assign product_style_id = product.metafields.custom.style_id.value | default: product.metafields.custom.style_id | default: current_variant.sku | default: current_variant.barcode
+  assign product_style_id = product.metafields.custom.style_id.value | default: product.metafields.custom.style_id | default: current_variant.metafields.custom.style_id.value | default: current_variant.metafields.custom.style_id
+  if product_style_id == blank
+    assign product_style_id_candidate = current_variant.sku | strip
+    assign product_style_id_candidate_compact = product_style_id_candidate | downcase | remove: ' '
+    assign product_style_id_candidate_prefix = product_style_id_candidate_compact | slice: 0, 4
+    assign product_style_id_candidate_size = product_style_id_candidate | size
+    assign product_handle_lower = product.handle | downcase
+    assign product_style_id_candidate_lower = product_style_id_candidate | downcase
+    assign variant_title_lower = current_variant.title | downcase | strip
+    assign product_style_id_candidate_contains_handle = false
+    if product_handle_lower != blank and product_style_id_candidate_lower contains product_handle_lower
+      assign product_style_id_candidate_contains_handle = true
+    endif
+    if product_style_id_candidate != blank and product_style_id_candidate_size >= 4 and product_style_id_candidate_size <= 32 and product_style_id_candidate_prefix != 'size' and product_style_id_candidate_lower != variant_title_lower and product_style_id_candidate_contains_handle == false
+      assign product_style_id = product_style_id_candidate
+    endif
+  endif
+  assign product_style_id_suffix_markers = '-US M | US M |-US |-EU | EU |-UK | UK |-SIZE | SIZE | -L|-M|-S|-XL|-XS|-XXL'
+  assign product_style_id_suffix_marker_list = product_style_id_suffix_markers | split: '|'
+  for suffix_marker in product_style_id_suffix_marker_list
+    if product_style_id contains suffix_marker
+      assign product_style_id = product_style_id | split: suffix_marker | first | strip
+      break
+    endif
+  endfor
   if product_style_id == blank and product.handle == 'vans-otw-era-95-satoshi-nakamoto-round-lucky-charm'
     assign product_style_id = 'VN000EFEBLK'
   endif
@@ -11,6 +35,30 @@
   assign has_stockx_tag = false
   if product_tags_normalized contains 'stockx'
     assign has_stockx_tag = true
+  endif
+
+  assign product_delivery_window = 'standard'
+  assign product_delivery_setting = product.metafields.custom.delivery_window.value | default: product.metafields.custom.delivery_window
+  assign product_delivery_setting_normalized = product_delivery_setting | downcase | strip
+  if product_delivery_setting_normalized != blank
+    if product_delivery_setting_normalized contains '5' or product_delivery_setting_normalized contains 'stockx'
+      assign product_delivery_window = 'extended'
+    else
+      assign product_delivery_window = 'standard'
+    endif
+  elsif has_stockx_tag
+    assign product_delivery_window = 'extended'
+  endif
+
+  assign current_delivery_window = product_delivery_window
+  assign current_variant_delivery_setting = current_variant.metafields.custom.delivery_window.value | default: current_variant.metafields.custom.delivery_window
+  assign current_variant_delivery_setting_normalized = current_variant_delivery_setting | downcase | strip
+  if current_variant_delivery_setting_normalized != blank
+    if current_variant_delivery_setting_normalized contains '5' or current_variant_delivery_setting_normalized contains 'stockx'
+      assign current_delivery_window = 'extended'
+    else
+      assign current_delivery_window = 'standard'
+    endif
   endif
 
   if product.has_only_default_variant == false and product.options.size == 1
@@ -160,7 +208,6 @@
 
             {% unless product.has_only_default_variant %}
               <div class="product-view__intro-selector">
-                <p class="site-page-kicker">{{ selector_label }}</p>
                 <div class="product-form-v2__selector-tools">
                   {% if is_sneaker %}
                     <div class="product-form-v2__unit-switch" role="group" aria-label="Changer l'unite de pointure">
@@ -197,6 +244,30 @@
                 <div class="product-form-v2__pills" role="radiogroup" aria-label="{{ selector_label }}">
                   {% for variant in product.variants %}
                     {% assign pill_id = 'ProductVariant-' | append: section.id | append: '-' | append: variant.id %}
+                    {% liquid
+                      assign variant_style_id = product.metafields.custom.style_id.value | default: product.metafields.custom.style_id | default: variant.metafields.custom.style_id.value | default: variant.metafields.custom.style_id
+                      if variant_style_id == blank
+                        assign variant_style_id_candidate = variant.sku | strip
+                        assign variant_style_id_candidate_compact = variant_style_id_candidate | downcase | remove: ' '
+                        assign variant_style_id_candidate_prefix = variant_style_id_candidate_compact | slice: 0, 4
+                        assign variant_style_id_candidate_size = variant_style_id_candidate | size
+                        assign variant_style_id_candidate_lower = variant_style_id_candidate | downcase
+                        assign variant_title_lower = variant.title | downcase | strip
+                        assign variant_style_id_candidate_contains_handle = false
+                        if product_handle_lower != blank and variant_style_id_candidate_lower contains product_handle_lower
+                          assign variant_style_id_candidate_contains_handle = true
+                        endif
+                        if variant_style_id_candidate != blank and variant_style_id_candidate_size >= 4 and variant_style_id_candidate_size <= 32 and variant_style_id_candidate_prefix != 'size' and variant_style_id_candidate_lower != variant_title_lower and variant_style_id_candidate_contains_handle == false
+                          assign variant_style_id = variant_style_id_candidate
+                        endif
+                      endif
+                      for suffix_marker in product_style_id_suffix_marker_list
+                        if variant_style_id contains suffix_marker
+                          assign variant_style_id = variant_style_id | split: suffix_marker | first | strip
+                          break
+                        endif
+                      endfor
+                    %}
                     <input
                       class="product-form-v2__pill-input visually-hidden"
                       type="radio"
@@ -207,8 +278,21 @@
                       data-variant-label="{{ variant.title | escape }}"
                       data-variant-price="{{ variant.price | money | escape }}"
                       data-variant-price-cents="{{ variant.price }}"
-                      data-variant-style-id="{{ product.metafields.custom.style_id.value | default: product.metafields.custom.style_id | default: variant.sku | default: variant.barcode | escape }}"
+                      data-variant-style-id="{{ variant_style_id | escape }}"
                       data-variant-available="{% if variant.available %}true{% else %}false{% endif %}"
+                      {% liquid
+                        assign variant_delivery_window = product_delivery_window
+                        assign variant_delivery_setting = variant.metafields.custom.delivery_window.value | default: variant.metafields.custom.delivery_window
+                        assign variant_delivery_setting_normalized = variant_delivery_setting | downcase | strip
+                        if variant_delivery_setting_normalized != blank
+                          if variant_delivery_setting_normalized contains '5' or variant_delivery_setting_normalized contains 'stockx'
+                            assign variant_delivery_window = 'extended'
+                          else
+                            assign variant_delivery_window = 'standard'
+                          endif
+                        endif
+                      %}
+                      data-variant-delivery-window="{{ variant_delivery_window }}"
                       {% unless variant.available %}disabled{% endunless %}
                       {% if variant.id == current_variant.id %}checked{% endif %}
                     >
@@ -217,22 +301,6 @@
                       <span class="product-form-v2__pill-price" data-variant-pill-price>{{ variant.price | money }}</span>
                     </label>
                   {% endfor %}
-                </div>
-                <div class="product-delivery-pills" aria-label="Délais de livraison">
-                  <span class="product-delivery-pill{% unless has_stockx_tag %} is-active{% endunless %}" tabindex="0">
-                    <span class="product-delivery-pill__dot" aria-hidden="true"></span>
-                    <span>Livraison 24/48h</span>
-                    <span class="product-delivery-pill__tooltip" role="tooltip">
-                      Livraison standard 24/48h en France métropolitaine. Retours gratuits sous 14 jours.
-                    </span>
-                  </span>
-                  <span class="product-delivery-pill{% if has_stockx_tag %} is-active{% endif %}" tabindex="0">
-                    <span class="product-delivery-pill__dot" aria-hidden="true"></span>
-                    <span>Livraison 5 à 10 jours</span>
-                    <span class="product-delivery-pill__tooltip" role="tooltip">
-                      Livraison sous 5 à 10 jours ouvrés. Approvisionné via notre réseau de revendeurs partenaires. Retours gratuits sous 14 jours.
-                    </span>
-                  </span>
                 </div>
                 <div
                   class="product-size-guide"
@@ -308,6 +376,22 @@
                 </div>
               </div>
             {% endunless %}
+            <div class="product-delivery-pills" aria-label="Délais de livraison" data-product-delivery-pills data-delivery-window="{{ current_delivery_window }}">
+              <span class="product-delivery-pill{% if current_delivery_window == 'standard' %} is-active{% endif %}" tabindex="0" data-product-delivery-option="standard">
+                <span class="product-delivery-pill__dot" aria-hidden="true"></span>
+                <span>Livraison 24/48h</span>
+                <span class="product-delivery-pill__tooltip" role="tooltip">
+                  Livraison standard 24/48h en France métropolitaine. Retours gratuits sous 14 jours.
+                </span>
+              </span>
+              <span class="product-delivery-pill{% if current_delivery_window == 'extended' %} is-active{% endif %}" tabindex="0" data-product-delivery-option="extended">
+                <span class="product-delivery-pill__dot" aria-hidden="true"></span>
+                <span>Livraison 5 à 12 jours</span>
+                <span class="product-delivery-pill__tooltip" role="tooltip">
+                  Livraison sous 5 à 12 jours ouvrés. Approvisionné via notre réseau de revendeurs partenaires. Retours gratuits sous 14 jours.
+                </span>
+              </span>
+            </div>
           </div>
 
             <div class="product-view__purchase-sticky-placeholder" data-product-purchase-placeholder hidden></div>

@@ -3806,6 +3806,7 @@
       const mediaNextEl = productViewEl?.querySelector('[data-product-media-next]');
       const styleIdEl = productViewEl?.querySelector('[data-product-style-id]');
       const styleIdValueEl = productViewEl?.querySelector('[data-product-style-id-value]');
+      const deliveryPillsEl = formEl.querySelector('[data-product-delivery-pills]');
 
       initProductQuantitySelector(formEl);
       initProductReassuranceTabs(formEl);
@@ -3873,6 +3874,16 @@
         priceEl.dataset.productPriceCents = Number.isFinite(cents) ? String(cents) : priceEl.dataset.productPriceCents || '';
         const activeCents = Number.parseInt(priceEl.dataset.productPriceCents || '', 10);
         priceEl.textContent = formatProductTotalPrice(activeCents * getQuantity(), fallbackText);
+      };
+
+      const syncProductDeliveryPills = (deliveryWindow = 'standard') => {
+        if (!deliveryPillsEl) return;
+
+        const activeDeliveryWindow = deliveryWindow === 'extended' ? 'extended' : 'standard';
+        deliveryPillsEl.dataset.deliveryWindow = activeDeliveryWindow;
+        deliveryPillsEl.querySelectorAll('[data-product-delivery-option]').forEach((pillEl) => {
+          pillEl.classList.toggle('is-active', pillEl.dataset.productDeliveryOption === activeDeliveryWindow);
+        });
       };
 
       quantityInputEl?.addEventListener('product:quantity-change', () => {
@@ -3963,6 +3974,7 @@
           styleIdValueEl.textContent = styleId;
           styleIdEl.hidden = !styleId;
         }
+        syncProductDeliveryPills(selectedPillEl.dataset.variantDeliveryWindow);
       };
 
       pillEls.forEach((pillEl) => {
