@@ -4790,30 +4790,8 @@ body.template-cart,
 
 [data-collection-page] .catalog-grid {
   grid-template-columns: repeat(var(--catalog-cols, 4), minmax(0, 1fr));
-  gap: 1px;
+  gap: 0;
   border: 1px solid rgba(255, 255, 255, .5);
-  background-image:
-    linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5)),
-    linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5)),
-    linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5));
-  background-size: 1px 100%, 1px 100%, 1px 100%;
-  background-position: 25% 0, 50% 0, 75% 0;
-  background-repeat: no-repeat;
-}
-
-[data-collection-page][style*="--catalog-cols: 3"] .catalog-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5)),
-    linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5));
-  background-size: 1px 100%, 1px 100%;
-  background-position: 33.33% 0, 66.67% 0;
-}
-
-[data-collection-page][style*="--catalog-cols: 2"] .catalog-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5));
-  background-size: 1px 100%;
-  background-position: 50% 0;
 }
 
 .catalog-empty {
@@ -5002,6 +4980,24 @@ body.template-collection .main-collection::before {
   background: #D9DBDD;
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, .5);
+}
+
+[data-collection-page] .catalog-grid__card {
+  border-right: 1px solid rgba(255, 255, 255, .5);
+}
+
+[data-collection-page] .catalog-grid__card:nth-child(4n) {
+  border-right: 0;
+}
+
+[data-collection-page][style*="--catalog-cols: 3"] .catalog-grid__card:nth-child(4n),
+[data-collection-page][style*="--catalog-cols: 2"] .catalog-grid__card:nth-child(4n) {
+  border-right: 1px solid rgba(255, 255, 255, .5);
+}
+
+[data-collection-page][style*="--catalog-cols: 3"] .catalog-grid__card:nth-child(3n),
+[data-collection-page][style*="--catalog-cols: 2"] .catalog-grid__card:nth-child(2n) {
+  border-right: 0;
 }
 
 .catalog-grid__quick-add {
@@ -8433,6 +8429,14 @@ body.template-search .site-footer.site-footer--showcase {
 
   [data-collection-page] .catalog-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-collection-page] .catalog-grid__card:nth-child(2n) {
+    border-right: 0;
+  }
+
+  [data-collection-page] .catalog-grid__card:nth-child(2n + 1) {
+    border-right: 1px solid rgba(255, 255, 255, .5);
   }
 
   [data-collection-page] .catalog-grid__card,
