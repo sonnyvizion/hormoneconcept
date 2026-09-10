@@ -1,0 +1,121 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "global_reassurance": {
+      "type": "reassurance-editorial-grid",
+      "blocks": {
+        "verified": {
+          "type": "image_card",
+          "settings": {
+            "image": "shopify://shop_images/rea_01_copie.webp",
+            "video_asset": "rea-verified.webm",
+            "video_asset_poster": "",
+            "video_width": 10,
+            "eyebrow": "AUTHENTICITE",
+            "title": "PRODUITS VERIFIES",
+            "link": "",
+            "overlay_color": "#000000",
+            "overlay_opacity": 25,
+            "text_color": "#ffffff"
+          }
+        },
+        "secure": {
+          "type": "image_card",
+          "settings": {
+            "image": "shopify://shop_images/rea_02_copie.webp",
+            "video_asset": "rea-secure.webm",
+            "video_asset_poster": "",
+            "video_width": 10,
+            "eyebrow": "PAIMENT SECURISÉ",
+            "title": "Acheter en toute sécurité",
+            "link": "",
+            "overlay_color": "#000000",
+            "overlay_opacity": 25,
+            "text_color": "#ffffff"
+          }
+        },
+        "pickup": {
+          "type": "image_card",
+          "settings": {
+            "image": "shopify://shop_images/rea_03.webp",
+            "video_asset": "rea-pickup.webm",
+            "video_asset_poster": "",
+            "video_width": 10,
+            "eyebrow": "RETRAIT",
+            "title": "PICK & COLLECT DISPO",
+            "link": "",
+            "overlay_color": "#000000",
+            "overlay_opacity": 40,
+            "text_color": "#ffffff"
+          }
+        }
+      },
+      "block_order": ["verified", "secure", "pickup"],
+      "settings": {
+        "hide_on_home": true,
+        "heading": "NOS ENGAGEMENTS",
+        "description": "<p>Une selection exigeante et des services pensés pour vous accompagner.</p>",
+        "background_color": "#f4f5f7",
+        "text_color": "#111824",
+        "line_color": "#d8dde5",
+        "desktop_height": 560
+      }
+    },
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "newsletter_title": "NEWSLETTER",
+        "newsletter_copy": "RESTEZ INFORME EN VOUS\nINSCRIVANT A LA NEWSLETTER",
+        "newsletter_placeholder": "TON EMAIL*",
+        "newsletter_cta": "JE M'INSCRIS ↘",
+        "newsletter_success": "MERCI POUR TON INSCRIPTION.",
+        "newsletter_error": "UNE ERREUR EST SURVENUE, REESSAIE.",
+        "social_title": "RESEAUX SOCIAUX",
+        "social_link_1_label": "INSTAGRAM",
+        "social_link_1_url": "https://www.instagram.com/hormone.concept/",
+        "social_link_2_label": "WHATSAPP",
+        "social_link_2_url": "",
+        "social_link_3_label": "X",
+        "social_link_3_url": "",
+        "social_link_4_label": "TIKTOK",
+        "social_link_4_url": "https://www.tiktok.com/@hormone.concept?_r=1&_t=ZN-98AEzkMHoKU",
+        "social_link_5_label": "YOUTUBE",
+        "social_link_5_url": "",
+        "legal_title": "LEGALES",
+        "legal_link_1_label": "MENTIONS LEGALES",
+        "legal_link_1_url": "shopify://policies/legal-notice",
+        "legal_link_2_label": "CVG",
+        "legal_link_2_url": "shopify://policies/shipping-policy",
+        "legal_link_3_label": "RGPD",
+        "legal_link_3_url": "shopify://policies/terms-of-service",
+        "media_video": "shopify://files/videos/sneaker-tourne.mp4",
+        "media_alt": "Sneaker",
+        "store_title": "HORMONE CONCEPT",
+        "store_line_1": "102 RUE DE LONGCHAMP",
+        "store_line_2": "PARIS, 75016",
+        "store_line_3": "",
+        "store_phone": "01 73 74 88 18",
+        "bottom_logo_image": "shopify://shop_images/HORMONE_LOGO_2.svg",
+        "bottom_logo_alt": "HORMONE",
+        "bottom_logo_text": "HORMONE",
+        "bg_color": "#2a2327",
+        "line_color": "#e6e9ee",
+        "line_opacity": 28,
+        "text_color": "#f2f4f7",
+        "muted_color": "#b8bdc5",
+        "input_text_color": "#8d929b"
+      }
+    }
+  },
+  "order": ["global_reassurance", "footer"]
+}

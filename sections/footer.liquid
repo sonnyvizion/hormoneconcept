@@ -169,6 +169,18 @@
           {% if section.settings.store_phone != blank %}
             <p class="site-footer-v2__address-line">{{ section.settings.store_phone }}</p>
           {% endif %}
+          {% if shop.enabled_payment_types.size > 0 %}
+            <div class="site-footer-v2__payments" aria-label="Moyens de paiement acceptes">
+              <p class="site-footer-v2__payments-title">PAIEMENT</p>
+              <ul class="site-footer-v2__payment-list" role="list">
+                {% for type in shop.enabled_payment_types %}
+                  <li class="site-footer-v2__payment-item">
+                    {{ type | payment_type_svg_tag: class: 'site-footer-v2__payment-icon' }}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>

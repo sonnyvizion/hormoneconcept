@@ -2,11 +2,48 @@
   assign current_sort = collection.sort_by | default: collection.default_sort_by
   assign default_cols = section.settings.grid_columns | plus: 0
   assign products_per_page = section.settings.products_per_page
+  assign collection_header_video = section.settings.collection_header_video
+  assign collection_header_video_asset = ''
+  assign collection_header_has_video = false
+  assign collection_header_video_url = ''
+  assign collection_header_mobile_video_asset = ''
+  assign collection_header_poster_asset = ''
+  assign collection_title_handle = collection.title | handleize
+  if collection.handle == 'accessoire' or collection_title_handle == 'accessoire' or collection.handle == 'accessoires' or collection_title_handle == 'accessoires'
+    assign collection_header_video_asset = 'catalog-head-accessoire.webm'
+    assign collection_header_mobile_video_asset = 'catalog-accessoires-mobile.mp4'
+    assign collection_header_poster_asset = 'catalog-accessoires-poster.png'
+  elsif collection.handle == 'vetement' or collection_title_handle == 'vetement' or collection.handle == 'vetements' or collection_title_handle == 'vetements'
+    assign collection_header_video_asset = 'catalog-head-vetement.webm'
+    assign collection_header_mobile_video_asset = 'catalog-vetements-mobile.mp4'
+    assign collection_header_poster_asset = 'catalog-vetements-video-poster.jpg'
+  elsif collection.handle == 'sneakers' or collection_title_handle == 'sneakers' or collection.handle == 'sneaker' or collection_title_handle == 'sneaker' or collection.handle == 'baskets' or collection_title_handle == 'baskets'
+    assign collection_header_video_asset = 'catalog-head-sneakers.webm'
+    assign collection_header_mobile_video_asset = 'catalog-sneakers-mobile.mp4'
+    assign collection_header_poster_asset = 'catalog-sneakers-poster.jpg'
+  endif
+  if collection_header_video_asset != blank or collection_header_video_url != blank or collection_header_video != blank
+    assign collection_header_has_video = true
+  endif
   assign desc_plain = collection.description | strip_html
   assign desc_needs_accordion = false
   if desc_plain.size > 180
     assign desc_needs_accordion = true
   endif
+  assign total_active_filters = 0
+  for filter in collection.filters
+    if filter.type == 'price_range'
+      if filter.min_value.value or filter.max_value.value
+        assign total_active_filters = total_active_filters | plus: 1
+      endif
+    else
+      for v in filter.values
+        if v.active
+          assign total_active_filters = total_active_filters | plus: 1
+        endif
+      endfor
+    endif
+  endfor
 %}
 
 <section
@@ -14,17 +51,151 @@
   data-collection-page
   style="--catalog-cols: {{ default_cols }};"
 >
-
-  <div class="catalog-page-head">
-    <p class="site-page-kicker">[ COLLECTION ]</p>
-    <h1 class="catalog-page-head__title">{{ collection.title }}</h1>
-  </div>
-
   <div class="catalog-page-body">
     {% paginate collection.products by products_per_page %}
 
+      <div class="catalog-page-panel">
+        <div class="catalog-page-head{% unless collection_header_has_video %} catalog-page-head--no-visual{% endunless %}">
+          {% if collection_header_has_video %}
+            <div class="catalog-page-head__visual" aria-hidden="true">
+            {% if collection_header_video_asset != blank %}
+              {% comment %}
+                Alpha WebM served from the theme assets (Shopify's uploader / video_tag
+                strips the alpha; the assets folder is served untouched). Desktop gets
+                the transparent WebM; the mp4 below is the opaque black-matte fallback
+                for Safari / iOS, knocked out via mix-blend-mode: lighten.
+              {% endcomment %}
+              <video
+                class="catalog-page-head__video catalog-page-head__video--blend"
+                autoplay
+                loop
+                muted
+                playsinline
+                preload="auto"
+                {% if collection_header_poster_asset != blank %}poster="{{ collection_header_poster_asset | asset_url }}"{% endif %}
+              >
+                <source src="{{ collection_header_video_asset | asset_url }}" type="video/webm">
+                {% if collection_header_mobile_video_asset != blank %}
+                  <source src="{{ collection_header_mobile_video_asset | asset_url }}" type="video/mp4">
+                {% endif %}
+              </video>
+              {% if collection_header_mobile_video_asset != blank %}
+                <video
+                  class="catalog-page-head__mobile-video"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                  preload="auto"
+                  {% if collection_header_poster_asset != blank %}poster="{{ collection_header_poster_asset | asset_url }}"{% endif %}
+                >
+                  <source src="{{ collection_header_mobile_video_asset | asset_url }}" type="video/mp4">
+                </video>
+              {% endif %}
+            {% elsif collection_header_video_url != blank %}
+              <video
+                class="catalog-page-head__video catalog-page-head__video--blend"
+                autoplay
+                loop
+                muted
+                playsinline
+                preload="auto"
+                {% if collection_header_poster_asset != blank %}poster="{{ collection_header_poster_asset | asset_url }}"{% endif %}
+              >
+                <source src="{{ collection_header_video_url }}" type="video/webm">
+              </video>
+              {% if collection_header_mobile_video_asset != blank %}
+                <video
+                  class="catalog-page-head__mobile-video"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                  preload="auto"
+                  {% if collection_header_poster_asset != blank %}poster="{{ collection_header_poster_asset | asset_url }}"{% endif %}
+                >
+                  <source src="{{ collection_header_mobile_video_asset | asset_url }}" type="video/mp4">
+                </video>
+              {% endif %}
+            {% elsif collection_header_video != blank %}
+              {{
+                collection_header_video
+                | video_tag:
+                  autoplay: true,
+                  loop: true,
+                  muted: true,
+                  controls: false,
+                  playsinline: true,
+                  class: 'catalog-page-head__video'
+              }}
+            {% endif %}
+            </div>
+          {% endif %}
+          {%- liquid
+            assign catalog_brand_keys = ''
+            assign catalog_brand_count = 0
+            assign catalog_brand_minimum = 8
+            assign catalog_brand_limit = 18
+          -%}
+          {%- capture catalog_brand_pills -%}
+            {%- for vendor in collection.all_vendors limit: catalog_brand_limit -%}
+              {%- if vendor != blank -%}
+                {%- assign vendor_handle = vendor | handleize -%}
+                {%- assign vendor_token = '|' | append: vendor_handle | append: '|' -%}
+                {%- unless catalog_brand_keys contains vendor_token -%}
+                  {%- assign catalog_brand_keys = catalog_brand_keys | append: vendor_token -%}
+                  {%- assign catalog_brand_count = catalog_brand_count | plus: 1 -%}
+                  <a class="catalog-page-head__brand-pill" href="{{ collection.url }}?filter.p.vendor={{ vendor | url_encode }}">{{ vendor | upcase }}</a>
+                {%- endunless -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if catalog_brand_count < catalog_brand_minimum -%}
+              {%- for vendor in shop.vendors -%}
+                {%- if catalog_brand_count >= catalog_brand_limit -%}
+                  {%- break -%}
+                {%- endif -%}
+                {%- if vendor != blank -%}
+                  {%- assign vendor_handle = vendor | handleize -%}
+                  {%- assign vendor_token = '|' | append: vendor_handle | append: '|' -%}
+                  {%- unless catalog_brand_keys contains vendor_token -%}
+                    {%- assign catalog_brand_keys = catalog_brand_keys | append: vendor_token -%}
+                    {%- assign catalog_brand_count = catalog_brand_count | plus: 1 -%}
+                    <a class="catalog-page-head__brand-pill catalog-page-head__brand-pill--brand-page" href="{{ routes.collections_url }}/vendors?q={{ vendor | url_encode }}">{{ vendor | upcase }}</a>
+                  {%- endunless -%}
+                {%- endif -%}
+                {%- if catalog_brand_count >= catalog_brand_minimum -%}
+                  {%- break -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endcapture -%}
+          <div class="catalog-page-head__content">
+            <div class="catalog-page-head__heading">
+              <p class="site-page-kicker">[ COLLECTION ]</p>
+              <h1 class="catalog-page-head__title">{{ collection.title }}</h1>
+            </div>
+            {% if collection.filters.size > 0 %}
+              <button
+                type="button"
+                class="catalog-filters__toggle{% if total_active_filters > 0 %} catalog-filters__toggle--active{% endif %}"
+                data-catalog-filters-toggle
+                aria-controls="CatalogFiltersBar-{{ section.id }}"
+                aria-expanded="false"
+              >
+                <span data-catalog-filters-toggle-label>AFFICHER LES FILTRES</span>
+                {% if total_active_filters > 0 %}
+                  <span class="catalog-filters__toggle-count">{{ total_active_filters }}</span>
+                {% endif %}
+                <span class="catalog-filters__toggle-arrow" aria-hidden="true"></span>
+              </button>
+            {% endif %}
+            {% render 'catalog-brand-marquee', pills: catalog_brand_pills, variant: 'inline' %}
+          </div>
+        </div>
+
       <div class="catalog-filters">
         <form
+          id="CatalogFiltersBar-{{ section.id }}"
           class="catalog-filters__bar"
           method="get"
           action="{{ collection.url }}"
@@ -32,34 +203,32 @@
         >
 
           {% if collection.filters.size > 0 %}
-            {%- liquid
-              assign total_active_filters = 0
-              for filter in collection.filters
-                if filter.type == 'price_range'
-                  if filter.min_value.value or filter.max_value.value
-                    assign total_active_filters = total_active_filters | plus: 1
-                  endif
-                else
-                  for v in filter.values
-                    if v.active
-                      assign total_active_filters = total_active_filters | plus: 1
-                    endif
-                  endfor
-                endif
-              endfor
-            -%}
             <details class="catalog-filters__mobile-accordion{% if total_active_filters > 0 %} catalog-filters__mobile-accordion--active{% endif %}" data-catalog-filters-mobile open>
               <summary class="catalog-filters__mobile-trigger">
                 <span>FILTRER</span>
                 {% if total_active_filters > 0 %}
                   <span class="catalog-filters__mobile-count">{{ total_active_filters }}</span>
                 {% endif %}
-                <span class="catalog-filters__mobile-arrow" aria-hidden="true"></span>
               </summary>
 
+              <div class="catalog-filters__scrim" data-catalog-filters-close aria-hidden="true"></div>
+
               <div class="catalog-filters__mobile-panel">
+                <div class="catalog-filters__drawer-head">
+                  <span class="catalog-filters__drawer-title">FILTRER</span>
+                  <button type="button" class="catalog-filters__drawer-close" data-catalog-filters-close aria-label="Fermer les filtres">&times;</button>
+                </div>
+                <div class="catalog-filters__drawer-sort">
+                  <label for="SortByDrawer">TRI</label>
+                  <select id="SortByDrawer" data-catalog-sort-proxy>
+                    {% for option in collection.sort_options %}
+                      <option value="{{ option.value | escape }}" {% if option.value == current_sort %}selected{% endif %}>
+                        {{ option.name | upcase }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
                 <div class="catalog-filters__groups">
-                  <span class="catalog-filters__sep-label">FILTRER</span>
 
                   {% for filter in collection.filters %}
                     {%- liquid
@@ -78,7 +247,7 @@
                     -%}
                     <details class="catalog-filter-group{% if active_count > 0 %} catalog-filter-group--active{% endif %}" data-filter-group>
                       <summary class="catalog-filter-group__trigger">
-                        {{ filter.label | upcase }}
+                        <span data-catalog-filter-animate-label>{{ filter.label | upcase }}</span>
                         {% if active_count > 0 %}
                           <span class="catalog-filter-group__count">{{ active_count }}</span>
                         {% endif %}
@@ -138,32 +307,51 @@
                     </details>
                   {% endfor %}
                 </div>
+                <div class="catalog-filters__drawer-foot">
+                  {% if total_active_filters > 0 %}
+                    <a href="{{ collection.url }}" class="catalog-filters__drawer-clear">TOUT EFFACER</a>
+                  {% endif %}
+                  <button type="button" class="catalog-filters__drawer-apply" data-catalog-filters-apply>
+                    VOIR LES RÉSULTATS
+                  </button>
+                </div>
               </div>
             </details>
           {% endif %}
 
           <div class="catalog-filters__right">
             <div class="catalog-toolbar__sort">
-              <label for="SortBy" class="catalog-toolbar__sort-label">TRI</label>
-              <select id="SortBy" name="sort_by" onchange="this.closest('form').submit()">
+              <span class="catalog-toolbar__sort-label">TRI</span>
+              <select id="SortBy" name="sort_by" class="catalog-toolbar__sort-native" tabindex="-1" aria-hidden="true">
                 {% for option in collection.sort_options %}
                   <option value="{{ option.value | escape }}" {% if option.value == current_sort %}selected{% endif %}>
                     {{ option.name | upcase }}
                   </option>
                 {% endfor %}
               </select>
+              <details class="catalog-sort-popup" data-catalog-sort-popup>
+                <summary class="catalog-sort-popup__trigger">
+                  <span data-catalog-sort-current>
+                    {% for option in collection.sort_options %}
+                      {% if option.value == current_sort %}{{ option.name | upcase }}{% endif %}
+                    {% endfor %}
+                  </span>
+                  <span class="catalog-sort-popup__arrow" aria-hidden="true"></span>
+                </summary>
+                <div class="catalog-sort-popup__menu" role="menu" aria-label="Trier les produits">
+                  {% for option in collection.sort_options %}
+                    <button
+                      type="button"
+                      class="catalog-sort-popup__option{% if option.value == current_sort %} is-selected{% endif %}"
+                      data-catalog-sort-option="{{ option.value | escape }}"
+                      role="menuitemradio"
+                      aria-checked="{% if option.value == current_sort %}true{% else %}false{% endif %}"
+                    >{{ option.name | upcase }}</button>
+                  {% endfor %}
+                </div>
+              </details>
             </div>
 
-            <div class="catalog-toolbar__columns" data-col-toggle aria-label="Colonnes">
-              {% for n in (2..4) %}
-                <button
-                  type="button"
-                  class="catalog-col-btn{% if n == default_cols %} is-active{% endif %}"
-                  data-cols="{{ n }}"
-                  aria-label="{{ n }} colonnes"
-                ><span class="catalog-col-icon" aria-hidden="true">{% for i in (1..n) %}<span></span>{% endfor %}</span></button>
-              {% endfor %}
-            </div>
           </div>
         </form>
 
@@ -209,8 +397,33 @@
           </div>
         {% endif %}
       </div>
+      {% render 'catalog-brand-marquee', pills: catalog_brand_pills, variant: 'foot' %}
+      </div>
 
-      <p class="catalog-count">{{ collection.products_count }} PRODUIT{% if collection.products_count != 1 %}S{% endif %}</p>
+      <div class="catalog-count-bar">
+        <p class="catalog-count">
+          <span data-catalog-count-number data-count-target="{{ collection.products_count }}">{{ collection.products_count }}</span>
+          <span>PRODUIT{% if collection.products_count != 1 %}S{% endif %}</span>
+        </p>
+        {% if collection.filters.size > 0 %}
+          <button type="button" class="catalog-count-bar__filter" data-catalog-filters-open>
+            <span>FILTRER</span>
+            {% if total_active_filters > 0 %}
+              <span class="catalog-count-bar__filter-count">{{ total_active_filters }}</span>
+            {% endif %}
+          </button>
+        {% endif %}
+        <div class="catalog-toolbar__columns" data-col-toggle aria-label="Colonnes">
+          {% for n in (2..4) %}
+            <button
+              type="button"
+              class="catalog-col-btn{% if n == default_cols %} is-active{% endif %}"
+              data-cols="{{ n }}"
+              aria-label="{{ n }} colonnes"
+            ><span class="catalog-col-icon" aria-hidden="true">{% for i in (1..n) %}<span></span>{% endfor %}</span></button>
+          {% endfor %}
+        </div>
+      </div>
 
       <div class="catalog-grid" data-catalog-grid>
         {% for product in collection.products %}
@@ -278,7 +491,7 @@
                 {% endunless %}
               </div>
               <div class="catalog-grid__meta">
-                <p class="catalog-grid__vendor">{{ product.vendor | default: shop.name | upcase }}</p>
+                {% render 'brand-mark', brand: product.vendor, class: 'catalog-grid__vendor' %}
                 <h3 class="catalog-grid__title">{{ product.title | upcase }}</h3>
                 <p class="catalog-grid__price">
                   {% if product.price_varies %}
@@ -342,6 +555,17 @@
     {% endif %}
   </div>
 
+  {% if collection.filters.size > 0 %}
+    <div class="catalog-sticky-filter" data-catalog-sticky-filter>
+      <button type="button" class="catalog-sticky-filter__btn" data-catalog-filters-open>
+        <span class="catalog-sticky-filter__label">FILTRES</span>
+        {% if total_active_filters > 0 %}
+          <span class="catalog-sticky-filter__count">{{ total_active_filters }}</span>
+        {% endif %}
+      </button>
+    </div>
+  {% endif %}
+
 </section>
 
 {% schema %}
@@ -367,6 +591,11 @@
         { "value": "4", "label": "4 colonnes" }
       ],
       "default": "4"
+    },
+    {
+      "type": "video",
+      "id": "collection_header_video",
+      "label": "Vidéo header collection"
     }
   ]
 }

@@ -32,7 +32,7 @@
                 </a>
 
                 <div class="cart-item-v2__info">
-                  <p class="cart-item-v2__vendor">{{ item.product.vendor | default: shop.name | upcase }}</p>
+                  {% render 'brand-mark', brand: item.product.vendor, class: 'cart-item-v2__vendor' %}
                   <h2><a href="{{ item.url }}">{{ item.product.title | upcase }}</a></h2>
                   {% unless item.variant.title contains 'Default' %}
                     <p class="cart-item-v2__variant">{{ item.variant.title | upcase }}</p>

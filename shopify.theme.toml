@@ -1,3 +1,11 @@
 [environments.development]
 store = "hormone-concept.myshopify.com"
-theme = "181601075467"
+theme = "181851619595"
+
+[environments.copy]
+store = "hormone-concept.myshopify.com"
+theme = "181622014219"
+
+[environments.sandbox]
+store = "hormone-concept.myshopify.com"
+theme = "181848473867"

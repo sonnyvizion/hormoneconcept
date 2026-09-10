@@ -1,0 +1,495 @@
+{% liquid
+  assign show_reassurance_editorial = true
+  if section.settings.hide_on_home and request.page_type == 'index'
+    assign show_reassurance_editorial = false
+  endif
+%}
+
+{% if show_reassurance_editorial %}
+<section
+  class="reassurance-editorial"
+  style="
+    --reassurance-editorial-bg: {{ section.settings.background_color }};
+    --reassurance-editorial-text: {{ section.settings.text_color }};
+    --reassurance-editorial-line: {{ section.settings.line_color }};
+    --reassurance-editorial-height: {{ section.settings.desktop_height }}px;
+    --reassurance-editorial-card-count: {{ section.blocks.size }};
+  "
+>
+  <div class="reassurance-editorial__grid">
+    <div class="reassurance-editorial__intro">
+      {% if section.settings.heading != blank %}
+        <h2 class="reassurance-editorial__heading">{{ section.settings.heading | escape | newline_to_br }}</h2>
+      {% endif %}
+      {% if section.settings.description != blank %}
+        <div class="reassurance-editorial__description">{{ section.settings.description }}</div>
+      {% endif %}
+    </div>
+
+    {% for block in section.blocks %}
+      {% liquid
+        assign image_alt = block.settings.image.alt | default: block.settings.title | default: section.settings.heading
+        assign card_tag = 'div'
+        if block.settings.link != blank
+          assign card_tag = 'a'
+        endif
+      %}
+      <{{ card_tag }}
+        class="reassurance-editorial__card"
+        {% if block.settings.link != blank %}href="{{ block.settings.link }}"{% endif %}
+        style="
+          --reassurance-card-overlay: {{ block.settings.overlay_color }};
+          --reassurance-card-overlay-opacity: {{ block.settings.overlay_opacity | times: 0.01 }};
+          --reassurance-card-text: {{ block.settings.text_color }};
+          --reassurance-card-video-width: {{ block.settings.video_width }}%;
+        "
+        {{ block.shopify_attributes }}
+      >
+        {% if block.settings.image != blank %}
+          {{
+            block.settings.image
+            | image_url: width: 1800
+            | image_tag:
+              loading: 'lazy',
+              widths: '360, 540, 720, 900, 1200, 1500, 1800',
+              sizes: '(max-width: 640px) 50vw, 28vw',
+              class: 'reassurance-editorial__image',
+              alt: image_alt
+          }}
+        {% else %}
+          {{ 'image' | placeholder_svg_tag: 'reassurance-editorial__placeholder' }}
+        {% endif %}
+
+        <span class="reassurance-editorial__overlay" aria-hidden="true"></span>
+
+        {%- assign card_video_asset = block.settings.video_asset | strip -%}
+        {% if card_video_asset != blank %}
+          {% comment %}
+            WebM alpha lives in the theme assets (Shopify's file uploader / video_tag
+            transcode strips the alpha channel — the assets folder is served untouched).
+          {% endcomment %}
+          <div class="reassurance-editorial__video-panel" aria-hidden="true">
+            <video
+              class="reassurance-editorial__video reassurance-editorial__video--alpha"
+              autoplay
+              loop
+              muted
+              playsinline
+              preload="metadata"
+              {% if block.settings.video_asset_poster != blank %}poster="{{ block.settings.video_asset_poster | asset_url }}"{% endif %}
+            >
+              <source src="{{ card_video_asset | asset_url }}" type="video/webm">
+            </video>
+          </div>
+        {% elsif block.settings.video != blank %}
+          <div class="reassurance-editorial__video-panel" aria-hidden="true">
+            {{
+              block.settings.video
+              | video_tag:
+                autoplay: true,
+                loop: true,
+                muted: true,
+                controls: false,
+                playsinline: true,
+                class: 'reassurance-editorial__video'
+            }}
+          </div>
+        {% endif %}
+
+        {% if block.settings.eyebrow != blank or block.settings.title != blank %}
+          <div class="reassurance-editorial__copy">
+            {% if block.settings.eyebrow != blank %}
+              <span class="reassurance-editorial__eyebrow">{{ block.settings.eyebrow | escape }}</span>
+            {% endif %}
+            {% if block.settings.title != blank %}
+              <span class="reassurance-editorial__card-title">{{ block.settings.title | escape }}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      </{{ card_tag }}>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% stylesheet %}
+  .reassurance-editorial {
+    position: relative;
+    z-index: 2;
+    padding: var(--section-rail-gap) var(--hero-shell-inset);
+    background: var(--reassurance-editorial-bg);
+    color: var(--reassurance-editorial-text);
+  }
+
+  .reassurance-editorial__grid {
+    display: grid;
+    grid-template-columns: minmax(220px, .62fr) repeat(var(--reassurance-editorial-card-count), minmax(0, 1fr));
+    min-height: var(--reassurance-editorial-height);
+    border-top: 1px solid var(--reassurance-editorial-line);
+    border-left: 1px solid var(--reassurance-editorial-line);
+  }
+
+  .reassurance-editorial__intro,
+  .reassurance-editorial__card {
+    min-width: 0;
+    border-right: 1px solid var(--reassurance-editorial-line);
+    border-bottom: 1px solid var(--reassurance-editorial-line);
+  }
+
+  .reassurance-editorial__intro {
+    padding: clamp(20px, 2vw, 32px);
+    background: var(--reassurance-editorial-bg);
+  }
+
+  .reassurance-editorial__heading {
+    margin: 0;
+    font-family: inherit;
+    font-size: clamp(1.45rem, 2vw, 2.25rem);
+    font-weight: 500;
+    letter-spacing: .02em;
+    line-height: 1.04;
+    text-transform: uppercase;
+  }
+
+  .reassurance-editorial__description {
+    max-width: 34ch;
+    margin-top: 12px;
+    font-size: clamp(.62rem, .7vw, .78rem);
+    letter-spacing: .04em;
+    line-height: 1.38;
+    text-transform: uppercase;
+  }
+
+  .reassurance-editorial__description p {
+    margin: 0;
+  }
+
+  .reassurance-editorial__card {
+    position: relative;
+    display: block;
+    isolation: isolate;
+    min-height: var(--reassurance-editorial-height);
+    overflow: hidden;
+    color: var(--reassurance-card-text);
+    background: #15171a;
+  }
+
+  .reassurance-editorial__image,
+  .reassurance-editorial__placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .6s cubic-bezier(.22, .61, .36, 1);
+  }
+
+  .reassurance-editorial__placeholder {
+    background: #d8dbdd;
+    color: rgba(20, 28, 38, .3);
+  }
+
+  .reassurance-editorial__card:hover .reassurance-editorial__image,
+  .reassurance-editorial__card:focus-visible .reassurance-editorial__image {
+    transform: scale(1.025);
+  }
+
+  .reassurance-editorial__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(to top, rgba(0, 0, 0, .68), transparent 48%),
+      var(--reassurance-card-overlay);
+    opacity: var(--reassurance-card-overlay-opacity);
+    pointer-events: none;
+  }
+
+  .reassurance-editorial__video-panel {
+    position: absolute;
+    top: clamp(10px, 1.2vw, 18px);
+    left: clamp(10px, 1.2vw, 18px);
+    z-index: 2;
+    width: var(--reassurance-card-video-width);
+    max-width: calc(100% - 20px);
+    pointer-events: none;
+  }
+
+  .reassurance-editorial__video {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: transparent;
+    object-fit: contain;
+    /* Fallback path (Shopify "video" picker): the transcode discards the alpha
+       channel and leaves colour noise where the clip was transparent.
+       Desaturating + hard contrast collapses that noise toward black, then
+       `lighten` drops it against the card so only the bright artwork stays. */
+    filter: grayscale(1) contrast(2.8) brightness(0.92);
+    mix-blend-mode: lighten;
+  }
+
+  /* WebM served from the assets folder keeps its real alpha — render it straight. */
+  .reassurance-editorial__video--alpha {
+    filter: none;
+    mix-blend-mode: normal;
+  }
+
+  .reassurance-editorial__copy {
+    position: absolute;
+    right: clamp(10px, 1.2vw, 18px);
+    bottom: clamp(10px, 1.2vw, 18px);
+    left: clamp(10px, 1.2vw, 18px);
+    z-index: 2;
+    display: grid;
+    gap: 5px;
+    padding: 10px 12px;
+    border: 1px solid currentColor;
+    background: rgba(10, 12, 15, .14);
+    backdrop-filter: blur(4px);
+    text-align: left;
+  }
+
+  .reassurance-editorial__eyebrow,
+  .reassurance-editorial__card-title {
+    min-width: 0;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .reassurance-editorial__eyebrow {
+    font-size: .52rem;
+    letter-spacing: .26em;
+    line-height: 1.3;
+    opacity: .72;
+  }
+
+  .reassurance-editorial__card-title {
+    font-size: clamp(.64rem, .75vw, .82rem);
+    letter-spacing: .12em;
+    line-height: 1.32;
+  }
+
+  @media (max-width: 640px) {
+    .reassurance-editorial {
+      padding: 8px;
+    }
+
+    .reassurance-editorial__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      min-height: 0;
+    }
+
+    .reassurance-editorial__intro,
+    .reassurance-editorial__card {
+      min-height: 0;
+      aspect-ratio: 1 / 1.28;
+    }
+
+    .reassurance-editorial__intro {
+      padding: 12px 8px;
+    }
+
+    .reassurance-editorial__heading {
+      font-size: clamp(.9rem, 5vw, 1.25rem);
+      line-height: 1.06;
+    }
+
+    .reassurance-editorial__description {
+      margin-top: 7px;
+      font-size: clamp(.46rem, 2.15vw, .58rem);
+      line-height: 1.32;
+    }
+
+    .reassurance-editorial__video-panel {
+      display: none;
+    }
+
+    .reassurance-editorial__copy {
+      right: 7px;
+      bottom: 7px;
+      left: 7px;
+      gap: 3px;
+      padding: 8px;
+    }
+
+    .reassurance-editorial__eyebrow {
+      font-size: .44rem;
+    }
+
+    .reassurance-editorial__card-title {
+      font-size: .56rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reassurance-editorial__image {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Reassurance editoriale",
+  "max_blocks": 3,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "hide_on_home",
+      "label": "Masquer cette instance sur la page d'accueil",
+      "default": false
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Titre",
+      "default": "NOS ENGAGEMENTS"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description",
+      "default": "<p>Une selection exigeante et des services pensés pour vous accompagner.</p>"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Couleur du fond",
+      "default": "#f4f5f7"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Couleur du texte editorial",
+      "default": "#111824"
+    },
+    {
+      "type": "color",
+      "id": "line_color",
+      "label": "Couleur des lignes",
+      "default": "#d8dde5"
+    },
+    {
+      "type": "range",
+      "id": "desktop_height",
+      "label": "Hauteur sur ordinateur",
+      "min": 360,
+      "max": 760,
+      "step": 20,
+      "unit": "px",
+      "default": 560
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image_card",
+      "name": "Carte image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "Video en haut a gauche"
+        },
+        {
+          "type": "text",
+          "id": "video_asset",
+          "label": "Video transparente (fichier assets/)",
+          "info": "Nom d'un .webm alpha placé dans les fichiers du theme (ex: rea-01.webm). Prioritaire sur le champ Video ci-dessus. A ajouter via Edition du code > Assets — l'upload de fichiers Shopify supprime la transparence."
+        },
+        {
+          "type": "text",
+          "id": "video_asset_poster",
+          "label": "Image poster de la video transparente (fichier assets/)",
+          "info": "Optionnel. Nom d'une image dans assets/ affichee avant le chargement de la video."
+        },
+        {
+          "type": "range",
+          "id": "video_width",
+          "label": "Largeur de la video",
+          "min": 10,
+          "max": 80,
+          "step": 5,
+          "unit": "%",
+          "default": 10
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Petit texte",
+          "default": "SERVICE"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Texte principal",
+          "default": "VOTRE ENGAGEMENT"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Lien"
+        },
+        {
+          "type": "color",
+          "id": "overlay_color",
+          "label": "Couleur de l'overlay",
+          "default": "#000000"
+        },
+        {
+          "type": "range",
+          "id": "overlay_opacity",
+          "label": "Opacite de l'overlay",
+          "min": 0,
+          "max": 80,
+          "step": 5,
+          "unit": "%",
+          "default": 25
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Couleur du texte",
+          "default": "#ffffff"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Reassurance editoriale",
+      "blocks": [
+        {
+          "type": "image_card",
+          "settings": {
+            "eyebrow": "AUTHENTICITE",
+            "title": "PRODUITS VERIFIES"
+          }
+        },
+        {
+          "type": "image_card",
+          "settings": {
+            "eyebrow": "LIVRAISON",
+            "title": "EXPEDITION SUIVIE"
+          }
+        },
+        {
+          "type": "image_card",
+          "settings": {
+            "eyebrow": "SERVICE",
+            "title": "RETOURS SIMPLIFIES"
+          }
+        }
+      ]
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}

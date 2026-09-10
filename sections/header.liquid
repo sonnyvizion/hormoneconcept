@@ -53,7 +53,7 @@
           aria-label="Rechercher"
         >
           <span class="header-link__icon header-link__icon--search" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
               <path d="m21 21-4.34-4.34"/>
               <circle cx="11" cy="11" r="8"/>
             </svg>
@@ -67,7 +67,7 @@
           aria-label="Compte"
         >
           <span class="header-link__icon header-link__icon--account" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
               <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
@@ -84,7 +84,7 @@
           aria-expanded="false"
         >
           <span class="header-link__icon header-link__icon--cart" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
               <path d="M16 10a4 4 0 0 1-8 0"/>
               <path d="M3.103 6.034h17.794"/>
               <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"/>
@@ -115,6 +115,7 @@
             </button>
           </div>
           <form action="{{ routes.search_url }}" method="get" class="site-search-form header-search-overlay__form" role="search">
+            <input type="hidden" name="type" value="product">
             <input type="hidden" name="options[prefix]" value="last">
             <label class="visually-hidden" for="HeaderSearchInput-{{ section.id }}">Recherche</label>
             <div class="header-search-overlay__input-wrap">
@@ -129,7 +130,7 @@
             </button>
           </form>
         </div>
-        <div class="header-search-predictive" data-search-results hidden></div>
+        <div class="header-search-predictive" data-search-results data-lenis-prevent="true" hidden></div>
       </div>
     </div>
   </div>

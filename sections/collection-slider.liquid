@@ -51,14 +51,14 @@
 
         <article class="collection-slider__row" {{ block.shopify_attributes }}>
           <div class="collection-slider__overlay">
-            <div class="collection-slider__badge collection-slider__badge--title">
+            <a class="collection-slider__badge collection-slider__badge--title" href="{{ view_all_url }}" aria-label="Voir la collection {{ row_label | escape }}">
               <div class="collection-slider__ticker" aria-hidden="true">
                 <span class="collection-slider__ticker-track">
-                  <span>{{ row_label }} - {{ row_label }} - {{ row_label }} - {{ row_label }} -</span>
-                  <span>{{ row_label }} - {{ row_label }} - {{ row_label }} - {{ row_label }} -</span>
+                  <span>{{ row_label }} - TOUT VOIR - {{ row_label }} - TOUT VOIR -</span>
+                  <span>{{ row_label }} - TOUT VOIR - {{ row_label }} - TOUT VOIR -</span>
                 </span>
               </div>
-            </div>
+            </a>
 
             <div class="collection-slider__overlay-right">
               <div class="collection-slider__badge collection-slider__badge--controls">
@@ -70,14 +70,6 @@
                 </button>
               </div>
 
-              <a class="collection-slider__badge collection-slider__badge--view-all" href="{{ view_all_url }}">
-                <div class="collection-slider__ticker collection-slider__ticker--reverse" aria-hidden="true">
-                  <span class="collection-slider__ticker-track">
-                    <span>{{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} -</span>
-                    <span>{{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} - {{ view_all_label }} -</span>
-                  </span>
-                </div>
-              </a>
             </div>
           </div>
 
@@ -169,7 +161,7 @@
                             {% endif %}
                         </div>
                         <div class="collection-slider__meta">
-                          <p class="collection-slider__brand">{{ product.vendor | default: 'Original' | upcase }}</p>
+                          {% render 'brand-mark', brand: product.vendor, class: 'collection-slider__brand' %}
                           <h3>{{ product.title | upcase }}</h3>
                           <p class="collection-slider__price">{{ product.price | money }}</p>
                         </div>
@@ -193,7 +185,7 @@
                             <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
                           </div>
                           <div class="collection-slider__meta">
-                            <p class="collection-slider__brand">ORIGINAL</p>
+                            {% render 'brand-mark', brand: 'Original', class: 'collection-slider__brand' %}
                             <h3>PRODUIT EXEMPLE {{ i }}</h3>
                             <p class="collection-slider__price">{{ 12000 | money }}</p>
                           </div>
@@ -216,7 +208,7 @@
                           <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
                         </div>
                         <div class="collection-slider__meta">
-                          <p class="collection-slider__brand">ORIGINAL</p>
+                          {% render 'brand-mark', brand: 'Original', class: 'collection-slider__brand' %}
                           <h3>PRODUIT EXEMPLE {{ i }}</h3>
                           <p class="collection-slider__price">{{ 12000 | money }}</p>
                         </div>
@@ -233,14 +225,14 @@
       {% for i in (1..2) %}
         <article class="collection-slider__row">
           <div class="collection-slider__overlay">
-            <div class="collection-slider__badge collection-slider__badge--title">
+            <a class="collection-slider__badge collection-slider__badge--title" href="{{ fallback_view_all_url }}" aria-label="Voir la collection Drop New">
               <div class="collection-slider__ticker" aria-hidden="true">
                 <span class="collection-slider__ticker-track">
-                  <span>DROP NEW - DROP NEW - DROP NEW - DROP NEW -</span>
-                  <span>DROP NEW - DROP NEW - DROP NEW - DROP NEW -</span>
+                  <span>DROP NEW - TOUT VOIR - DROP NEW - TOUT VOIR -</span>
+                  <span>DROP NEW - TOUT VOIR - DROP NEW - TOUT VOIR -</span>
                 </span>
               </div>
-            </div>
+            </a>
 
             <div class="collection-slider__overlay-right">
               <div class="collection-slider__badge collection-slider__badge--controls">
@@ -252,14 +244,6 @@
                 </button>
               </div>
 
-              <a class="collection-slider__badge collection-slider__badge--view-all" href="{{ fallback_view_all_url }}">
-                <div class="collection-slider__ticker collection-slider__ticker--reverse" aria-hidden="true">
-                  <span class="collection-slider__ticker-track">
-                    <span>TOUT VOIR - TOUT VOIR - TOUT VOIR - TOUT VOIR -</span>
-                    <span>TOUT VOIR - TOUT VOIR - TOUT VOIR - TOUT VOIR -</span>
-                  </span>
-                </div>
-              </a>
             </div>
           </div>
 
@@ -297,7 +281,7 @@
                         <div class="collection-slider__product-image collection-slider__product-image--placeholder"></div>
                       </div>
                       <div class="collection-slider__meta">
-                        <p class="collection-slider__brand">ORIGINAL</p>
+                        {% render 'brand-mark', brand: 'Original', class: 'collection-slider__brand' %}
                         <h3>PRODUIT EXEMPLE {{ j }}</h3>
                         <p class="collection-slider__price">{{ 12000 | money }}</p>
                       </div>

@@ -51,13 +51,16 @@
     {% endif %}
 
     {% if collection_results.size > 0 %}
+      {%- capture predictive_pills -%}
+        {% for collection in collection_results limit: predictive_collection_count %}
+          <a class="header-search-predictive__pill" href="{{ collection.url }}">{{ collection.title }}</a>
+        {% endfor %}
+      {%- endcapture -%}
       <section class="header-search-predictive__group">
-        <div class="header-search-predictive__collection-pills">
-          {% for collection in collection_results limit: predictive_collection_count %}
-            <a class="header-search-predictive__pill" href="{{ collection.url }}">
-              {{ collection.title }}
-            </a>
-          {% endfor %}
+        <div class="header-search-predictive__collection-pills" data-predictive-pills>
+          <div class="header-search-predictive__pill-track">{{ predictive_pills }}</div>
+          <div class="header-search-predictive__pill-track" aria-hidden="true" inert>{{ predictive_pills }}</div>
+          <div class="header-search-predictive__pill-track" aria-hidden="true" inert>{{ predictive_pills }}</div>
         </div>
       </section>
     {% endif %}
@@ -128,6 +131,7 @@
                             {% endif %}
                           </div>
                           <div class="collection-slider__meta collection-slider__meta--predictive">
+                            {% render 'brand-mark', brand: product.vendor, class: 'collection-slider__brand' %}
                             <h3>{{ product.title | upcase }}</h3>
                             <p class="collection-slider__price">
                               {% if product.price_varies %}A PARTIR DE {% endif %}{{ product.price | money }}

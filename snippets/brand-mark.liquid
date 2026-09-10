@@ -1,0 +1,75 @@
+{% liquid
+  assign brand_label = brand | default: shop.name | strip
+  assign brand_key = brand_label | downcase | strip
+  assign brand_key = brand_key | replace: '&', 'and'
+  assign brand_key = brand_key | remove: ' '
+  assign brand_key = brand_key | remove: '-'
+  assign brand_key = brand_key | remove: '.'
+  assign brand_key = brand_key | remove: "'"
+  assign brand_key = brand_key | remove: '’'
+  assign brand_key = brand_key | remove: '_'
+  assign brand_asset = blank
+
+  case brand_key
+    when 'nike', 'nikesb'
+      assign brand_asset = 'brand-nike.svg'
+    when 'jordan', 'airjordan', 'jumpman'
+      assign brand_asset = 'brand-jordan.svg'
+    when 'adidas', 'adidasoriginals', 'adidasyeezy', 'yeezy'
+      assign brand_asset = 'brand-adidas.svg'
+    when 'newbalance', 'nb'
+      assign brand_asset = 'brand-newbalance.svg'
+    when 'asics', 'asicstiger'
+      assign brand_asset = 'brand-asics.svg'
+    when 'puma'
+      assign brand_asset = 'brand-puma.svg'
+    when 'reebok'
+      assign brand_asset = 'brand-reebok.svg'
+    when 'fila'
+      assign brand_asset = 'brand-fila.svg'
+    when 'dior'
+      assign brand_asset = 'brand-dior.svg'
+    when 'thenorthface', 'northface'
+      assign brand_asset = 'brand-thenorthface.svg'
+    when 'zara'
+      assign brand_asset = 'brand-zara.svg'
+    when 'uniqlo'
+      assign brand_asset = 'brand-uniqlo.svg'
+    when 'underarmour', 'ua'
+      assign brand_asset = 'brand-underarmour.svg'
+    when 'burton'
+      assign brand_asset = 'brand-burton.svg'
+    when 'bata'
+      assign brand_asset = 'brand-bata.svg'
+    when 'ami', 'amiparis', 'amialexandremattiussi'
+      assign brand_asset = 'brand-ami.svg'
+    when 'chromehearts', 'chromeheart'
+      assign brand_asset = 'brand-chrome-heart.svg'
+    when 'umbro'
+      assign brand_asset = 'brand-umbro.svg'
+  endcase
+
+  assign mark_class = 'brand-mark'
+  if class != blank
+    assign mark_class = mark_class | append: ' ' | append: class
+  endif
+  if brand_asset != blank
+    assign mark_class = mark_class | append: ' brand-mark--has-logo'
+  else
+    assign mark_class = mark_class | append: ' brand-mark--text-only'
+  endif
+%}
+
+<span class="{{ mark_class }}" aria-label="{{ brand_label | escape }}">
+  {% if brand_asset != blank %}
+    <img
+      class="brand-mark__logo"
+      src="{{ brand_asset | asset_url }}"
+      alt=""
+      width="28"
+      height="28"
+      loading="lazy"
+    >
+  {% endif %}
+  <span class="brand-mark__label">{{ brand_label | upcase }}</span>
+</span>

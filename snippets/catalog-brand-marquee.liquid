@@ -1,0 +1,17 @@
+{%- comment -%}
+  Brand pills marquee for the collection header.
+  Params:
+    pills   {string} pre-rendered <a class="catalog-page-head__brand-pill"> markup
+    variant {string} 'inline' (desktop, inside .catalog-page-head__content)
+                     'foot'   (mobile, bottom of .catalog-page-panel)
+{%- endcomment -%}
+{%- if pills != blank -%}
+  <div
+    class="catalog-page-head__brand-marquee catalog-page-head__brand-marquee--{{ variant | default: 'inline' }}"
+    data-brand-marquee
+    aria-label="Marques de la collection"
+  >
+    <div class="catalog-page-head__brand-track">{{ pills }}</div>
+    <div class="catalog-page-head__brand-track" aria-hidden="true" inert>{{ pills }}</div>
+  </div>
+{%- endif -%}

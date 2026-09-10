@@ -29,7 +29,7 @@
     </div>
 
     <div class="product-card__meta">
-      <p class="product-card__vendor">{{ product.vendor | default: shop.name | upcase }}</p>
+      {% render 'brand-mark', brand: product.vendor, class: 'product-card__vendor' %}
       <h3>{{ product.title | upcase }}</h3>
       <p class="product-card__price">{{ product_variant.price | money }}</p>
     </div>

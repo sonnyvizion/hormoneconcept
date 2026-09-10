@@ -1,0 +1,242 @@
+<section
+  class="reassurance-marquee reassurance-marquee--{{ section.settings.direction }}"
+  style="
+    --reassurance-marquee-bg: {{ section.settings.background_color }};
+    --reassurance-marquee-text: {{ section.settings.text_color }};
+    --reassurance-marquee-separator: {{ section.settings.separator_color }};
+    --reassurance-marquee-height: {{ section.settings.height }}px;
+    --reassurance-marquee-speed: {{ section.settings.speed }}s;
+    --reassurance-marquee-font-size: {{ section.settings.font_size }}px;
+    --reassurance-marquee-gap: {{ section.settings.item_gap }}px;
+  "
+  aria-label="{{ section.settings.accessibility_label | escape }}"
+>
+  <div class="reassurance-marquee__viewport">
+    <div class="reassurance-marquee__track">
+      <div class="reassurance-marquee__group">
+        {% for block in section.blocks %}
+          {% if block.settings.text != blank %}
+            <span class="reassurance-marquee__item" {{ block.shopify_attributes }}>
+              {{ block.settings.text | escape }}
+            </span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="reassurance-marquee__group" aria-hidden="true">
+        {% for block in section.blocks %}
+          {% if block.settings.text != blank %}
+            <span class="reassurance-marquee__item">
+              {{ block.settings.text | escape }}
+            </span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .reassurance-marquee {
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+    background: var(--reassurance-marquee-bg);
+    color: var(--reassurance-marquee-text);
+  }
+
+  .reassurance-marquee__viewport {
+    overflow: hidden;
+    width: 100%;
+    height: var(--reassurance-marquee-height);
+  }
+
+  .reassurance-marquee__track {
+    display: flex;
+    width: max-content;
+    min-width: 200%;
+    height: 100%;
+    animation: reassurance-marquee-scroll var(--reassurance-marquee-speed) linear infinite;
+  }
+
+  .reassurance-marquee--right .reassurance-marquee__track {
+    animation-direction: reverse;
+  }
+
+  .reassurance-marquee__group {
+    display: flex;
+    flex: 0 0 50%;
+    align-items: center;
+    justify-content: space-around;
+    min-width: 50%;
+    gap: var(--reassurance-marquee-gap);
+    padding-inline: calc(var(--reassurance-marquee-gap) / 2);
+  }
+
+  .reassurance-marquee__item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1em;
+    white-space: nowrap;
+    font-size: var(--reassurance-marquee-font-size);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .reassurance-marquee__item + .reassurance-marquee__item::before {
+    content: "";
+    display: block;
+    width: 4px;
+    height: 4px;
+    margin-right: var(--reassurance-marquee-gap);
+    border-radius: 999px;
+    background: var(--reassurance-marquee-separator);
+  }
+
+  @keyframes reassurance-marquee-scroll {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reassurance-marquee__track {
+      animation: none;
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Bande reassurance",
+  "settings": [
+    {
+      "type": "text",
+      "id": "accessibility_label",
+      "label": "Label d'accessibilite",
+      "default": "Informations de reassurance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Couleur du fond",
+      "default": "#090b0f"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Couleur du texte",
+      "default": "#f4f5f7"
+    },
+    {
+      "type": "color",
+      "id": "separator_color",
+      "label": "Couleur des separateurs",
+      "default": "#8b929c"
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "label": "Hauteur",
+      "min": 22,
+      "max": 56,
+      "step": 2,
+      "unit": "px",
+      "default": 34
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Taille du texte",
+      "min": 9,
+      "max": 15,
+      "step": 1,
+      "unit": "px",
+      "default": 11
+    },
+    {
+      "type": "range",
+      "id": "item_gap",
+      "label": "Espacement",
+      "min": 18,
+      "max": 72,
+      "step": 2,
+      "unit": "px",
+      "default": 38
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Vitesse",
+      "min": 8,
+      "max": 40,
+      "step": 1,
+      "unit": "s",
+      "default": 20
+    },
+    {
+      "type": "select",
+      "id": "direction",
+      "label": "Direction",
+      "options": [
+        {
+          "value": "left",
+          "label": "Vers la gauche"
+        },
+        {
+          "value": "right",
+          "label": "Vers la droite"
+        }
+      ],
+      "default": "left"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Texte",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Texte",
+          "default": "Expedition suivie"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 3,
+  "presets": [
+    {
+      "name": "Bande reassurance",
+      "blocks": [
+        {
+          "type": "item",
+          "settings": {
+            "text": "Authenticite controlee"
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "text": "Expedition suivie"
+          }
+        },
+        {
+          "type": "item",
+          "settings": {
+            "text": "Paiement securise"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

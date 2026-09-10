@@ -199,7 +199,7 @@
               {% if product.type != blank %}
                 <span class="product-view__meta-pill">{{ product.type | upcase }}</span>
               {% endif %}
-              <span class="product-view__meta-pill">{{ product.vendor | default: shop.name | upcase }}</span>
+              {% render 'brand-mark', brand: product.vendor, class: 'product-view__meta-pill product-view__meta-pill--brand' %}
             </div>
             <h1 class="product-view__title">{{ product.title | upcase }}</h1>
             <p class="product-view__style-id" data-product-style-id{% if product_style_id == blank %} hidden{% endif %}>
@@ -443,6 +443,19 @@
                   </div>
                 </div>
               </div>
+
+              {% if shop.enabled_payment_types.size > 0 %}
+                <div class="product-view__payments" aria-label="Moyens de paiement acceptes">
+                  <p class="product-view__payments-title">PAIEMENT SECURISE</p>
+                  <ul class="product-view__payment-list" role="list">
+                    {% for type in shop.enabled_payment_types %}
+                      <li class="product-view__payment-item">
+                        {{ type | payment_type_svg_tag: class: 'product-view__payment-icon' }}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
             </div>
 
             <div class="product-view__reassurance" data-product-reassurance>

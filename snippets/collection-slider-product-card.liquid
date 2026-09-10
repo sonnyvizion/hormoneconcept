@@ -61,7 +61,7 @@
         {% endif %}
     </div>
     <div class="collection-slider__meta">
-      <p class="collection-slider__brand">{{ card_product.vendor | default: 'Original' | upcase }}</p>
+      {% render 'brand-mark', brand: card_product.vendor, class: 'collection-slider__brand' %}
       <h3>{{ card_product.title | upcase }}</h3>
       <p class="collection-slider__price">{{ card_product.price | money }}</p>
     </div>

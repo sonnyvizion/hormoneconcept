@@ -9,14 +9,14 @@
   const COPY_OUT_DURATION_MS = 400;
   const LENIS_DESKTOP_QUERY = '(hover: hover) and (pointer: fine)';
   const COPY_ELEMENT_SELECTOR = '.video-hero__copy-grid h2, .video-hero__copy-grid h3, .video-hero__copy-grid .video-hero__subtitle-bracket, .video-hero__copy-grid .video-hero__availability-label';
-  const CTA_POINTER_SCRAMBLE_SELECTOR = '.header-menu a, .header-menu__list-row, .header-menu__view-all, .header-menu__panel a, .header-link, .button, .video-hero__availability, .site-footer-v2__submit';
+  const CTA_POINTER_SCRAMBLE_SELECTOR = '.header-menu a, .header-menu__list-row, .header-menu__view-all, .header-menu__panel a, .header-link, .button, .video-hero__availability, .site-footer-v2__submit, .catalog-sticky-filter__btn, .catalog-filters__toggle';
   const INTERACTIVE_SCRAMBLE_SELECTOR = '.header-menu a, .header-menu__list-row, .header-menu__view-all, .header-menu__panel a, .header-link, .button, .video-hero__availability, .collection-slider__fixed-quick-add-button, .header-search-predictive__pill, .site-footer-v2__links-list a, .site-footer-v2__links-list span, .site-footer-v2__submit';
   const interactiveScrambleState = new WeakMap();
   const ctaHoverScrambleState = new WeakMap();
 
   const getInteractiveTextTarget = (element) => {
     if (!element) return null;
-    return element.querySelector?.('.video-hero__availability-label, .site-footer-v2__submit-label, .collection-slider__fixed-quick-add-label, .header-menu__list-label') || element;
+    return element.querySelector?.('.video-hero__availability-label, .site-footer-v2__submit-label, .collection-slider__fixed-quick-add-label, .header-menu__list-label, .catalog-sticky-filter__label, [data-catalog-filters-toggle-label]') || element;
   };
 
   const getInteractiveLockTarget = (element) => {
@@ -2620,6 +2620,7 @@
 
     const quickAddForms = Array.from(sectionRoot.querySelectorAll('[data-quick-add-form]'));
     const desktopQuery = window.matchMedia('(min-width: 981px)');
+    const mobileSliderQuery = window.matchMedia('(max-width: 640px)');
 
     const getScrollStep = (track) => {
       if (!track) return 0;
@@ -3013,7 +3014,10 @@
 
         fixedQuickAddButtons.forEach((buttonEl, slotIndex) => {
           const slotStartX = normalizedBaseOffset + (slotIndex * step);
-          buttonEl.style.left = `${slotStartX + leftInset}px`;
+          const buttonOffset = mobileSliderQuery.matches
+            ? Math.max(8, step - buttonEl.offsetWidth - 8)
+            : leftInset;
+          buttonEl.style.left = `${slotStartX + buttonOffset}px`;
 
           if (!productCards.length) {
             setFixedQuickAddTarget(buttonEl, null);
@@ -4604,6 +4608,32 @@
     if (!pageEl || pageEl.dataset.catalogInit === 'true') return;
     pageEl.dataset.catalogInit = 'true';
 
+    const countNumberEl = pageEl.querySelector('[data-catalog-count-number]');
+    if (countNumberEl) {
+      const targetCount = Number.parseInt(countNumberEl.dataset.countTarget || '0', 10);
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (Number.isFinite(targetCount) && targetCount > 0 && !reduceMotion) {
+        const duration = 1100;
+        const startedAt = performance.now();
+        const numberFormatter = new Intl.NumberFormat(document.documentElement.lang || 'fr');
+        countNumberEl.textContent = '0';
+
+        const animateCount = (now) => {
+          const progress = Math.min((now - startedAt) / duration, 1);
+          const easedProgress = 1 - Math.pow(1 - progress, 4);
+          const currentCount = Math.round(targetCount * easedProgress);
+          countNumberEl.textContent = numberFormatter.format(currentCount);
+
+          if (progress < 1) {
+            window.requestAnimationFrame(animateCount);
+          }
+        };
+
+        window.requestAnimationFrame(animateCount);
+      }
+    }
+
     const colToggleEl = pageEl.querySelector('[data-col-toggle]');
     if (colToggleEl) {
       const savedCols = window.sessionStorage.getItem('catalog-cols');
@@ -4628,30 +4658,253 @@
 
     const filterFormEl = pageEl.querySelector('[data-catalog-filter-form]');
     if (filterFormEl) {
+      const filterMobileQuery = window.matchMedia('(max-width: 640px)');
       const mobileAccordionEl = filterFormEl.querySelector('[data-catalog-filters-mobile]');
+      const filtersEl = filterFormEl.closest('.catalog-filters');
+      const desktopToggleEl = pageEl.querySelector('[data-catalog-filters-toggle]');
+      const desktopToggleLabelEl = desktopToggleEl?.querySelector('[data-catalog-filters-toggle-label]');
+      const desktopFilterMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let desktopFilterAnimationTimer = 0;
+      let desktopFilterAnimationNonce = 0;
+
+      const getDesktopFilterItems = () => Array.from(filterFormEl.querySelectorAll(
+        '.catalog-filters__groups > .catalog-filter-group, .catalog-filters__right'
+      ));
+
+      const prepareDesktopFilterItems = (open, animationNonce) => {
+        const items = getDesktopFilterItems();
+        const maxStaggerMs = 150;
+        const stepMs = items.length > 1
+          ? Math.min(38, maxStaggerMs / (items.length - 1))
+          : 0;
+
+        items.forEach((item, index) => {
+          const staggerIndex = open ? index : items.length - index - 1;
+          item.style.setProperty('--catalog-filter-delay', `${Math.round(staggerIndex * stepMs)}ms`);
+        });
+
+        const labels = Array.from(filterFormEl.querySelectorAll('[data-catalog-filter-animate-label]'));
+        labels.forEach((labelEl, index) => {
+          const staggerIndex = open ? index : labels.length - index - 1;
+          window.setTimeout(() => {
+            if (animationNonce !== desktopFilterAnimationNonce) return;
+            runInteractiveScramble(labelEl, {
+              direction: open ? 'in' : 'out',
+              totalSteps: 6,
+              intervalMs: 24
+            });
+          }, Math.min(staggerIndex * stepMs, maxStaggerMs));
+        });
+      };
+
+      const setDesktopFiltersOpen = (open, options = {}) => {
+        if (!filtersEl || !desktopToggleEl || filterMobileQuery.matches) return;
+        const animationNonce = ++desktopFilterAnimationNonce;
+        if (desktopFilterAnimationTimer) {
+          window.clearTimeout(desktopFilterAnimationTimer);
+          desktopFilterAnimationTimer = 0;
+        }
+
+        desktopToggleEl.setAttribute('aria-expanded', String(open));
+        if (desktopToggleLabelEl) {
+          stopCtaHoverScramble(desktopToggleEl, true);
+          const toggleLabel = open ? 'MASQUER LES FILTRES' : 'AFFICHER LES FILTRES';
+          desktopToggleLabelEl.dataset.scrambleFinal = toggleLabel;
+          desktopToggleLabelEl.textContent = toggleLabel;
+        }
+
+        if (desktopFilterMotionQuery.matches) {
+          filtersEl.classList.toggle('is-desktop-open', open);
+          filtersEl.classList.remove('is-desktop-animating');
+          filtersEl.style.height = open ? 'auto' : '0px';
+        } else {
+          filtersEl.classList.add('is-desktop-animating');
+          filtersEl.style.height = `${filtersEl.getBoundingClientRect().height}px`;
+          prepareDesktopFilterItems(open, animationNonce);
+
+          window.requestAnimationFrame(() => {
+            if (animationNonce !== desktopFilterAnimationNonce) return;
+            filtersEl.classList.toggle('is-desktop-open', open);
+            filtersEl.style.height = open ? `${filtersEl.scrollHeight}px` : '0px';
+          });
+
+          desktopFilterAnimationTimer = window.setTimeout(() => {
+            if (animationNonce !== desktopFilterAnimationNonce) return;
+            filtersEl.classList.remove('is-desktop-animating');
+            filtersEl.style.height = open ? 'auto' : '0px';
+            desktopFilterAnimationTimer = 0;
+          }, 380);
+        }
+
+        if (open && options.scroll) {
+          window.setTimeout(() => {
+            if (animationNonce !== desktopFilterAnimationNonce) return;
+            filterFormEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, desktopFilterMotionQuery.matches ? 0 : 360);
+        }
+      };
+
+      desktopToggleEl?.addEventListener('click', () => {
+        setDesktopFiltersOpen(!filtersEl.classList.contains('is-desktop-open'));
+      });
+
+      const syncFilterDrawerLock = () => {
+        const open = !!mobileAccordionEl
+          && mobileAccordionEl.hasAttribute('open')
+          && filterMobileQuery.matches;
+        document.body.classList.toggle('catalog-filter-drawer-open', open);
+      };
+
+      const closeFilterDrawer = () => {
+        if (!mobileAccordionEl) return;
+        mobileAccordionEl.removeAttribute('open');
+        syncFilterDrawerLock();
+      };
+
       if (mobileAccordionEl && mobileAccordionEl.dataset.catalogFiltersSync !== 'true') {
         mobileAccordionEl.dataset.catalogFiltersSync = 'true';
 
-        const mobileQuery = window.matchMedia('(max-width: 640px)');
         const syncCatalogFiltersAccordion = () => {
-          if (mobileQuery.matches) {
+          if (filterMobileQuery.matches) {
             mobileAccordionEl.removeAttribute('open');
           } else {
             mobileAccordionEl.setAttribute('open', 'open');
           }
+          syncFilterDrawerLock();
         };
 
         syncCatalogFiltersAccordion();
 
-        if (typeof mobileQuery.addEventListener === 'function') {
-          mobileQuery.addEventListener('change', syncCatalogFiltersAccordion);
-        } else if (typeof mobileQuery.addListener === 'function') {
-          mobileQuery.addListener(syncCatalogFiltersAccordion);
+        if (typeof filterMobileQuery.addEventListener === 'function') {
+          filterMobileQuery.addEventListener('change', syncCatalogFiltersAccordion);
+        } else if (typeof filterMobileQuery.addListener === 'function') {
+          filterMobileQuery.addListener(syncCatalogFiltersAccordion);
         }
+
+        mobileAccordionEl.addEventListener('toggle', syncFilterDrawerLock);
+
+        filterFormEl.querySelectorAll('[data-catalog-filters-close]').forEach((closeEl) => {
+          closeEl.addEventListener('click', (event) => {
+            event.preventDefault();
+            closeFilterDrawer();
+          });
+        });
+
+        // The open button lives next to .catalog-count, outside the form
+        pageEl.querySelectorAll('[data-catalog-filters-open]').forEach((openEl) => {
+          openEl.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (filterMobileQuery.matches) {
+              mobileAccordionEl.setAttribute('open', 'open');
+              syncFilterDrawerLock();
+            } else {
+              setDesktopFiltersOpen(true, { scroll: true });
+            }
+          });
+        });
+
+        filterFormEl
+          .querySelector('[data-catalog-filters-apply]')
+          ?.addEventListener('click', () => filterFormEl.submit());
+
+        // Drawer sort is a nameless proxy — mirror its value onto the real
+        // #SortBy select so it submits with "Voir les résultats" (deferred).
+        const sortProxyEl = filterFormEl.querySelector('[data-catalog-sort-proxy]');
+        const realSortEl = filterFormEl.querySelector('#SortBy');
+        if (sortProxyEl && realSortEl) {
+          sortProxyEl.value = realSortEl.value;
+          sortProxyEl.addEventListener('change', () => {
+            realSortEl.value = sortProxyEl.value;
+          });
+        }
+
+        const sortPopupEl = filterFormEl.querySelector('[data-catalog-sort-popup]');
+        const sortCurrentEl = sortPopupEl?.querySelector('[data-catalog-sort-current]');
+        const desktopFilterGroups = Array.from(filterFormEl.querySelectorAll('details[data-filter-group]'));
+
+        const closeOtherDesktopPopups = (currentEl) => {
+          if (filterMobileQuery.matches) return;
+          desktopFilterGroups.forEach((groupEl) => {
+            if (groupEl !== currentEl) groupEl.removeAttribute('open');
+          });
+          if (sortPopupEl && sortPopupEl !== currentEl) sortPopupEl.removeAttribute('open');
+        };
+
+        desktopFilterGroups.forEach((groupEl) => {
+          groupEl.addEventListener('toggle', () => {
+            if (groupEl.hasAttribute('open')) closeOtherDesktopPopups(groupEl);
+          });
+        });
+
+        if (sortPopupEl && realSortEl) {
+          sortPopupEl.addEventListener('toggle', () => {
+            if (sortPopupEl.hasAttribute('open')) closeOtherDesktopPopups(sortPopupEl);
+          });
+
+          sortPopupEl.querySelectorAll('[data-catalog-sort-option]').forEach((optionEl) => {
+            optionEl.addEventListener('click', () => {
+              const value = optionEl.dataset.catalogSortOption;
+              realSortEl.value = value;
+              if (sortProxyEl) sortProxyEl.value = value;
+              if (sortCurrentEl) sortCurrentEl.textContent = normalizeText(optionEl.textContent || '');
+
+              sortPopupEl.querySelectorAll('[data-catalog-sort-option]').forEach((candidateEl) => {
+                const selected = candidateEl === optionEl;
+                candidateEl.classList.toggle('is-selected', selected);
+                candidateEl.setAttribute('aria-checked', String(selected));
+              });
+
+              sortPopupEl.removeAttribute('open');
+              filterFormEl.requestSubmit();
+            });
+          });
+
+          document.addEventListener('click', (event) => {
+            if (!sortPopupEl.hasAttribute('open') || sortPopupEl.contains(event.target)) return;
+            sortPopupEl.removeAttribute('open');
+          });
+
+          sortPopupEl.addEventListener('keydown', (event) => {
+            const options = Array.from(sortPopupEl.querySelectorAll('[data-catalog-sort-option]'));
+            if (!options.length || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            if (!sortPopupEl.hasAttribute('open')) sortPopupEl.setAttribute('open', 'open');
+
+            const activeIndex = options.indexOf(document.activeElement);
+            let nextIndex = activeIndex;
+            if (event.key === 'Home') nextIndex = 0;
+            if (event.key === 'End') nextIndex = options.length - 1;
+            if (event.key === 'ArrowDown') nextIndex = activeIndex < 0 ? 0 : (activeIndex + 1) % options.length;
+            if (event.key === 'ArrowUp') nextIndex = activeIndex < 0 ? options.length - 1 : (activeIndex - 1 + options.length) % options.length;
+            options[nextIndex].focus();
+          });
+        }
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== 'Escape') return;
+          if (sortPopupEl?.hasAttribute('open')) {
+            sortPopupEl.removeAttribute('open');
+            sortPopupEl.querySelector('summary')?.focus();
+          }
+          if (filterMobileQuery.matches && mobileAccordionEl.hasAttribute('open')) {
+            closeFilterDrawer();
+          }
+        });
+
+        // On mobile the price "APPLIQUER" button must not submit on its own —
+        // values are committed together via "Voir les résultats".
+        filterFormEl.querySelectorAll('.catalog-filter-price__apply').forEach((btn) => {
+          btn.addEventListener('click', (event) => {
+            if (!filterMobileQuery.matches) return;
+            event.preventDefault();
+            btn.closest('[data-filter-group]')?.removeAttribute('open');
+          });
+        });
       }
 
       filterFormEl.querySelectorAll('[data-filter-checkbox]').forEach((checkbox) => {
         checkbox.addEventListener('change', () => {
+          if (filterMobileQuery.matches) return;
           filterFormEl.submit();
         });
       });
@@ -4663,6 +4916,55 @@
           });
         }
       });
+    }
+
+    // Sticky mobile filter bar: reveal it once the count bar scrolls out of view
+    const stickyFilterEl = pageEl.querySelector('[data-catalog-sticky-filter]');
+    const countBarEl = pageEl.querySelector('.catalog-count-bar');
+    if (
+      stickyFilterEl
+      && countBarEl
+      && stickyFilterEl.dataset.stickyFilterInit !== 'true'
+      && 'IntersectionObserver' in window
+    ) {
+      stickyFilterEl.dataset.stickyFilterInit = 'true';
+      const stickyFilterButtonEl = stickyFilterEl.querySelector('.catalog-sticky-filter__btn');
+      const reassuranceEl = document.querySelector('.product-reassurance');
+      let countBarWasPassed = false;
+      let reassuranceIsVisible = false;
+      let stickyFilterWasVisible = false;
+
+      const syncStickyFilterVisibility = () => {
+        const shouldShow = countBarWasPassed && !reassuranceIsVisible;
+        stickyFilterEl.classList.toggle('is-visible', shouldShow);
+        if (
+          shouldShow
+          && !stickyFilterWasVisible
+          && stickyFilterButtonEl
+          && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ) {
+          runInteractiveScramble(stickyFilterButtonEl, { totalSteps: 12, intervalMs: 30 });
+        }
+        stickyFilterWasVisible = shouldShow;
+      };
+
+      const stickyObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          countBarWasPassed = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+          syncStickyFilterVisibility();
+        });
+      }, { threshold: 0 });
+      stickyObserver.observe(countBarEl);
+
+      if (reassuranceEl) {
+        const reassuranceObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            reassuranceIsVisible = entry.isIntersecting;
+            syncStickyFilterVisibility();
+          });
+        }, { threshold: 0 });
+        reassuranceObserver.observe(reassuranceEl);
+      }
     }
 
     pageEl.querySelectorAll('[data-quick-add-form]').forEach((formEl) => {
@@ -4735,6 +5037,96 @@
         if (scrambleTimer) { window.clearInterval(scrambleTimer); scrambleTimer = null; }
         labelEl.textContent = finalText;
       });
+    });
+
+    const finePointerQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const marqueeReduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    pageEl.querySelectorAll('[data-brand-marquee]').forEach((brandMarqueeEl) => {
+      if (brandMarqueeEl.dataset.brandMarqueeInit === 'true') return;
+      brandMarqueeEl.dataset.brandMarqueeInit = 'true';
+
+      const trackEls = Array.from(
+        brandMarqueeEl.querySelectorAll('.catalog-page-head__brand-track')
+      );
+      if (!trackEls.length) return;
+
+      // Seamless loop: the keyframe shifts each track by exactly its own
+      // width + 8px so the trailing copy lands on the leading one. That only
+      // reads as an infinite belt when a single track is at least as wide as
+      // the visible marquee — otherwise a gap opens on the trailing edge once
+      // per cycle. When a collection only has a handful of short brand pills
+      // the track is far narrower than the header, so we clone the pill set
+      // enough times to always overflow, and scale the duration to keep the
+      // scroll speed (px/s) constant.
+      const MARQUEE_GAP = 8;
+      const MARQUEE_BASE_DURATION = 28;
+      const seedHtml = trackEls.map((trackEl) => trackEl.innerHTML);
+
+      const fillTracks = () => {
+        const containerWidth = brandMarqueeEl.clientWidth;
+        if (!containerWidth) return;
+
+        trackEls.forEach((trackEl, i) => {
+          trackEl.style.animationDuration = '';
+          trackEl.innerHTML = seedHtml[i];
+        });
+
+        const baseWidth = trackEls[0].getBoundingClientRect().width;
+        if (!baseWidth) return;
+
+        const copies = baseWidth >= containerWidth
+          ? 1
+          : Math.ceil(containerWidth / baseWidth) + 1;
+        if (copies > 1) {
+          trackEls.forEach((trackEl, i) => {
+            trackEl.innerHTML = seedHtml[i].repeat(copies);
+          });
+        }
+
+        const filledWidth = trackEls[0].getBoundingClientRect().width;
+        const duration = MARQUEE_BASE_DURATION
+          * ((filledWidth + MARQUEE_GAP) / (baseWidth + MARQUEE_GAP));
+        trackEls.forEach((trackEl) => {
+          trackEl.style.animationDuration = `${duration.toFixed(2)}s`;
+        });
+      };
+
+      fillTracks();
+
+      let fillTimer = null;
+      const scheduleFill = () => {
+        window.clearTimeout(fillTimer);
+        fillTimer = window.setTimeout(fillTracks, 180);
+      };
+      if (typeof window.ResizeObserver === 'function') {
+        new window.ResizeObserver(scheduleFill).observe(brandMarqueeEl);
+      } else {
+        window.addEventListener('resize', scheduleFill);
+      }
+
+      const setMarqueeRate = (rate) => {
+        if (!finePointerQuery.matches || marqueeReduceMotionQuery.matches) return;
+        trackEls.forEach((trackEl) => {
+          trackEl.getAnimations().forEach((anim) => {
+            if (typeof anim.updatePlaybackRate === 'function') {
+              anim.updatePlaybackRate(rate);
+            } else {
+              anim.playbackRate = rate;
+            }
+          });
+        });
+      };
+
+      const slowMarquee = () => setMarqueeRate(0.15);
+      const resumeMarquee = () => {
+        if (!brandMarqueeEl.matches(':hover')) setMarqueeRate(1);
+      };
+
+      brandMarqueeEl.addEventListener('mouseenter', slowMarquee);
+      brandMarqueeEl.addEventListener('mouseleave', () => setMarqueeRate(1));
+      brandMarqueeEl.addEventListener('focusin', slowMarquee);
+      brandMarqueeEl.addEventListener('focusout', resumeMarquee);
     });
   };
 
@@ -4862,6 +5254,7 @@
     const buildSearchFormMarkup = () => `
       <form action="/search" method="get" class="site-search-form main-search__form" role="search">
         <input type="hidden" name="options[prefix]" value="last">
+        <input type="hidden" name="type" value="product">
         <label class="visually-hidden" for="SearchFallbackInput">Recherche</label>
         <input id="SearchFallbackInput" type="search" name="q" value="${query.replace(/"/g, '&quot;')}" placeholder="RECHERCHER UNE MARQUE, MODELE..." autocomplete="off">
         <button class="button main-search__submit" type="submit">LANCER</button>
@@ -4882,11 +5275,6 @@
               <div class="main-search__panel main-search__panel--search">
                 <p class="main-search__panel-kicker">[ RECHERCHER ]</p>
                 ${buildSearchFormMarkup()}
-                <p class="main-search__panel-copy">
-                  ${query
-                    ? `RESULTATS POUR "${query.toUpperCase()}", AVEC UNE SEPARATION CLAIRE ENTRE PRODUITS ET CONTENUS.`
-                    : "UTILISE LA RECHERCHE COMME UN INDEX RAPIDE POUR NAVIGUER DANS L'UNIVERS HORMONE."}
-                </p>
               </div>
               <div class="main-search__panel main-search__panel--summary">
                 <p class="main-search__panel-kicker">[ INDEX ]</p>
@@ -5003,6 +5391,27 @@
     });
   };
 
+  const initSearchDock = (root = document) => {
+    if (!document.body.classList.contains('template-search')) return;
+    if (!('IntersectionObserver' in window)) return;
+
+    const scope = root && root.querySelector ? root : document;
+    const dockEl = scope.querySelector('[data-search-dock]') || document.querySelector('[data-search-dock]');
+    if (!dockEl || dockEl.dataset.searchDockInit === 'true') return;
+
+    const footerEl = document.querySelector('.site-footer');
+    if (!footerEl) return;
+
+    dockEl.dataset.searchDockInit = 'true';
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        dockEl.classList.toggle('is-hidden', entry.isIntersecting);
+      });
+    }, { threshold: 0 });
+    observer.observe(footerEl);
+  };
+
   initHeaderScrollVisibility();
   initMobileNav();
   initCartDrawer();
@@ -5022,6 +5431,7 @@
   initCatalogPage();
   initCartPage();
   initSearchPageFallback();
+  initSearchDock();
   refreshHeaderCartCount();
   document.addEventListener('shopify:section:load', (event) => {
     initHeaderScrollVisibility(event.target);
@@ -5042,6 +5452,7 @@
     initCatalogPage(event.target);
     initCartPage(event.target);
     initSearchPageFallback(event.target);
+    initSearchDock(event.target);
     refreshHeaderCartCount();
   });
 })();
