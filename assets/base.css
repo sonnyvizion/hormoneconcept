@@ -7064,10 +7064,82 @@ body.template-collection .main-collection::before {
   text-transform: none;
 }
 
+@property --pill-shine-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 .product-form-v2__pill-input:checked + .product-form-v2__pill {
   background: rgba(223, 228, 233, .98);
-  border-color: rgba(0, 96, 255, .72);
+  border-color: rgba(0, 96, 255, .4);
   color: rgba(18, 27, 37, .94);
+  overflow: visible;
+}
+
+.product-form-v2__pill-input:checked + .product-form-v2__pill::before,
+.product-form-v2__pill-input:checked + .product-form-v2__pill::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+  --pill-shine-angle: 0deg;
+  animation: productPillShineSpin 6s linear infinite;
+}
+
+.product-form-v2__pill-input:checked + .product-form-v2__pill::before {
+  inset: -1px;
+  z-index: 3;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--pill-shine-angle),
+    transparent 0%,
+    transparent 50%,
+    rgba(0, 96, 255, .55) 58%,
+    #cfe0ff 64%,
+    rgba(0, 96, 255, .55) 70%,
+    transparent 78%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.product-form-v2__pill-input:checked + .product-form-v2__pill::after {
+  inset: -2px;
+  z-index: 1;
+  padding: 2px;
+  opacity: .5;
+  filter: blur(1.5px);
+  background: conic-gradient(
+    from var(--pill-shine-angle),
+    transparent 0%,
+    transparent 50%,
+    rgba(0, 96, 255, .55) 58%,
+    rgba(160, 200, 255, .7) 64%,
+    rgba(0, 96, 255, .55) 70%,
+    transparent 78%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+@keyframes productPillShineSpin {
+  to {
+    --pill-shine-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-form-v2__pill-input:checked + .product-form-v2__pill::before,
+  .product-form-v2__pill-input:checked + .product-form-v2__pill::after {
+    animation: none;
+  }
 }
 
 .product-form-v2__pill.is-sold-out {
