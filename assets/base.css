@@ -4979,6 +4979,10 @@ body.template-cart,
   gap: 14px;
 }
 
+.catalog-empty .button {
+  border-radius: 0;
+  font-weight: 400;
+}
 .site-pagination {
   margin-top: clamp(16px, 1.8vw, 24px);
   display: flex;
