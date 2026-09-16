@@ -12516,6 +12516,7 @@ body.template-search .site-footer.site-footer--showcase {
     width: calc(33.333% - clamp(20px, 2.2vw, 38px));
     margin: 0;
     overflow: hidden;
+    line-height: 26px;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
