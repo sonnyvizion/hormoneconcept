@@ -12740,13 +12740,13 @@ body.template-search .site-footer.site-footer--showcase {
     flex-direction: column;
     margin: 0;
     border-width: 0;
-    padding: clamp(22px, 2vw, 34px);
+    padding: clamp(22px, 2vw, 34px) 0;
     background: rgb(239, 243, 246);
   }
 
   .product-view__desktop-info .product-accordion[open] .product-accordion__summary {
     flex: 0 0 auto;
-    padding: 0;
+    padding: 0 clamp(22px, 2vw, 34px);
   }
 
   .product-view__desktop-info .product-accordion[open] .product-accordion__body {
@@ -12754,9 +12754,10 @@ body.template-search .site-footer.site-footer--showcase {
     min-height: 0;
     max-height: none;
     margin-top: clamp(14px, 1.8vw, 22px);
-    padding: clamp(14px, 1.8vw, 22px) 0 0;
+    padding: clamp(14px, 1.8vw, 22px) clamp(22px, 2vw, 34px) 0;
     border-top: 1px solid rgba(203, 212, 219, .92);
     overflow: auto;
+    scrollbar-width: thin;
   }
 
   .product-view__desktop-info .product-view__reassurance {

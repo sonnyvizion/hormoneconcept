@@ -4013,6 +4013,17 @@
 
     let accordionAnimating = false;
 
+    // Chrome renders <details> non-summary children through an internal
+    // anonymous box, so flex-shrink on accordionBodyEl can't be trusted to
+    // cap its height to the panel's available space. Compute that budget
+    // ourselves and clamp max-height to a hard pixel value instead.
+    const getAccordionBodyBudget = () => {
+      const accordionRect = accordionEl.getBoundingClientRect();
+      const summaryRect = accordionSummaryEl.getBoundingClientRect();
+      const marginTop = Number.parseFloat(getComputedStyle(accordionBodyEl).marginTop) || 0;
+      return Math.max(0, accordionRect.bottom - summaryRect.bottom - marginTop);
+    };
+
     const animateAccordionOpen = () => {
       const firstTop = accordionSummaryEl.getBoundingClientRect().top;
 
@@ -4027,28 +4038,31 @@
         accordionSummaryEl.style.transform = `translateY(${deltaY}px)`;
       }
 
+      const targetHeight = Math.min(accordionBodyEl.scrollHeight, getAccordionBodyBudget());
+
       window.requestAnimationFrame(() => {
         accordionSummaryEl.style.transition = 'transform .38s cubic-bezier(.22, 1, .36, 1)';
         accordionSummaryEl.style.transform = '';
         accordionBodyEl.style.transition = 'max-height .38s cubic-bezier(.22, 1, .36, 1) .08s';
-        accordionBodyEl.style.maxHeight = `${accordionBodyEl.scrollHeight}px`;
+        accordionBodyEl.style.maxHeight = `${targetHeight}px`;
       });
 
       window.setTimeout(() => {
         accordionSummaryEl.style.transition = '';
         accordionBodyEl.style.transition = '';
-        accordionBodyEl.style.maxHeight = '';
         accordionBodyEl.style.overflow = '';
+        accordionBodyEl.style.maxHeight = `${getAccordionBodyBudget()}px`;
         accordionAnimating = false;
       }, 480);
     };
 
     const animateAccordionClose = () => {
       const firstTop = accordionSummaryEl.getBoundingClientRect().top;
+      const currentHeight = accordionBodyEl.getBoundingClientRect().height;
 
       accordionBodyEl.style.transition = 'none';
       accordionBodyEl.style.overflow = 'hidden';
-      accordionBodyEl.style.maxHeight = `${accordionBodyEl.scrollHeight}px`;
+      accordionBodyEl.style.maxHeight = `${currentHeight}px`;
       accordionBodyEl.getBoundingClientRect();
       accordionBodyEl.style.transition = 'max-height .3s ease';
       accordionBodyEl.style.maxHeight = '0px';
