@@ -12676,6 +12676,11 @@ body.template-search .site-footer.site-footer--showcase {
 
   .product-view__desktop-description > :first-child {
     margin-top: 0;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
   }
 
   .product-view__desktop-description > :last-child {
