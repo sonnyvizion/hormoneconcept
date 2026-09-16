@@ -12554,7 +12554,7 @@ body.template-search .site-footer.site-footer--showcase {
     overflow: hidden;
   }
 
-  .product-view__desktop-lane:last-child {
+  .product-view__desktop-lane--right {
     border-right: 0;
   }
 
