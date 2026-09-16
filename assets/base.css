@@ -165,7 +165,8 @@ body:not(.template-index) main {
   );
 }
 
-body.template-product main {
+body.template-product main,
+body.template-product-classic main {
   padding-top: calc(
     var(--hero-shell-inset)
     + (var(--site-header-shell-padding) * 2)
@@ -12496,26 +12497,26 @@ body.template-search .site-footer.site-footer--showcase {
 }
 
 @media (min-width: 1351px) {
-  .main-product {
+  body:not(.template-product-classic) .main-product {
     padding-bottom: 0;
   }
 
-  .site-page-shell--product {
+  body:not(.template-product-classic) .site-page-shell--product {
     padding-inline: calc(var(--hero-shell-inset) + 2px);
   }
 
-  .collection-slider--product-suggestions .collection-slider__inner {
+  body:not(.template-product-classic) .collection-slider--product-suggestions .collection-slider__inner {
     padding-inline: calc(var(--hero-shell-inset) + 2px);
   }
 
-  .collection-slider--product-suggestions::before {
+  body:not(.template-product-classic) .collection-slider--product-suggestions::before {
     inset:
       var(--collection-slider-frame-top-gap)
       calc(var(--hero-shell-inset) + 2px)
       var(--collection-slider-frame-bottom-gap);
   }
 
-  .site-page-shell--product .product-breadcrumb {
+  body:not(.template-product-classic) .site-page-shell--product .product-breadcrumb {
     /* left/width/top are set in JS (initDesktopProductGallery) to match
        product-view__desktop-info's actual rendered box exactly, since the
        two don't share the same positioning container. These are just an
@@ -12534,7 +12535,7 @@ body.template-search .site-footer.site-footer--showcase {
     border: 1px solid rgba(255, 255, 255, .96);
   }
 
-  .site-page-shell--product .product-view {
+  body:not(.template-product-classic) .site-page-shell--product .product-view {
     --product-desktop-stage-height: max(720px, calc(100svh - 154px));
     display: block;
     min-height: var(--product-desktop-stage-height);
@@ -12543,7 +12544,7 @@ body.template-search .site-footer.site-footer--showcase {
     isolation: isolate;
   }
 
-  .product-view__media {
+  body:not(.template-product-classic) .product-view__media {
     display: none;
   }
 
@@ -12651,12 +12652,12 @@ body.template-search .site-footer.site-footer--showcase {
     transform: translate(-50%, -65%) rotate(45deg);
   }
 
-  .product-view__details,
-  .product-form-v2 {
+  body:not(.template-product-classic) .product-view__details,
+  body:not(.template-product-classic) .product-form-v2 {
     display: contents;
   }
 
-  .product-view__panel--intro {
+  body:not(.template-product-classic) .product-view__panel--intro {
     display: none;
   }
 
@@ -12707,7 +12708,7 @@ body.template-search .site-footer.site-footer--showcase {
   }
 
   .product-view__desktop-info .product-view__title {
-    font-size: clamp(1.65rem, 2vw, 2.35rem);
+    font-size: 1vw;
     line-height: 1.08;
   }
 
@@ -12827,11 +12828,11 @@ body.template-search .site-footer.site-footer--showcase {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .product-description--full {
+  body:not(.template-product-classic) .product-description--full {
     display: none;
   }
 
-  .product-description--remainder {
+  body:not(.template-product-classic) .product-description--remainder {
     display: block;
   }
 
@@ -12842,7 +12843,7 @@ body.template-search .site-footer.site-footer--showcase {
 }
 
 @media (min-width: 1351px) and (max-height: 820px) {
-  .site-page-shell--product .product-view {
+  body:not(.template-product-classic) .site-page-shell--product .product-view {
     --product-desktop-stage-height: max(650px, calc(100svh - 132px));
   }
 
