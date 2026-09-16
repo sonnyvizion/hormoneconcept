@@ -1,0 +1,295 @@
+<script>
+  (() => {
+    const key = 'hormone-concept-loader-seen';
+    let shouldShow = true;
+
+    try {
+      shouldShow = sessionStorage.getItem(key) !== 'true';
+      if (shouldShow) sessionStorage.setItem(key, 'true');
+    } catch (_) {}
+
+    if (shouldShow && !Shopify.designMode) {
+      document.documentElement.classList.add('site-loader-pending');
+    }
+  })();
+</script>
+
+<div class="site-loader" data-site-loader aria-hidden="true">
+  <p class="site-loader__brand" data-site-loader-copy data-final="HORMONE CONCEPT">HORMONE CONCEPT</p>
+
+  <div class="site-loader__media" aria-hidden="true">
+    <video
+      class="site-loader__video site-loader__video--desktop"
+      data-site-loader-video
+      muted
+      playsinline
+      preload="none"
+      poster="{{ 'catalog-sneakers-loader-poster.png' | asset_url }}"
+    >
+      <source data-src="{{ 'catalog-sneakers-transparent.mov' | asset_url }}" type='video/quicktime; codecs="hvc1"'>
+      <source data-src="{{ 'catalog-sneakers-transparent.webm' | asset_url }}" type="video/webm">
+    </video>
+    <video
+      class="site-loader__video site-loader__video--mobile"
+      data-site-loader-video
+      muted
+      playsinline
+      preload="none"
+      poster="{{ 'catalog-sneakers-loader-poster.png' | asset_url }}"
+    >
+      <source data-src="{{ 'catalog-sneakers-mobile.mp4' | asset_url }}" type="video/mp4">
+    </video>
+
+    <div class="site-loader__progress">
+      <div class="site-loader__progress-track">
+        <span class="site-loader__progress-fill" data-site-loader-progress-fill></span>
+      </div>
+      <span class="site-loader__progress-value" data-site-loader-progress-value>0%</span>
+    </div>
+  </div>
+
+  <p class="site-loader__welcome" data-site-loader-copy data-final="BIENVENUE">BIENVENUE</p>
+</div>
+
+<style>
+  html.site-loader-pending,
+  html.site-loader-pending body {
+    overflow: hidden;
+  }
+
+  .site-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: none;
+    place-items: center;
+    overflow: hidden;
+    color: #f4f0ec;
+    background: #2a2327;
+    font-family: inherit;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .site-loader-pending .site-loader {
+    display: grid;
+  }
+
+  .site-loader__brand,
+  .site-loader__welcome {
+    position: absolute;
+    left: 50%;
+    z-index: 2;
+    margin: 0;
+    transform: translateX(-50%);
+    font-size: clamp(11px, .9vw, 14px);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: .22em;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0;
+    animation: site-loader-copy 3.5s ease forwards;
+  }
+
+  .site-loader__brand {
+    top: clamp(28px, 5vh, 56px);
+  }
+
+  .site-loader__welcome {
+    bottom: clamp(28px, 5vh, 56px);
+  }
+
+  .site-loader__media {
+    position: relative;
+    isolation: isolate;
+    width: 15vw;
+    aspect-ratio: 1;
+    background: #2a2327;
+    opacity: 0;
+    animation: site-loader-media 3.5s ease forwards;
+  }
+
+  .site-loader__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: lighten;
+  }
+
+  .site-loader__video--mobile {
+    display: none;
+  }
+
+  .site-loader__progress {
+    position: absolute;
+    top: calc(100% + 16px);
+    left: 0;
+    width: 100%;
+  }
+
+  .site-loader__progress-track {
+    width: 100%;
+    height: 1px;
+    overflow: hidden;
+    background: rgba(244, 240, 236, .22);
+  }
+
+  .site-loader__progress-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #f4f0ec;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  .site-loader__progress-value {
+    display: block;
+    margin-top: 7px;
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: .12em;
+    text-align: right;
+  }
+
+  .site-loader.is-leaving {
+    pointer-events: none;
+    animation: site-loader-exit .8s cubic-bezier(.76, 0, .24, 1) forwards;
+  }
+
+  @keyframes site-loader-copy {
+    0%, 4% { opacity: 0; }
+    10%, 82% { opacity: .9; }
+    100% { opacity: 0; }
+  }
+
+  @keyframes site-loader-media {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes site-loader-exit {
+    to { transform: translateY(-100%); }
+  }
+
+  @media (max-width: 749px) {
+    .site-loader__media {
+      width: 28vw;
+    }
+
+    .site-loader__video--desktop {
+      display: none;
+    }
+
+    .site-loader__video--mobile {
+      display: block;
+      mix-blend-mode: screen;
+      -webkit-mix-blend-mode: screen;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-loader__media {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    .site-loader__brand,
+    .site-loader__welcome {
+      animation: none;
+      opacity: .9;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const loader = document.querySelector('[data-site-loader]');
+    const root = document.documentElement;
+    if (!loader || !root.classList.contains('site-loader-pending')) {
+      loader?.remove();
+      return;
+    }
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mobile = window.matchMedia('(max-width: 749px)').matches;
+    const videos = [...loader.querySelectorAll('[data-site-loader-video]')];
+    const activeVideo = videos[mobile ? 1 : 0];
+    const copyElements = [...loader.querySelectorAll('[data-site-loader-copy]')];
+    const progressFill = loader.querySelector('[data-site-loader-progress-fill]');
+    const progressValue = loader.querySelector('[data-site-loader-progress-value]');
+
+    const scrambleReveal = (element, delay) => {
+      const finalText = element.dataset.final || element.textContent || '';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const duration = 1400;
+      const frameDuration = 42;
+      const stepDuration = duration / finalText.length;
+
+      element.style.width = `${element.getBoundingClientRect().width}px`;
+      element.textContent = '';
+
+      window.setTimeout(() => {
+        const startedAt = performance.now();
+        const timer = window.setInterval(() => {
+          const elapsed = performance.now() - startedAt;
+          const activeIndex = Math.min(Math.floor(elapsed / stepDuration), finalText.length);
+          const prefix = finalText.slice(0, activeIndex);
+          const activeChar = finalText.charAt(activeIndex);
+          const scramblingChar = activeChar && !/\s/.test(activeChar)
+            ? chars[Math.floor(Math.random() * chars.length)]
+            : activeChar;
+
+          element.textContent = `${prefix}${scramblingChar}`;
+
+          if (activeIndex >= finalText.length) {
+            window.clearInterval(timer);
+            element.textContent = finalText;
+          }
+        }, frameDuration);
+      }, delay);
+    };
+
+    if (reducedMotion) {
+      copyElements.forEach((element) => {
+        element.textContent = element.dataset.final || element.textContent;
+      });
+    } else {
+      copyElements.forEach((element, index) => scrambleReveal(element, 180 + (index * 240)));
+    }
+
+    if (!reducedMotion && activeVideo) {
+      activeVideo.querySelectorAll('source[data-src]').forEach((source) => {
+        source.src = source.dataset.src;
+      });
+      activeVideo.load();
+      activeVideo.playbackRate = 1.5;
+      activeVideo.play().catch(() => {});
+    }
+
+    const duration = reducedMotion ? 700 : 3500;
+    const progressStartedAt = performance.now();
+    const updateProgress = (now) => {
+      const progress = Math.min((now - progressStartedAt) / duration, 1);
+      const percentage = Math.round(progress * 100);
+
+      if (progressFill) progressFill.style.transform = `scaleX(${progress})`;
+      if (progressValue) progressValue.textContent = `${percentage}%`;
+      if (progress < 1) window.requestAnimationFrame(updateProgress);
+    };
+
+    window.requestAnimationFrame(updateProgress);
+    window.setTimeout(() => {
+      loader.classList.add('is-leaving');
+      window.setTimeout(() => {
+        root.classList.remove('site-loader-pending');
+        loader.remove();
+      }, 850);
+    }, duration);
+  })();
+</script>

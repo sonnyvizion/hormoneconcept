@@ -1,0 +1,286 @@
+{% if section.settings.enabled %}
+  <aside
+    id="ReassuranceBar-{{ section.id }}"
+    class="reassurance-bar"
+    data-reassurance-bar
+    data-interval="{{ section.settings.rotation_speed | times: 1000 }}"
+    style="--reassurance-bg: #2a2327; --reassurance-ink: #f5f1f3;"
+    aria-label="Informations"
+  >
+    <p class="reassurance-bar__text" data-reassurance-text aria-live="polite"></p>
+    <div hidden>
+      {% for index in (1..4) %}
+        {% assign message_key = 'message_' | append: index %}
+        {% assign message = section.settings[message_key] %}
+        {% if message != blank %}
+          <span data-reassurance-message>{{ message | escape }}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </aside>
+
+  <style>
+    :root {
+      --reassurance-bar-height: 22px;
+    }
+
+    .reassurance-bar {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 61;
+      display: grid;
+      place-items: center;
+      height: var(--reassurance-bar-height);
+      overflow: hidden;
+      color: var(--reassurance-ink);
+      background: var(--reassurance-bg);
+      transform: translateY(0);
+      transition: transform .34s cubic-bezier(.22, .61, .36, 1);
+    }
+
+    .reassurance-bar.is-scroll-hidden {
+      transform: translateY(-100%);
+    }
+
+    .shopify-section .reassurance-bar .reassurance-bar__text {
+      display: block;
+      min-height: 1em;
+      margin: 0;
+      font-family: inherit;
+      font-size: 9px !important;
+      font-weight: 500;
+      line-height: 1 !important;
+      letter-spacing: .14em !important;
+      text-transform: uppercase !important;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    body:has(.reassurance-bar) .site-header {
+      top: calc(var(--hero-shell-inset) + var(--reassurance-bar-height));
+    }
+
+    body:has(.reassurance-bar) .site-header.is-scroll-hidden {
+      --site-header-scroll-offset: calc(
+        -100%
+        - var(--hero-shell-inset)
+        - var(--reassurance-bar-height)
+        - 10px
+      );
+    }
+
+    body:has(.reassurance-bar) .header-menu__panel {
+      top: calc(
+        var(--reassurance-bar-height)
+        + var(--hero-shell-inset)
+        + (var(--site-header-shell-padding) * 2)
+        + var(--site-header-height)
+        + 6px
+      );
+    }
+
+    body:not(.template-index):not(.template-collection):not(.template-search):has(.reassurance-bar) main {
+      padding-top: calc(
+        var(--reassurance-bar-height)
+        + var(--hero-shell-inset)
+        + (var(--site-header-shell-padding) * 2)
+        + var(--site-header-height)
+        + var(--site-header-gap)
+      );
+    }
+
+    @media (min-width: 641px) {
+      body.template-collection:has(.reassurance-bar) .catalog-page-panel,
+      body.template-search:has(.reassurance-bar) .catalog-page-panel.main-search__hero {
+        padding-top: calc(
+          var(--reassurance-bar-height)
+          + var(--hero-shell-inset)
+          + (var(--site-header-shell-padding) * 2)
+          + var(--site-header-height)
+          + 10px
+        );
+      }
+    }
+
+    @media (max-width: 749px) {
+      :root {
+        --reassurance-bar-height: 21px;
+      }
+
+      .shopify-section .reassurance-bar .reassurance-bar__text {
+        max-width: calc(100vw - 24px);
+        overflow: hidden;
+        font-size: 9px !important;
+        letter-spacing: .1em !important;
+      }
+
+      body.template-collection:has(.reassurance-bar) .catalog-page-panel,
+      body.template-search:has(.reassurance-bar) .catalog-page-panel.main-search__hero {
+        padding-top: calc(
+          var(--reassurance-bar-height)
+          + var(--hero-shell-inset)
+          + var(--site-header-height)
+          + 34px
+        );
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reassurance-bar {
+        transition: none;
+      }
+    }
+  </style>
+
+  <script>
+    (() => {
+      const bar = document.getElementById('ReassuranceBar-{{ section.id }}');
+      if (!bar || bar.dataset.initialized === 'true') return;
+      bar.dataset.initialized = 'true';
+
+      const output = bar.querySelector('[data-reassurance-text]');
+      const messages = [...bar.querySelectorAll('[data-reassurance-message]')]
+        .map((element) => element.textContent.trim())
+        .filter(Boolean);
+      const interval = Math.max(Number(bar.dataset.interval) || 4000, 2500);
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let messageIndex = 0;
+      let revealTimer = 0;
+      let rotationTimer = 0;
+
+      const reveal = (text) => {
+        window.clearInterval(revealTimer);
+        output.style.width = 'auto';
+        output.textContent = text;
+        output.style.width = `${Math.ceil(output.getBoundingClientRect().width)}px`;
+
+        if (reduceMotion) return;
+
+        output.textContent = '';
+        const duration = Math.min(1300, Math.max(650, text.length * 72));
+        const stepDuration = duration / text.length;
+        const startedAt = performance.now();
+
+        revealTimer = window.setInterval(() => {
+          const activeIndex = Math.min(
+            Math.floor((performance.now() - startedAt) / stepDuration),
+            text.length
+          );
+          const prefix = text.slice(0, activeIndex);
+          const activeChar = text.charAt(activeIndex);
+          const scramblingChar = activeChar && !/\s/.test(activeChar)
+            ? chars[Math.floor(Math.random() * chars.length)]
+            : activeChar;
+
+          output.textContent = `${prefix}${scramblingChar}`;
+
+          if (activeIndex >= text.length) {
+            window.clearInterval(revealTimer);
+            output.textContent = text;
+          }
+        }, 42);
+      };
+
+      if (messages.length) {
+        reveal(messages[0]);
+        if (messages.length > 1 && !reduceMotion) {
+          rotationTimer = window.setInterval(() => {
+            messageIndex = (messageIndex + 1) % messages.length;
+            reveal(messages[messageIndex]);
+          }, interval);
+        }
+      }
+
+      const connectToHeader = () => {
+        const header = document.querySelector('.site-header');
+        if (!header) return;
+
+        const syncWithHeader = () => {
+          bar.classList.toggle('is-scroll-hidden', header.classList.contains('is-scroll-hidden'));
+        };
+        new MutationObserver(syncWithHeader).observe(header, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
+        syncWithHeader();
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', connectToHeader, { once: true });
+      } else {
+        connectToHeader();
+      }
+
+      document.addEventListener('shopify:section:unload', (event) => {
+        if (event.detail.sectionId !== '{{ section.id }}') return;
+        window.clearInterval(revealTimer);
+        window.clearInterval(rotationTimer);
+      }, { once: true });
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Bandeau reassurance",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Afficher le bandeau",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Couleur du fond",
+      "default": "#EFF0F0"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Couleur du texte",
+      "default": "#2A2327"
+    },
+    {
+      "type": "range",
+      "id": "rotation_speed",
+      "label": "Temps par phrase",
+      "min": 3,
+      "max": 8,
+      "step": 1,
+      "default": 4,
+      "unit": "s"
+    },
+    {
+      "type": "text",
+      "id": "message_1",
+      "label": "Phrase 1",
+      "default": "RETRAIT EN BOUTIQUE DISPONIBLE"
+    },
+    {
+      "type": "text",
+      "id": "message_2",
+      "label": "Phrase 2",
+      "default": "PAIEMENT SÉCURISÉ"
+    },
+    {
+      "type": "text",
+      "id": "message_3",
+      "label": "Phrase 3",
+      "default": "PRODUITS AUTHENTIQUES"
+    },
+    {
+      "type": "text",
+      "id": "message_4",
+      "label": "Phrase 4"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bandeau reassurance"
+    }
+  ]
+}
+{% endschema %}

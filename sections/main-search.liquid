@@ -123,9 +123,10 @@
                             <h3 class="catalog-grid__title">{{ item.title | upcase }}</h3>
                             <p class="catalog-grid__price">
                               {% if item.price_varies %}
-                                À PARTIR DE {{ item.price_min | money }}
+                                <span class="catalog-grid__price-prefix">À PARTIR DE</span>
+                                <span class="catalog-grid__price-amount">{{ item.price_min | money }}</span>
                               {% else %}
-                                {{ item.price | money }}
+                                <span class="catalog-grid__price-amount">{{ item.price | money }}</span>
                               {% endif %}
                               {% if item.compare_at_price > item.price %}
                                 <s class="catalog-grid__compare-price">{{ item.compare_at_price | money }}</s>

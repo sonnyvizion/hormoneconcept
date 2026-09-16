@@ -6,6 +6,8 @@
 
 <section
   class="store-showcase"
+  data-store-showcase
+  data-store-time-zone="Europe/Paris"
   style="
     --store-showcase-height: {{ section.settings.image_height }};
     --store-showcase-frame-color: {{ section.settings.frame_color }};
@@ -29,6 +31,10 @@
               class: 'store-showcase__image',
               alt: image_alt
           }}
+          <span class="store-showcase__status" data-store-status hidden>
+            <span class="store-showcase__status-light" aria-hidden="true"></span>
+            <span class="store-showcase__status-label" data-store-status-label></span>
+          </span>
         </picture>
       {% else %}
         <div class="store-showcase__placeholder"></div>
@@ -59,33 +65,38 @@
       <div class="store-showcase__hours">
         {% if section.blocks.size > 0 %}
           {% for block in section.blocks %}
-            <div class="store-showcase__hours-row" {{ block.shopify_attributes }}>
+            <div
+              class="store-showcase__hours-row"
+              data-store-day="{{ block.settings.day | escape }}"
+              data-store-hours="{{ block.settings.hours | escape }}"
+              {{ block.shopify_attributes }}
+            >
               <span class="store-showcase__day">{{ block.settings.day }}</span>
               <span class="store-showcase__time">{{ block.settings.hours }}</span>
             </div>
           {% endfor %}
         {% else %}
-          <div class="store-showcase__hours-row">
+          <div class="store-showcase__hours-row" data-store-day="LUNDI" data-store-hours="11:00 - 18:00">
             <span class="store-showcase__day">LUNDI</span>
             <span class="store-showcase__time">11:00 - 18:00</span>
           </div>
-          <div class="store-showcase__hours-row">
+          <div class="store-showcase__hours-row" data-store-day="MARDI" data-store-hours="11:00 - 18:00">
             <span class="store-showcase__day">MARDI</span>
             <span class="store-showcase__time">11:00 - 18:00</span>
           </div>
-          <div class="store-showcase__hours-row">
+          <div class="store-showcase__hours-row" data-store-day="MERCREDI" data-store-hours="11:00 - 18:00">
             <span class="store-showcase__day">MERCREDI</span>
             <span class="store-showcase__time">11:00 - 18:00</span>
           </div>
-          <div class="store-showcase__hours-row">
+          <div class="store-showcase__hours-row" data-store-day="JEUDI" data-store-hours="11:00 - 18:00">
             <span class="store-showcase__day">JEUDI</span>
             <span class="store-showcase__time">11:00 - 18:00</span>
           </div>
-          <div class="store-showcase__hours-row">
+          <div class="store-showcase__hours-row" data-store-day="VENDREDI" data-store-hours="11:00 - 18:00">
             <span class="store-showcase__day">VENDREDI</span>
             <span class="store-showcase__time">11:00 - 18:00</span>
           </div>
-          <div class="store-showcase__hours-row">
+          <div class="store-showcase__hours-row" data-store-day="SAMEDI" data-store-hours="11:00 - 18:00">
             <span class="store-showcase__day">SAMEDI</span>
             <span class="store-showcase__time">11:00 - 18:00</span>
           </div>
@@ -94,6 +105,123 @@
     </div>
   </div>
 </section>
+
+<script>
+  (() => {
+    const dayIndexes = {
+      dimanche: 0,
+      lundi: 1,
+      mardi: 2,
+      mercredi: 3,
+      jeudi: 4,
+      vendredi: 5,
+      samedi: 6
+    };
+    const dayLabels = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'];
+
+    const normalize = (value) => String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+    const parseTime = (value) => {
+      const match = String(value || '').match(/(\d{1,2})\s*[:hH]\s*(\d{2})/);
+      if (!match) return null;
+      const hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      if (hours > 23 || minutes > 59) return null;
+      return (hours * 60) + minutes;
+    };
+
+    const formatTime = (minutes) => {
+      const hours = Math.floor(minutes / 60);
+      const remainder = minutes % 60;
+      if (hours === 12 && remainder === 0) return 'MIDI';
+      if (hours === 0 && remainder === 0) return 'MINUIT';
+      return `${hours}H${remainder ? String(remainder).padStart(2, '0') : ''}`;
+    };
+
+    const initStoreStatus = (root = document) => {
+      root.querySelectorAll('[data-store-showcase]').forEach((sectionEl) => {
+        if (sectionEl.dataset.storeStatusInit === 'true') return;
+        sectionEl.dataset.storeStatusInit = 'true';
+
+        const statusEl = sectionEl.querySelector('[data-store-status]');
+        const labelEl = sectionEl.querySelector('[data-store-status-label]');
+        if (!statusEl || !labelEl) return;
+
+        const schedule = new Map();
+        sectionEl.querySelectorAll('[data-store-day][data-store-hours]').forEach((rowEl) => {
+          const dayIndex = dayIndexes[normalize(rowEl.dataset.storeDay)];
+          const times = String(rowEl.dataset.storeHours || '').match(/\d{1,2}\s*[:hH]\s*\d{2}/g) || [];
+          const opensAt = parseTime(times[0]);
+          const closesAt = parseTime(times[1]);
+          if (dayIndex === undefined || opensAt === null || closesAt === null) return;
+          schedule.set(dayIndex, { opensAt, closesAt });
+        });
+
+        const updateStatus = () => {
+          if (!sectionEl.isConnected) return;
+          const timeZone = sectionEl.dataset.storeTimeZone || 'Europe/Paris';
+          const parts = new Intl.DateTimeFormat('fr-FR', {
+            timeZone,
+            weekday: 'long',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23'
+          }).formatToParts(new Date());
+          const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+          const currentDay = dayIndexes[normalize(values.weekday)];
+          const currentMinutes = (Number(values.hour) * 60) + Number(values.minute);
+          const today = schedule.get(currentDay);
+          const isOpen = today && currentMinutes >= today.opensAt && currentMinutes < today.closesAt;
+
+          statusEl.classList.toggle('is-open', !!isOpen);
+          statusEl.classList.toggle('is-closed', !isOpen);
+
+          if (isOpen) {
+            labelEl.textContent = `OUVERT · JUSQU'À ${formatTime(today.closesAt)}`;
+            statusEl.hidden = false;
+            return;
+          }
+
+          let nextOpening = null;
+          for (let offset = 0; offset <= 7; offset += 1) {
+            const dayIndex = (currentDay + offset) % 7;
+            const hours = schedule.get(dayIndex);
+            if (!hours || (offset === 0 && currentMinutes >= hours.opensAt)) continue;
+            nextOpening = { offset, dayIndex, opensAt: hours.opensAt };
+            break;
+          }
+
+          if (!nextOpening) {
+            labelEl.textContent = 'FERMÉ';
+          } else if (nextOpening.offset === 0) {
+            labelEl.textContent = `FERMÉ · OUVRE AUJOURD'HUI À ${formatTime(nextOpening.opensAt)}`;
+          } else if (nextOpening.offset === 1) {
+            labelEl.textContent = `FERMÉ · OUVRE DEMAIN À ${formatTime(nextOpening.opensAt)}`;
+          } else {
+            labelEl.textContent = `FERMÉ · OUVRE ${dayLabels[nextOpening.dayIndex]} À ${formatTime(nextOpening.opensAt)}`;
+          }
+          statusEl.hidden = false;
+        };
+
+        updateStatus();
+        const intervalId = window.setInterval(() => {
+          if (!sectionEl.isConnected) {
+            window.clearInterval(intervalId);
+            return;
+          }
+          updateStatus();
+        }, 60000);
+      });
+    };
+
+    initStoreStatus();
+    document.addEventListener('shopify:section:load', (event) => initStoreStatus(event.target));
+  })();
+</script>
 
 {% schema %}
 {

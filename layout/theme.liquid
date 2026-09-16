@@ -16,15 +16,24 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    {% # theme-check-disable RemoteAsset %}
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    {% # theme-check-enable RemoteAsset %}
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
+    {{ 'paragraph-font.css' | asset_url | stylesheet_tag }}
     <script src="{{ 'lenis.min.js' | asset_url }}" defer></script>
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'search-kicker-scramble.js' | asset_url }}" defer></script>
   </head>
   <body class="template-{{ template | replace: '.', '-' | handle }}">
+    {% if request.page_type == 'index' %}
+      {% render 'site-loader' %}
+    {% endif %}
+
     <a class="skip-link" href="#main-content">Aller au contenu</a>
 
+    {% section 'reassurance-bar' %}
     {% section 'header' %}
 
     <main id="main-content" role="main">
