@@ -12545,6 +12545,18 @@ body.template-search .site-footer.site-footer--showcase {
     border-right: 0;
   }
 
+  .product-view__desktop-lane--left::after,
+  .product-view__desktop-lane--right::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(216, 219, 221, .32);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    pointer-events: none;
+  }
+
   .product-view__desktop-track {
     position: absolute;
     inset: 0 0 auto;
