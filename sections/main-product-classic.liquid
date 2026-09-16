@@ -1,0 +1,570 @@
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign selector_label = 'OPTIONS'
+  assign featured_image = current_variant.featured_image | default: product.featured_image
+  assign product_style_id = product.metafields.custom.style_id.value | default: product.metafields.custom.style_id | default: current_variant.metafields.custom.style_id.value | default: current_variant.metafields.custom.style_id
+  if product_style_id == blank
+    assign product_style_id_candidate = current_variant.sku | strip
+    assign product_style_id_candidate_compact = product_style_id_candidate | downcase | remove: ' '
+    assign product_style_id_candidate_prefix = product_style_id_candidate_compact | slice: 0, 4
+    assign product_style_id_candidate_size = product_style_id_candidate | size
+    assign product_handle_lower = product.handle | downcase
+    assign product_style_id_candidate_lower = product_style_id_candidate | downcase
+    assign variant_title_lower = current_variant.title | downcase | strip
+    assign product_style_id_candidate_contains_handle = false
+    if product_handle_lower != blank and product_style_id_candidate_lower contains product_handle_lower
+      assign product_style_id_candidate_contains_handle = true
+    endif
+    if product_style_id_candidate != blank and product_style_id_candidate_size >= 4 and product_style_id_candidate_size <= 32 and product_style_id_candidate_prefix != 'size' and product_style_id_candidate_lower != variant_title_lower and product_style_id_candidate_contains_handle == false
+      assign product_style_id = product_style_id_candidate
+    endif
+  endif
+  assign product_style_id_suffix_markers = '-US M | US M |-US |-EU | EU |-UK | UK |-SIZE | SIZE | -L|-M|-S|-XL|-XS|-XXL'
+  assign product_style_id_suffix_marker_list = product_style_id_suffix_markers | split: '|'
+  for suffix_marker in product_style_id_suffix_marker_list
+    if product_style_id contains suffix_marker
+      assign product_style_id = product_style_id | split: suffix_marker | first | strip
+      break
+    endif
+  endfor
+  if product_style_id == blank and product.handle == 'vans-otw-era-95-satoshi-nakamoto-round-lucky-charm'
+    assign product_style_id = 'VN000EFEBLK'
+  endif
+
+  assign product_tags_normalized = product.tags | join: ',' | downcase
+  assign has_stockx_tag = false
+  if product_tags_normalized contains 'stockx'
+    assign has_stockx_tag = true
+  endif
+
+  assign product_delivery_window = 'standard'
+  assign product_delivery_setting = product.metafields.custom.delivery_window.value | default: product.metafields.custom.delivery_window
+  assign product_delivery_setting_normalized = product_delivery_setting | downcase | strip
+  if product_delivery_setting_normalized != blank
+    if product_delivery_setting_normalized contains '5' or product_delivery_setting_normalized contains 'stockx'
+      assign product_delivery_window = 'extended'
+    else
+      assign product_delivery_window = 'standard'
+    endif
+  elsif has_stockx_tag
+    assign product_delivery_window = 'extended'
+  endif
+
+  assign current_delivery_window = product_delivery_window
+  assign current_variant_delivery_setting = current_variant.metafields.custom.delivery_window.value | default: current_variant.metafields.custom.delivery_window
+  assign current_variant_delivery_setting_normalized = current_variant_delivery_setting | downcase | strip
+  if current_variant_delivery_setting_normalized != blank
+    if current_variant_delivery_setting_normalized contains '5' or current_variant_delivery_setting_normalized contains 'stockx'
+      assign current_delivery_window = 'extended'
+    else
+      assign current_delivery_window = 'standard'
+    endif
+  endif
+
+  if product.has_only_default_variant == false and product.options.size == 1
+    assign selector_label = product.options.first | upcase
+  endif
+
+  assign product_type_handle = product.type | handleize
+  assign product_type_collection = collections[product_type_handle]
+  if product_type_collection != blank
+    assign product_type_url = product_type_collection.url
+  else
+    capture product_type_url
+      echo routes.collections_url
+      echo '/types?q='
+      echo product.type | url_encode
+    endcapture
+  endif
+
+  assign product_vendor_handle = product.vendor | handleize
+  assign product_vendor_collection = collections[product_vendor_handle]
+  if product_vendor_collection != blank
+    assign product_vendor_url = product_vendor_collection.url
+  else
+    capture product_vendor_url
+      echo routes.collections_url
+      echo '/vendors?q='
+      echo product.vendor | url_encode
+    endcapture
+  endif
+
+  assign product_type_lower = product.type | downcase
+  assign is_sneaker = false
+  if product_type_lower contains 'sneaker' or product_type_lower contains 'chaussure' or product_type_lower contains 'footwear' or product_type_lower contains 'boot' or product_type_lower contains 'sandal' or product_type_lower contains 'mule'
+    assign is_sneaker = true
+  endif
+
+  assign product_description_first = blank
+  assign product_description_remainder = product.description
+  if product.description contains '</p>'
+    assign product_description_first = product.description | split: '</p>' | first | append: '</p>'
+    assign product_description_remainder = product.description | remove_first: product_description_first
+  endif
+%}
+
+<section class="main-product">
+  <div class="container">
+    <div class="site-page-shell site-page-shell--product">
+      <nav class="product-breadcrumb" aria-label="Fil d'Ariane">
+        <a href="{{ routes.root_url }}">ACCUEIL</a>
+        {% if collection %}
+          <span aria-hidden="true">/</span>
+          <a href="{{ collection.url }}">{{ collection.title | upcase }}</a>
+        {% elsif product.collections.first %}
+          <span aria-hidden="true">/</span>
+          <a href="{{ product.collections.first.url }}">{{ product.collections.first.title | upcase }}</a>
+        {% endif %}
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ product.title | upcase }}</span>
+      </nav>
+
+      <div class="product-view" data-product-view>
+        <div class="product-view__media">
+          <div class="product-view__media-frame">
+            {% if featured_image %}
+              <img
+                class="product-view__media-image"
+                src="{{ featured_image | image_url: width: 1800 }}"
+                alt="{{ featured_image.alt | default: product.title | escape }}"
+                width="{{ featured_image.width }}"
+                height="{{ featured_image.height }}"
+                loading="eager"
+                data-product-main-media
+                data-media-id="{{ featured_image.id }}"
+              >
+            {% else %}
+              <div class="ph-img"></div>
+            {% endif %}
+          </div>
+
+          {% if featured_image and product.images.size > 1 %}
+            <div class="product-view__media-controls collection-slider__badge collection-slider__badge--controls">
+              <button class="collection-slider__control product-view__media-arrow product-view__media-arrow--prev is-disabled" type="button" data-product-media-prev aria-label="Image precedente">
+                <span aria-hidden="true"></span>
+              </button>
+              <button class="collection-slider__control product-view__media-arrow product-view__media-arrow--next" type="button" data-product-media-next aria-label="Image suivante">
+                <span aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div
+              class="product-view__media-thumbs"
+              aria-label="Galerie produit"
+              style="--product-media-thumb-count: {{ product.images.size }};"
+            >
+              {% for image in product.images %}
+                {% if forloop.index <= 5 %}
+                  <button
+                    class="product-view__media-thumb{% if image.id == featured_image.id %} is-active{% endif %}"
+                    data-media-id="{{ image.id }}"
+                    data-media-index="{{ forloop.index0 }}"
+                    data-product-media-thumb
+                    data-media-src="{{ image | image_url: width: 1800 }}"
+                    data-media-alt="{{ image.alt | default: product.title | escape }}"
+                    aria-pressed="{% if image.id == featured_image.id %}true{% else %}false{% endif %}"
+                    aria-label="Afficher l'image {{ forloop.index }}"
+                    type="button"
+                  >
+                    <span
+                      class="product-view__media-thumb-frame"
+                      style="--product-thumb-image: url('{{ image | image_url: width: 240 }}');"
+                    >
+                      <span class="product-view__media-thumb-image" aria-hidden="true"></span>
+                    </span>
+                  </button>
+                {% elsif forloop.index == 6 %}
+                  <button
+                    class="product-view__media-thumb product-view__media-thumb--overflow"
+                    data-media-id="{{ image.id }}"
+                    data-media-index="{{ forloop.index0 }}"
+                    data-product-media-thumb
+                    data-product-media-overflow
+                    data-media-src="{{ image | image_url: width: 1800 }}"
+                    data-media-alt="{{ image.alt | default: product.title | escape }}"
+                    aria-pressed="false"
+                    aria-label="Afficher les images suivantes"
+                    type="button"
+                  >
+                    <span class="product-view__media-thumb-frame">
+                      <span class="product-view__media-thumb-more" aria-hidden="true">...</span>
+                    </span>
+                  </button>
+                {% else %}
+                  <button
+                    class="product-view__media-thumb product-view__media-thumb--hidden"
+                    data-media-id="{{ image.id }}"
+                    data-media-index="{{ forloop.index0 }}"
+                    data-product-media-thumb
+                    data-media-src="{{ image | image_url: width: 1800 }}"
+                    data-media-alt="{{ image.alt | default: product.title | escape }}"
+                    aria-pressed="false"
+                    aria-hidden="true"
+                    tabindex="-1"
+                    type="button"
+                  >
+                    <span
+                      class="product-view__media-thumb-frame"
+                      style="--product-thumb-image: url('{{ image | image_url: width: 240 }}');"
+                    >
+                      <span class="product-view__media-thumb-image" aria-hidden="true"></span>
+                    </span>
+                  </button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="product-view__details">
+          {% form 'product', product, class: 'product-form-v2', data-product-form: '' %}
+            <input
+              type="hidden"
+              name="id"
+              value="{{ current_variant.id }}"
+              data-product-variant-id
+            >
+
+          <div class="product-view__panel product-view__panel--intro">
+            <div class="product-view__meta-pills" aria-label="Informations produit">
+              {% if product.type != blank %}
+                <a class="product-view__meta-pill" href="{{ product_type_url | strip }}">{{ product.type | upcase }}</a>
+              {% endif %}
+              {% render 'brand-mark', brand: product.vendor, class: 'product-view__meta-pill product-view__meta-pill--brand', link_url: product_vendor_url %}
+            </div>
+            <h1 class="product-view__title">{{ product.title | upcase }}</h1>
+            <p class="product-view__style-id" data-product-style-id{% if product_style_id == blank %} hidden{% endif %}>
+              SKU: <span data-product-style-id-value>{{ product_style_id | escape }}</span>
+            </p>
+
+            {% unless product.has_only_default_variant %}
+              <div class="product-view__intro-selector">
+                <div class="product-form-v2__selector-tools">
+                  {% if is_sneaker %}
+                    <div class="product-form-v2__unit-switch" role="group" aria-label="Changer l'unite de pointure">
+                      <button
+                        class="product-form-v2__unit-button is-active"
+                        type="button"
+                        data-size-unit-toggle
+                        data-size-unit="EU"
+                        aria-pressed="true"
+                      >
+                        EU
+                      </button>
+                      <button
+                        class="product-form-v2__unit-button"
+                        type="button"
+                        data-size-unit-toggle
+                        data-size-unit="US"
+                        aria-pressed="false"
+                      >
+                        US M
+                      </button>
+                    </div>
+                  {% endif %}
+                  <button
+                    class="product-form-v2__guide-link"
+                    type="button"
+                    data-size-guide-open
+                    aria-controls="ProductSizeGuide-{{ section.id }}"
+                    aria-expanded="false"
+                  >
+                    GUIDE DES TAILLES
+                  </button>
+                </div>
+                <div class="product-form-v2__pills" role="radiogroup" aria-label="{{ selector_label }}">
+                  {% for variant in product.variants %}
+                    {% assign pill_id = 'ProductVariant-' | append: section.id | append: '-' | append: variant.id %}
+                    {% liquid
+                      assign variant_style_id = product.metafields.custom.style_id.value | default: product.metafields.custom.style_id | default: variant.metafields.custom.style_id.value | default: variant.metafields.custom.style_id
+                      if variant_style_id == blank
+                        assign variant_style_id_candidate = variant.sku | strip
+                        assign variant_style_id_candidate_compact = variant_style_id_candidate | downcase | remove: ' '
+                        assign variant_style_id_candidate_prefix = variant_style_id_candidate_compact | slice: 0, 4
+                        assign variant_style_id_candidate_size = variant_style_id_candidate | size
+                        assign variant_style_id_candidate_lower = variant_style_id_candidate | downcase
+                        assign variant_title_lower = variant.title | downcase | strip
+                        assign variant_style_id_candidate_contains_handle = false
+                        if product_handle_lower != blank and variant_style_id_candidate_lower contains product_handle_lower
+                          assign variant_style_id_candidate_contains_handle = true
+                        endif
+                        if variant_style_id_candidate != blank and variant_style_id_candidate_size >= 4 and variant_style_id_candidate_size <= 32 and variant_style_id_candidate_prefix != 'size' and variant_style_id_candidate_lower != variant_title_lower and variant_style_id_candidate_contains_handle == false
+                          assign variant_style_id = variant_style_id_candidate
+                        endif
+                      endif
+                      for suffix_marker in product_style_id_suffix_marker_list
+                        if variant_style_id contains suffix_marker
+                          assign variant_style_id = variant_style_id | split: suffix_marker | first | strip
+                          break
+                        endif
+                      endfor
+                    %}
+                    <input
+                      class="product-form-v2__pill-input visually-hidden"
+                      type="radio"
+                      id="{{ pill_id }}"
+                      name="product-variant-pill"
+                      value="{{ variant.id }}"
+                      data-variant-pill
+                      data-variant-label="{{ variant.title | escape }}"
+                      data-variant-price="{{ variant.price | money | escape }}"
+                      data-variant-price-cents="{{ variant.price }}"
+                      data-variant-style-id="{{ variant_style_id | escape }}"
+                      data-variant-available="{% if variant.available %}true{% else %}false{% endif %}"
+                      {% liquid
+                        assign variant_delivery_window = product_delivery_window
+                        assign variant_delivery_setting = variant.metafields.custom.delivery_window.value | default: variant.metafields.custom.delivery_window
+                        assign variant_delivery_setting_normalized = variant_delivery_setting | downcase | strip
+                        if variant_delivery_setting_normalized != blank
+                          if variant_delivery_setting_normalized contains '5' or variant_delivery_setting_normalized contains 'stockx'
+                            assign variant_delivery_window = 'extended'
+                          else
+                            assign variant_delivery_window = 'standard'
+                          endif
+                        endif
+                      %}
+                      data-variant-delivery-window="{{ variant_delivery_window }}"
+                      {% unless variant.available %}disabled{% endunless %}
+                      {% if variant.id == current_variant.id %}checked{% endif %}
+                    >
+                    <label class="product-form-v2__pill{% unless variant.available %} is-sold-out{% endunless %}" for="{{ pill_id }}" {% unless variant.available %}aria-disabled="true"{% endunless %}>
+                      <span data-variant-pill-label>{{ variant.title | upcase }}</span>
+                      <span class="product-form-v2__pill-price" data-variant-pill-price>{{ variant.price | money }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+                <div
+                  class="product-size-guide"
+                  id="ProductSizeGuide-{{ section.id }}"
+                  data-size-guide
+                  hidden
+                >
+                  <div class="product-size-guide__backdrop" data-size-guide-close></div>
+                  <div class="product-size-guide__dialog" role="dialog" aria-modal="true" aria-labelledby="ProductSizeGuideTitle-{{ section.id }}">
+                    <div class="product-size-guide__panel">
+                      <div class="product-size-guide__head">
+                        <button class="product-size-guide__close" type="button" aria-label="Fermer le guide des tailles" data-size-guide-close>
+                          <span aria-hidden="true"></span>
+                        </button>
+                        <p class="product-size-guide__title" id="ProductSizeGuideTitle-{{ section.id }}">Guide des tailles</p>
+                      </div>
+                      <div class="product-size-guide__table-wrap">
+                        {% if is_sneaker %}
+                          <table class="product-size-guide__table">
+                            <thead>
+                              <tr>
+                                <th>EU</th>
+                                <th>US MEN</th>
+                                <th>UK</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td>35.5</td><td>3.5</td><td>3</td></tr>
+                              <tr><td>36</td><td>4</td><td>3.5</td></tr>
+                              <tr><td>36.5</td><td>4.5</td><td>4</td></tr>
+                              <tr><td>37.5</td><td>5</td><td>4.5</td></tr>
+                              <tr><td>38</td><td>5.5</td><td>5</td></tr>
+                              <tr><td>38.5</td><td>6</td><td>5.5</td></tr>
+                              <tr><td>39</td><td>6.5</td><td>6</td></tr>
+                              <tr><td>40</td><td>7</td><td>6.5</td></tr>
+                              <tr><td>40.5</td><td>7.5</td><td>7</td></tr>
+                              <tr><td>41</td><td>8</td><td>7.5</td></tr>
+                              <tr><td>42</td><td>8.5</td><td>8</td></tr>
+                              <tr><td>42.5</td><td>9</td><td>8.5</td></tr>
+                              <tr><td>43</td><td>9.5</td><td>9</td></tr>
+                              <tr><td>44</td><td>10</td><td>9.5</td></tr>
+                              <tr><td>44.5</td><td>10.5</td><td>10</td></tr>
+                              <tr><td>45</td><td>11</td><td>10.5</td></tr>
+                              <tr><td>45.5</td><td>11.5</td><td>11</td></tr>
+                              <tr><td>46</td><td>12</td><td>11.5</td></tr>
+                              <tr><td>47</td><td>12.5</td><td>12</td></tr>
+                              <tr><td>47.5</td><td>13</td><td>12.5</td></tr>
+                            </tbody>
+                          </table>
+                        {% else %}
+                          <table class="product-size-guide__table">
+                            <thead>
+                              <tr>
+                                <th>TAILLE</th>
+                                <th>TOUR DE POITRINE</th>
+                                <th>TOUR DE TAILLE</th>
+                                <th>TOUR DE HANCHES</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr><td>XS</td><td>82 – 87 cm</td><td>66 – 71 cm</td><td>88 – 93 cm</td></tr>
+                              <tr><td>S</td><td>88 – 93 cm</td><td>72 – 77 cm</td><td>94 – 99 cm</td></tr>
+                              <tr><td>M</td><td>94 – 99 cm</td><td>78 – 83 cm</td><td>100 – 105 cm</td></tr>
+                              <tr><td>L</td><td>100 – 105 cm</td><td>84 – 89 cm</td><td>106 – 111 cm</td></tr>
+                              <tr><td>XL</td><td>106 – 111 cm</td><td>90 – 95 cm</td><td>112 – 117 cm</td></tr>
+                              <tr><td>XXL</td><td>112 – 117 cm</td><td>96 – 101 cm</td><td>118 – 123 cm</td></tr>
+                            </tbody>
+                          </table>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endunless %}
+            <div class="product-delivery-pills" aria-label="Délais de livraison" data-product-delivery-pills data-delivery-window="{{ current_delivery_window }}">
+              <span class="product-delivery-pill{% if current_delivery_window == 'standard' %} is-active{% endif %}" tabindex="0" data-product-delivery-option="standard">
+                <span class="product-delivery-pill__dot" aria-hidden="true"></span>
+                <span>Livraison 24/48h</span>
+                <span class="product-delivery-pill__tooltip" role="tooltip">
+                  Livraison standard 24/48h en France métropolitaine. Retours gratuits sous 14 jours.
+                </span>
+              </span>
+              <span class="product-delivery-pill{% if current_delivery_window == 'extended' %} is-active{% endif %}" tabindex="0" data-product-delivery-option="extended">
+                <span class="product-delivery-pill__dot" aria-hidden="true"></span>
+                <span>Livraison 5 à 12 jours</span>
+                <span class="product-delivery-pill__tooltip" role="tooltip">
+                  Livraison sous 5 à 12 jours ouvrés. Approvisionné via notre réseau de revendeurs partenaires. Retours gratuits sous 14 jours.
+                </span>
+              </span>
+            </div>
+          </div>
+
+            <div class="product-view__panel product-view__panel--purchase">
+              <div class="product-view__purchase-sticky-placeholder" data-product-purchase-placeholder hidden></div>
+              <div class="product-form-v2__purchase-actions" data-product-purchase-panel>
+                <button
+                  class="button product-form-v2__submit product-form-v2__submit--split"
+                  type="submit"
+                  data-product-submit
+                  {% unless current_variant.available %}disabled{% endunless %}
+                >
+                  <span class="product-form-v2__submit-label" data-product-submit-label>
+                    {% if current_variant.available %}
+                      AJOUTER AU PANIER
+                    {% else %}
+                      INDISPONIBLE
+                    {% endif %}
+                  </span>
+                  <span class="product-form-v2__submit-price" id="ProductPrice-{{ section.id }}" data-product-price data-product-price-cents="{{ current_variant.price }}" aria-live="polite">{{ current_variant.price | money }}</span>
+                </button>
+              </div>
+
+              <div
+                class="product-view__express"
+                data-product-payment-panel
+                {% unless current_variant.available %}hidden{% endunless %}
+              >
+                <div class="product-view__express-grid">
+                  <div class="product-view__express-payment">
+                    {{ form | payment_button }}
+                  </div>
+                </div>
+              </div>
+
+              {% if shop.enabled_payment_types.size > 0 %}
+                <div class="product-view__payments" aria-label="Moyens de paiement acceptes">
+                  <p class="product-view__payments-title">PAIEMENT SECURISE</p>
+                  <ul class="product-view__payment-list" role="list">
+                    {% for type in shop.enabled_payment_types %}
+                      <li class="product-view__payment-item">
+                        {{ type | payment_type_svg_tag: class: 'product-view__payment-icon' }}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="product-view__reassurance" data-product-reassurance>
+              <div class="product-view__reassurance-tabs" role="tablist" aria-label="Informations de réassurance">
+                <button
+                  class="product-view__reassurance-tab is-active"
+                  type="button"
+                  role="tab"
+                  id="ProductReassuranceAuth-{{ section.id }}"
+                  aria-controls="ProductReassuranceAuthPanel-{{ section.id }}"
+                  aria-selected="true"
+                  data-product-reassurance-tab
+                >
+                  Authenticité
+                </button>
+                <button
+                  class="product-view__reassurance-tab"
+                  type="button"
+                  role="tab"
+                  id="ProductReassuranceDelivery-{{ section.id }}"
+                  aria-controls="ProductReassuranceDeliveryPanel-{{ section.id }}"
+                  aria-selected="false"
+                  data-product-reassurance-tab
+                >
+                  Livraison et retours
+                </button>
+                <button
+                  class="product-view__reassurance-tab"
+                  type="button"
+                  role="tab"
+                  id="ProductReassurancePayment-{{ section.id }}"
+                  aria-controls="ProductReassurancePaymentPanel-{{ section.id }}"
+                  aria-selected="false"
+                  data-product-reassurance-tab
+                >
+                  Paiement sécurisé
+                </button>
+                <span class="product-view__reassurance-indicator" aria-hidden="true" data-product-reassurance-indicator></span>
+              </div>
+              <div
+                class="product-view__reassurance-panel is-active"
+                id="ProductReassuranceAuthPanel-{{ section.id }}"
+                role="tabpanel"
+                aria-labelledby="ProductReassuranceAuth-{{ section.id }}"
+                data-product-reassurance-panel
+              >
+                <p>Chaque article est contrôlé par notre équipe avant expédition afin de garantir son authenticité et son état.</p>
+              </div>
+              <div
+                class="product-view__reassurance-panel"
+                id="ProductReassuranceDeliveryPanel-{{ section.id }}"
+                role="tabpanel"
+                aria-labelledby="ProductReassuranceDelivery-{{ section.id }}"
+                data-product-reassurance-panel
+                hidden
+              >
+                <p>Livraison suivie et retours gratuits sous 14 jours, selon les conditions indiquées au moment du paiement.</p>
+              </div>
+              <div
+                class="product-view__reassurance-panel"
+                id="ProductReassurancePaymentPanel-{{ section.id }}"
+                role="tabpanel"
+                aria-labelledby="ProductReassurancePayment-{{ section.id }}"
+                data-product-reassurance-panel
+                hidden
+              >
+                <p>Paiement chiffré et sécurisé via Shopify Payments, avec les moyens de paiement disponibles au checkout.</p>
+              </div>
+            </div>
+          {% endform %}
+
+          {% if product.description != blank %}
+            <details class="product-accordion">
+              <summary class="product-accordion__summary">
+                <span>MORE DESCRIPTION</span>
+              </summary>
+              <div class="product-accordion__body">
+                <div class="rte product-description product-description--full">
+                  {{ product.description }}
+                </div>
+                <div class="rte product-description product-description--remainder">
+                  {{ product_description_remainder }}
+                </div>
+              </div>
+            </details>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Main product (classic)",
+  "settings": []
+}
+{% endschema %}
