@@ -12646,7 +12646,6 @@ body.template-search .site-footer.site-footer--showcase {
     display: flex;
     flex-direction: column;
     gap: 0;
-    height: calc(100% - clamp(44px, 6vh, 84px));
     padding: 0;
     overflow: hidden;
   }

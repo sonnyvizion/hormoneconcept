@@ -4187,13 +4187,32 @@
     nextButton?.addEventListener('click', () => goToIndex(activeIndex + 1));
     productViewEl.addEventListener('wheel', handleWheel, { passive: false });
 
+    let infoHeightRelockTimer = null;
+
+    const lockInfoHeight = () => {
+      if (!desktopQuery.matches || accordionEl?.hasAttribute('open')) return;
+      infoDockEl.style.height = '';
+      const naturalHeight = infoDockEl.getBoundingClientRect().height;
+      infoDockEl.style.height = naturalHeight ? `${naturalHeight}px` : '';
+    };
+
+    const scheduleInfoHeightRelock = () => {
+      if (infoHeightRelockTimer) window.clearTimeout(infoHeightRelockTimer);
+      infoHeightRelockTimer = window.setTimeout(lockInfoHeight, 120);
+    };
+
     const syncDesktopMode = () => {
       moveDesktopContent();
-      window.requestAnimationFrame(() => renderGalleryPosition(false));
+      window.requestAnimationFrame(() => {
+        renderGalleryPosition(false);
+        lockInfoHeight();
+      });
     };
 
     if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', syncDesktopMode);
     else desktopQuery.addListener(syncDesktopMode);
+
+    window.addEventListener('resize', scheduleInfoHeightRelock);
 
     const galleryResizeObserver = new ResizeObserver(() => renderGalleryPosition(false));
     galleryResizeObserver.observe(galleryEl);
