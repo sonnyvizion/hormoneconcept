@@ -3996,6 +3996,9 @@
           const marker = origins.get(element);
           marker?.parentNode?.insertBefore(element, marker.nextSibling);
         });
+        productViewEl.style.top = '';
+        infoDockEl.style.height = '';
+        if (breadcrumbEl) breadcrumbEl.style.top = '';
         return;
       }
 
@@ -4206,6 +4209,8 @@
     productViewEl.addEventListener('wheel', handleWheel, { passive: false });
 
     let infoHeightRelockTimer = null;
+    const breadcrumbEl = productViewEl.closest('.site-page-shell--product')?.querySelector('.product-breadcrumb') || null;
+    const breadcrumbGap = 10;
 
     const lockInfoHeight = () => {
       if (!desktopQuery.matches || accordionEl?.hasAttribute('open')) return;
@@ -4215,9 +4220,41 @@
       infoDockEl.style.height = naturalHeight ? `${naturalHeight}px` : '';
     };
 
+    // product-view__desktop-info is vertically centered inside product-view, so
+    // its top edge moves depending on the (now-locked) card height. Position the
+    // breadcrumb to sit right above wherever that top edge currently is, and
+    // push product-view down just enough to make room when a tall card leaves
+    // no space above it for the breadcrumb. Left/width are read straight off
+    // the card's own rendered box instead of duplicating its CSS formula, since
+    // the breadcrumb and the card don't share the same containing block.
+    const layoutBreadcrumb = () => {
+      if (!desktopQuery.matches || !breadcrumbEl) return;
+      productViewEl.style.top = '0px';
+      const stageHeight = productViewEl.getBoundingClientRect().height;
+      const cardHeight = infoDockEl.getBoundingClientRect().height;
+      const cardTopWithinStage = (stageHeight - cardHeight) / 2;
+      const breadcrumbHeight = breadcrumbEl.getBoundingClientRect().height;
+      // product-view already has position:relative (base rule) — shift it with
+      // `top` rather than margin-top, since a margin here would collapse with
+      // site-page-shell--product (no border/padding-top separating them) and
+      // silently drag the breadcrumb's own offsetParent down with it.
+      const neededShift = Math.max(0, Math.ceil(breadcrumbHeight + breadcrumbGap - cardTopWithinStage));
+
+      productViewEl.style.top = `${neededShift}px`;
+      breadcrumbEl.style.top = `${neededShift + cardTopWithinStage - breadcrumbHeight - breadcrumbGap}px`;
+
+      const parentRect = (breadcrumbEl.offsetParent || breadcrumbEl.parentElement).getBoundingClientRect();
+      const infoRect = infoDockEl.getBoundingClientRect();
+      breadcrumbEl.style.left = `${infoRect.left - parentRect.left}px`;
+      breadcrumbEl.style.width = `${infoRect.width}px`;
+    };
+
     const scheduleInfoHeightRelock = () => {
       if (infoHeightRelockTimer) window.clearTimeout(infoHeightRelockTimer);
-      infoHeightRelockTimer = window.setTimeout(lockInfoHeight, 120);
+      infoHeightRelockTimer = window.setTimeout(() => {
+        lockInfoHeight();
+        layoutBreadcrumb();
+      }, 120);
     };
 
     const syncDesktopMode = () => {
@@ -4225,6 +4262,7 @@
       window.requestAnimationFrame(() => {
         renderGalleryPosition(false);
         lockInfoHeight();
+        layoutBreadcrumb();
       });
     };
 

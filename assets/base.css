@@ -12505,12 +12505,16 @@ body.template-search .site-footer.site-footer--showcase {
   }
 
   .site-page-shell--product .product-breadcrumb {
-    position: relative;
+    /* left/width/top are set in JS (initDesktopProductGallery) to match
+       product-view__desktop-info's actual rendered box exactly, since the
+       two don't share the same positioning container. These are just an
+       unstyled-flash fallback before that JS runs. */
+    position: absolute;
     z-index: 12;
     display: block;
-    width: calc(33.333% - clamp(20px, 2.2vw, 38px) - 2px);
-    max-width: calc(33.333% - clamp(20px, 2.2vw, 38px) - 2px);
-    margin: 0 0 -1px calc(clamp(10px, 1.2vw, 20px) + 1px);
+    left: clamp(10px, 1.2vw, 20px);
+    width: calc(33.333% - clamp(20px, 2.2vw, 38px));
+    margin: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
