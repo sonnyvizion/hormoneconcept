@@ -7694,6 +7694,8 @@ a.product-view__meta-pill:focus-visible {
 .product-accordion__body .product-description,
 .product-accordion__body .product-description p,
 .product-accordion__body .product-description li {
+  width: 100%;
+  color: rgba(18, 27, 37, .72);
   font-family: var(--font-body-clean);
   font-size: 12px !important;
   font-weight: 400 !important;
@@ -12669,9 +12671,25 @@ body.template-search .site-footer.site-footer--showcase {
 
   .product-view__desktop-description {
     margin-top: clamp(24px, 2vw, 34px);
-    color: rgba(16, 25, 36, .78);
-    font-size: clamp(.76rem, .72vw, .9rem);
-    line-height: 1.45;
+    width: 100%;
+    color: rgba(18, 27, 37, .72);
+    font-family: var(--font-body-clean);
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.55 !important;
+    text-transform: none !important;
+  }
+
+  .product-view__desktop-description p,
+  .product-view__desktop-description li {
+    color: inherit;
+    font-family: var(--font-body-clean);
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.55 !important;
+    text-transform: none !important;
   }
 
   .product-view__desktop-description > :first-child {
