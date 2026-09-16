@@ -1,0 +1,16 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product-classic",
+      "settings": {}
+    },
+    "product_suggestions": {
+      "type": "product-collection-slider",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "product_suggestions"
+  ]
+}
