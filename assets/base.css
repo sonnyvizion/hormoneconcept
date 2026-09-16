@@ -12504,6 +12504,17 @@ body.template-search .site-footer.site-footer--showcase {
     padding-inline: calc(var(--hero-shell-inset) + 2px);
   }
 
+  .collection-slider--product-suggestions .collection-slider__inner {
+    padding-inline: calc(var(--hero-shell-inset) + 2px);
+  }
+
+  .collection-slider--product-suggestions::before {
+    inset:
+      var(--collection-slider-frame-top-gap)
+      calc(var(--hero-shell-inset) + 2px)
+      var(--collection-slider-frame-bottom-gap);
+  }
+
   .site-page-shell--product .product-breadcrumb {
     /* left/width/top are set in JS (initDesktopProductGallery) to match
        product-view__desktop-info's actual rendered box exactly, since the
