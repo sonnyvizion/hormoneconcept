@@ -1,15 +1,35 @@
 <section class="sneaker-cleaning-page sneaker-cleaning-page--simple">
   <div class="container">
     <div class="sneaker-cleaning-page__inner">
+      <aside
+        class="sneaker-cleaning-page__notice-bar"
+        data-cleaning-notice
+        data-interval="4000"
+        aria-label="Informations boutique"
+      >
+        <p class="sneaker-cleaning-page__notice-text" data-cleaning-notice-text aria-live="polite"></p>
+        <div hidden>
+          {% for index in (1..3) %}
+            {% assign notice_key = 'notice_' | append: index %}
+            {% assign notice = section.settings[notice_key] %}
+            {% if notice != blank %}
+              <span data-cleaning-notice-message>{{ notice | escape }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </aside>
+
       <header class="sneaker-cleaning-page__head">
         {% if section.settings.kicker != blank %}
           <p class="site-page-kicker">[ {{ section.settings.kicker | escape }} ]</p>
         {% endif %}
+
         {% if section.settings.title != blank %}
-          <h1>{{ section.settings.title | escape }}</h1>
+          <h1>{{ section.settings.title | escape | newline_to_br }}</h1>
         {% endif %}
+
         {% if section.settings.text != blank %}
-          <p>{{ section.settings.text | escape }}</p>
+          <div class="sneaker-cleaning-page__intro rte">{{ section.settings.text }}</div>
         {% endif %}
       </header>
 
@@ -18,24 +38,72 @@
           {% if section.settings.pricing_kicker != blank %}
             <p class="site-page-kicker">[ {{ section.settings.pricing_kicker | escape }} ]</p>
           {% endif %}
-          {% if section.settings.pricing_title != blank %}
-            <h2>{{ section.settings.pricing_title | escape }}</h2>
-          {% endif %}
         </div>
 
+        {% if section.settings.pricing_title != blank %}
+          <h2 class="sneaker-cleaning-page__pricing-title">{{ section.settings.pricing_title | escape }}</h2>
+        {% endif %}
+
         <div class="sneaker-cleaning-page__pricing-grid">
+          {% assign price_index = 0 %}
           {% for block in section.blocks %}
             {% if block.type == 'price' %}
+              {% assign price_index = price_index | plus: 1 %}
               <article class="sneaker-cleaning-page__price-card" {{ block.shopify_attributes }}>
-                {% if block.settings.service != blank %}
-                  <h3>{{ block.settings.service | escape }}</h3>
-                {% endif %}
-                {% if block.settings.description != blank %}
-                  <p>{{ block.settings.description | escape }}</p>
-                {% endif %}
-                {% if block.settings.price != blank %}
-                  <span>{{ block.settings.price | escape }}</span>
-                {% endif %}
+                <div class="sneaker-cleaning-page__price-card-top">
+                  <span class="sneaker-cleaning-page__price-index">// 00{{ price_index }}</span>
+                </div>
+
+                <div class="sneaker-cleaning-page__price-card-copy">
+                  {% if block.settings.service != blank %}
+                    {% assign service_handle = block.settings.service | handleize %}
+                    <div class="sneaker-cleaning-page__price-card-heading">
+                      <h3
+                        data-cleaning-scramble
+                        {% if service_handle == 'nettoyage-classique' or service_handle == 'option-express' %}
+                          data-cleaning-two-lines
+                        {% endif %}
+                      >{{ block.settings.service | escape }}</h3>
+                      {% unless block.settings.description contains '€' %}
+                        {% if block.settings.price != blank %}
+                          <span class="sneaker-cleaning-page__price">{{ block.settings.price | escape }}</span>
+                        {% endif %}
+                      {% endunless %}
+                    </div>
+                  {% endif %}
+                  {% if block.settings.description != blank %}
+                    {% if block.settings.description contains '€' %}
+                      {% assign price_lines = block.settings.description | split: '·' %}
+                      <div class="sneaker-cleaning-page__price-lines">
+                        {% for price_line in price_lines %}
+                          {% assign clean_price_line = price_line | strip %}
+                          {% assign price_parts = clean_price_line | split: ' ' %}
+                          {% assign price_amount = price_parts | last %}
+                          {% assign price_label = clean_price_line | remove_last: price_amount | strip %}
+                          <span class="sneaker-cleaning-page__price-line">
+                            {% if price_label != blank %}
+                              <span class="sneaker-cleaning-page__price-label">{{ price_label | escape }}</span>
+                            {% endif %}
+                            <span class="sneaker-cleaning-page__price-amount">{{ price_amount | escape }}</span>
+                          </span>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <p>{{ block.settings.description | escape }}</p>
+                    {% endif %}
+                  {% endif %}
+                  {% if block.settings.detail_title != blank or block.settings.detail_text != blank %}
+                    <div class="sneaker-cleaning-page__service-detail">
+                      {% if block.settings.detail_title != blank %}
+                        <h4>{{ block.settings.detail_title | escape }}</h4>
+                      {% endif %}
+                      {% if block.settings.detail_text != blank %}
+                        <p class="sneaker-cleaning-page__service-detail-text">{{ block.settings.detail_text | escape }}</p>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+
               </article>
             {% endif %}
           {% endfor %}
@@ -81,12 +149,158 @@
   </div>
 </section>
 
+{% javascript %}
+  (() => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const revealTitle = (title) => {
+      const finalText = title.dataset.scrambleText;
+      title.classList.add('is-visible');
+
+      if (reducedMotion) {
+        title.textContent = finalText;
+        return;
+      }
+
+      const startedAt = performance.now();
+      const duration = 850;
+
+      const scramble = (now) => {
+        const progress = Math.min((now - startedAt) / duration, 1);
+        const resolvedCharacters = Math.floor(progress * finalText.length);
+        title.textContent = Array.from(finalText, (character, index) => {
+          if (/\s/.test(character) || index < resolvedCharacters) return character;
+          return characters[Math.floor(Math.random() * characters.length)];
+        }).join('');
+
+        if (progress < 1) requestAnimationFrame(scramble);
+        else title.textContent = finalText;
+      };
+
+      requestAnimationFrame(scramble);
+    };
+
+    const initializeTitles = (root = document) => {
+      root.querySelectorAll('[data-cleaning-scramble]:not([data-scramble-ready])').forEach((title) => {
+        const sourceText = title.textContent.trim();
+        title.dataset.scrambleText = title.hasAttribute('data-cleaning-two-lines')
+          ? sourceText.replace(' ', '\n')
+          : sourceText;
+        title.dataset.scrambleReady = 'true';
+
+        if (reducedMotion) {
+          revealTitle(title);
+          return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            revealTitle(entry.target);
+            observer.unobserve(entry.target);
+          });
+        }, { threshold: 0.2 });
+
+        observer.observe(title);
+      });
+    };
+
+    const initializeNotices = (root = document) => {
+      root.querySelectorAll('[data-cleaning-notice]:not([data-notice-ready])').forEach((bar) => {
+        bar.dataset.noticeReady = 'true';
+        const output = bar.querySelector('[data-cleaning-notice-text]');
+        const messages = [...bar.querySelectorAll('[data-cleaning-notice-message]')]
+          .map((message) => message.textContent.trim())
+          .filter(Boolean);
+        const interval = Math.max(Number(bar.dataset.interval) || 4000, 2500);
+        let messageIndex = 0;
+        let revealTimer = 0;
+
+        const revealMessage = (text) => {
+          window.clearInterval(revealTimer);
+          output.style.width = 'auto';
+          output.textContent = text;
+          output.style.width = `${Math.ceil(output.getBoundingClientRect().width)}px`;
+
+          if (reducedMotion) return;
+
+          output.textContent = '';
+          const duration = Math.min(1300, Math.max(650, text.length * 72));
+          const stepDuration = duration / text.length;
+          const startedAt = performance.now();
+
+          revealTimer = window.setInterval(() => {
+            const activeIndex = Math.min(
+              Math.floor((performance.now() - startedAt) / stepDuration),
+              text.length
+            );
+            const prefix = text.slice(0, activeIndex);
+            const activeCharacter = text.charAt(activeIndex);
+            const scramblingCharacter = activeCharacter && !/\s/.test(activeCharacter)
+              ? characters[Math.floor(Math.random() * characters.length)]
+              : activeCharacter;
+
+            output.textContent = `${prefix}${scramblingCharacter}`;
+
+            if (activeIndex >= text.length) {
+              window.clearInterval(revealTimer);
+              output.textContent = text;
+            }
+          }, 42);
+        };
+
+        if (!messages.length) return;
+        revealMessage(messages[0]);
+
+        if (messages.length > 1 && !reducedMotion) {
+          window.setInterval(() => {
+            messageIndex = (messageIndex + 1) % messages.length;
+            revealMessage(messages[messageIndex]);
+          }, interval);
+        }
+      });
+    };
+
+    const initializeCleaningSection = (root = document) => {
+      initializeTitles(root);
+      initializeNotices(root);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => initializeCleaningSection(), { once: true });
+    } else {
+      initializeCleaningSection();
+    }
+
+    document.addEventListener('shopify:section:load', (event) => initializeCleaningSection(event.target));
+  })();
+{% endjavascript %}
+
 {% schema %}
 {
   "name": "Sneaker cleaning page",
   "settings": [
     {
       "type": "text",
+      "id": "notice_1",
+      "label": "Mention bandeau 1",
+      "default": "DISPONIBLE EN BOUTIQUE"
+    },
+    {
+      "type": "text",
+      "id": "notice_2",
+      "label": "Mention bandeau 2",
+      "default": "MAGASIN AU 102 RUE DE LONGCHAMP"
+    },
+    {
+      "type": "text",
+      "id": "notice_3",
+      "label": "Mention bandeau 3",
+      "default": "OPTION EXPRESS — DISPONIBLE EN 24/48H"
+    },
+    {
+      "type": "textarea",
       "id": "kicker",
       "label": "Kicker",
       "default": "SERVICE"
@@ -161,6 +375,18 @@
           "id": "price",
           "label": "Prix",
           "default": "35€"
+        },
+        {
+          "type": "text",
+          "id": "detail_title",
+          "label": "Titre du detail",
+          "default": "Nettoyage complet"
+        },
+        {
+          "type": "textarea",
+          "id": "detail_text",
+          "label": "Detail du service",
+          "default": "Nettoyage approfondi de la paire, des lacets et des semelles."
         }
       ]
     }

@@ -160,15 +160,6 @@
 </aside>
 
 <div class="header-menu__panel" id="HeaderMenuPanel-{{ section.id }}" data-mobile-nav-panel data-lenis-prevent="true">
-  <button
-    class="header-menu__close"
-    type="button"
-    data-mobile-nav-close
-    aria-label="Fermer le menu"
-  >
-    <span aria-hidden="true">&times;</span>
-  </button>
-
   <div class="header-menu__views" data-menu-views>
     <div class="header-menu__view is-active" data-menu-view="root">
       <div class="header-menu__view-head">
@@ -180,18 +171,6 @@
           {{ section.settings.drawer_view_all_label | default: 'Tout voir' }}
         </a>
       </div>
-
-      {% if section.settings.header_inline_menu != blank and section.settings.header_inline_menu.links.size > 0 %}
-        <ul class="header-menu__drawer-featured" aria-label="{{ section.settings.header_inline_menu.title | escape }}" role="list">
-          {% for link in section.settings.header_inline_menu.links limit: 3 %}
-            <li class="header-menu__list-item">
-              <a class="header-menu__list-row" href="{{ link.url }}">
-                <span class="header-menu__list-label">{{ link.title }}</span>
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
 
       <ul class="header-menu__list">
         {% if section.blocks.size > 0 %}
@@ -417,7 +396,7 @@
       "type": "link_list",
       "id": "header_inline_menu",
       "label": "Menu entre burger et logo",
-      "info": "Les 3 premiers liens sont affichés sur desktop et ajoutés au menu hamburger sur mobile."
+      "info": "Les 3 premiers liens sont affichés uniquement sur desktop."
     },
     {
       "type": "image_picker",

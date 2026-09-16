@@ -9,18 +9,15 @@
   assign collection_header_mobile_video_asset = ''
   assign collection_header_poster_asset = ''
   assign collection_title_handle = collection.title | handleize
-  if collection.handle == 'accessoire' or collection_title_handle == 'accessoire' or collection.handle == 'accessoires' or collection_title_handle == 'accessoires'
-    assign collection_header_video_asset = 'catalog-head-accessoire.webm'
-    assign collection_header_mobile_video_asset = 'catalog-accessoires-mobile.mp4'
-    assign collection_header_poster_asset = 'catalog-accessoires-poster.png'
-  elsif collection.handle == 'vetement' or collection_title_handle == 'vetement' or collection.handle == 'vetements' or collection_title_handle == 'vetements'
-    assign collection_header_video_asset = 'catalog-head-vetement.webm'
-    assign collection_header_mobile_video_asset = 'catalog-vetements-mobile.mp4'
-    assign collection_header_poster_asset = 'catalog-vetements-video-poster.jpg'
-  elsif collection.handle == 'sneakers' or collection_title_handle == 'sneakers' or collection.handle == 'sneaker' or collection_title_handle == 'sneaker' or collection.handle == 'baskets' or collection_title_handle == 'baskets'
-    assign collection_header_video_asset = 'catalog-head-sneakers.webm'
-    assign collection_header_mobile_video_asset = 'catalog-sneakers-mobile.mp4'
-    assign collection_header_poster_asset = 'catalog-sneakers-poster.jpg'
+  if collection.handle == 'accessoire' or collection_title_handle == 'accessoire' or collection.handle == 'accessoires' or collection_title_handle == 'accessoires' or collection.handle == 'casquettes' or collection_title_handle == 'casquettes' or collection.handle == 'chrome-hearts' or collection_title_handle == 'chrome-hearts'
+    assign collection_header_video_asset = 'catalog-accessoires-transparent.webm'
+    assign collection_header_mobile_video_asset = 'catalog-accessoires-transparent.mov'
+  elsif collection.handle == 'vetement' or collection_title_handle == 'vetement' or collection.handle == 'vetements' or collection_title_handle == 'vetements' or collection.handle == 't-shirts' or collection_title_handle == 't-shirts' or collection.handle == 'sicko' or collection_title_handle == 'sicko' or collection.handle == 'signatures' or collection_title_handle == 'signatures'
+    assign collection_header_video_asset = 'catalog-vetements-transparent.webm'
+    assign collection_header_mobile_video_asset = 'catalog-vetements-transparent.mov'
+  elsif collection.handle == 'sneakers' or collection_title_handle == 'sneakers' or collection.handle == 'sneaker' or collection_title_handle == 'sneaker' or collection.handle == 'baskets' or collection_title_handle == 'baskets' or collection.handle == 'asics' or collection_title_handle == 'asics'
+    assign collection_header_video_asset = 'catalog-sneakers-transparent.webm'
+    assign collection_header_mobile_video_asset = 'catalog-sneakers-transparent.mov'
   endif
   if collection_header_video_asset != blank or collection_header_video_url != blank or collection_header_video != blank
     assign collection_header_has_video = true
@@ -74,24 +71,11 @@
                 preload="auto"
                 {% if collection_header_poster_asset != blank %}poster="{{ collection_header_poster_asset | asset_url }}"{% endif %}
               >
-                <source src="{{ collection_header_video_asset | asset_url }}" type="video/webm">
                 {% if collection_header_mobile_video_asset != blank %}
-                  <source src="{{ collection_header_mobile_video_asset | asset_url }}" type="video/mp4">
+                  <source src="{{ collection_header_mobile_video_asset | asset_url }}" type='video/quicktime; codecs="hvc1"'>
                 {% endif %}
+                <source src="{{ collection_header_video_asset | asset_url }}" type="video/webm">
               </video>
-              {% if collection_header_mobile_video_asset != blank %}
-                <video
-                  class="catalog-page-head__mobile-video"
-                  autoplay
-                  loop
-                  muted
-                  playsinline
-                  preload="auto"
-                  {% if collection_header_poster_asset != blank %}poster="{{ collection_header_poster_asset | asset_url }}"{% endif %}
-                >
-                  <source src="{{ collection_header_mobile_video_asset | asset_url }}" type="video/mp4">
-                </video>
-              {% endif %}
             {% elsif collection_header_video_url != blank %}
               <video
                 class="catalog-page-head__video catalog-page-head__video--blend"
@@ -495,9 +479,10 @@
                 <h3 class="catalog-grid__title">{{ product.title | upcase }}</h3>
                 <p class="catalog-grid__price">
                   {% if product.price_varies %}
-                    À PARTIR DE {{ product.price_min | money }}
+                    <span class="catalog-grid__price-prefix">À PARTIR DE</span>
+                    <span class="catalog-grid__price-amount">{{ product.price_min | money }}</span>
                   {% else %}
-                    {{ product.price | money }}
+                    <span class="catalog-grid__price-amount">{{ product.price | money }}</span>
                   {% endif %}
                   {% if product.compare_at_price > product.price %}
                     <s class="catalog-grid__compare-price">{{ product.compare_at_price | money }}</s>

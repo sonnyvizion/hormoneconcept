@@ -1,0 +1,110 @@
+@media (min-width: 750px) {
+  html {
+    scrollbar-gutter: stable;
+  }
+}
+
+p {
+  font-family: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-variant-numeric: normal;
+}
+
+body .shopify-section p {
+  margin: 0;
+  font-size: 10px !important;
+  letter-spacing: 1px !important;
+  line-height: 1.25 !important;
+  font-weight: 100;
+  text-transform: uppercase !important;
+}
+
+.shopify-section .site-page-kicker,
+.shopify-section .main-search__panel-kicker,
+.shopify-section .collections-trio__subtitle,
+.shopify-section .header-search-overlay__kicker {
+  font-size: 12px !important;
+  min-height: 1em;
+  margin-bottom: 6px;
+}
+
+.shopify-section .collections-trio__subtitle-bracket {
+  font-size: inherit !important;
+}
+
+.shopify-section .header-search-overlay__head {
+  margin-bottom: 6px;
+}
+
+.shopify-section .store-showcase__hours .store-showcase__day,
+.shopify-section .store-showcase__hours .store-showcase__time {
+  font-size: 10px !important;
+  font-weight: 100;
+}
+
+.header-menu__view-title {
+  font-size: .9rem !important;
+  font-weight: 500 !important;
+  line-height: 1.1 !important;
+}
+
+.header-menu__view-all {
+  display: inline-flex;
+  align-items: center;
+  font-size: .8rem !important;
+  font-weight: 500 !important;
+  line-height: 1.1 !important;
+  padding-block: 0;
+  text-decoration: underline;
+}
+
+.collection-slider__price {
+  font-weight: 500 !important;
+}
+
+.catalog-grid__price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+}
+
+.catalog-grid__price-prefix {
+  font-size: 10px;
+}
+
+.catalog-grid__price-amount {
+  font-size: clamp(.8rem, .96vw, .92rem);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  pointer-events: none;
+  background: rgba(11, 16, 22, .28);
+  opacity: 0;
+  visibility: hidden;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition:
+    opacity .65s ease,
+    visibility 0s linear .65s;
+}
+
+body.mobile-menu-open::before,
+body.search-overlay-open::before {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+@media (max-width: 749px) {
+  .catalog-page-head__title {
+    font-size: 18px !important;
+  }
+
+  .shopify-section .site-page-kicker {
+    font-size: 11px !important;
+  }
+}

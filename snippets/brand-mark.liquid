@@ -59,8 +59,7 @@
     assign mark_class = mark_class | append: ' brand-mark--text-only'
   endif
 %}
-
-<span class="{{ mark_class }}" aria-label="{{ brand_label | escape }}">
+{% capture brand_mark_content %}
   {% if brand_asset != blank %}
     <img
       class="brand-mark__logo"
@@ -72,4 +71,14 @@
     >
   {% endif %}
   <span class="brand-mark__label">{{ brand_label | upcase }}</span>
-</span>
+{% endcapture %}
+
+{% if link_url != blank %}
+  <a class="{{ mark_class }}" href="{{ link_url | strip }}" aria-label="{{ brand_label | escape }}">
+    {{ brand_mark_content }}
+  </a>
+{% else %}
+  <span class="{{ mark_class }}" aria-label="{{ brand_label | escape }}">
+    {{ brand_mark_content }}
+  </span>
+{% endif %}

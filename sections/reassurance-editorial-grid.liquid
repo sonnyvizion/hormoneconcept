@@ -41,7 +41,6 @@
           --reassurance-card-overlay: {{ block.settings.overlay_color }};
           --reassurance-card-overlay-opacity: {{ block.settings.overlay_opacity | times: 0.01 }};
           --reassurance-card-text: {{ block.settings.text_color }};
-          --reassurance-card-video-width: {{ block.settings.video_width }}%;
         "
         {{ block.shopify_attributes }}
       >
@@ -62,48 +61,17 @@
 
         <span class="reassurance-editorial__overlay" aria-hidden="true"></span>
 
-        {%- assign card_video_asset = block.settings.video_asset | strip -%}
-        {% if card_video_asset != blank %}
-          {% comment %}
-            WebM alpha lives in the theme assets (Shopify's file uploader / video_tag
-            transcode strips the alpha channel — the assets folder is served untouched).
-          {% endcomment %}
-          <div class="reassurance-editorial__video-panel" aria-hidden="true">
-            <video
-              class="reassurance-editorial__video reassurance-editorial__video--alpha"
-              autoplay
-              loop
-              muted
-              playsinline
-              preload="metadata"
-              {% if block.settings.video_asset_poster != blank %}poster="{{ block.settings.video_asset_poster | asset_url }}"{% endif %}
-            >
-              <source src="{{ card_video_asset | asset_url }}" type="video/webm">
-            </video>
-          </div>
-        {% elsif block.settings.video != blank %}
-          <div class="reassurance-editorial__video-panel" aria-hidden="true">
-            {{
-              block.settings.video
-              | video_tag:
-                autoplay: true,
-                loop: true,
-                muted: true,
-                controls: false,
-                playsinline: true,
-                class: 'reassurance-editorial__video'
-            }}
-          </div>
-        {% endif %}
-
         {% if block.settings.eyebrow != blank or block.settings.title != blank %}
           <div class="reassurance-editorial__copy">
-            {% if block.settings.eyebrow != blank %}
-              <span class="reassurance-editorial__eyebrow">{{ block.settings.eyebrow | escape }}</span>
-            {% endif %}
-            {% if block.settings.title != blank %}
-              <span class="reassurance-editorial__card-title">{{ block.settings.title | escape }}</span>
-            {% endif %}
+            <span class="reassurance-editorial__copy-text">
+              {% if block.settings.eyebrow != blank %}
+                <span class="reassurance-editorial__eyebrow">{{ block.settings.eyebrow | escape }}</span>
+              {% endif %}
+              {% if block.settings.title != blank %}
+                <span class="reassurance-editorial__card-title">{{ block.settings.title | escape }}</span>
+              {% endif %}
+            </span>
+
           </div>
         {% endif %}
       </{{ card_tag }}>
@@ -137,7 +105,7 @@
   }
 
   .reassurance-editorial__intro {
-    padding: clamp(20px, 2vw, 32px);
+    padding: clamp(10px, 1vw, 16px);
     background: var(--reassurance-editorial-bg);
   }
 
@@ -205,49 +173,27 @@
     pointer-events: none;
   }
 
-  .reassurance-editorial__video-panel {
-    position: absolute;
-    top: clamp(10px, 1.2vw, 18px);
-    left: clamp(10px, 1.2vw, 18px);
-    z-index: 2;
-    width: var(--reassurance-card-video-width);
-    max-width: calc(100% - 20px);
-    pointer-events: none;
-  }
-
-  .reassurance-editorial__video {
-    display: block;
-    width: 100%;
-    height: auto;
-    background: transparent;
-    object-fit: contain;
-    /* Fallback path (Shopify "video" picker): the transcode discards the alpha
-       channel and leaves colour noise where the clip was transparent.
-       Desaturating + hard contrast collapses that noise toward black, then
-       `lighten` drops it against the card so only the bright artwork stays. */
-    filter: grayscale(1) contrast(2.8) brightness(0.92);
-    mix-blend-mode: lighten;
-  }
-
-  /* WebM served from the assets folder keeps its real alpha — render it straight. */
-  .reassurance-editorial__video--alpha {
-    filter: none;
-    mix-blend-mode: normal;
-  }
-
   .reassurance-editorial__copy {
     position: absolute;
     right: clamp(10px, 1.2vw, 18px);
     bottom: clamp(10px, 1.2vw, 18px);
     left: clamp(10px, 1.2vw, 18px);
     z-index: 2;
-    display: grid;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
     gap: 5px;
     padding: 10px 12px;
     border: 1px solid currentColor;
     background: rgba(10, 12, 15, .14);
     backdrop-filter: blur(4px);
     text-align: left;
+  }
+
+  .reassurance-editorial__copy-text {
+    display: grid;
+    min-width: 0;
+    gap: 5px;
   }
 
   .reassurance-editorial__eyebrow,
@@ -287,7 +233,7 @@
     }
 
     .reassurance-editorial__intro {
-      padding: 12px 8px;
+      padding: 6px 4px;
     }
 
     .reassurance-editorial__heading {
@@ -299,10 +245,6 @@
       margin-top: 7px;
       font-size: clamp(.46rem, 2.15vw, .58rem);
       line-height: 1.32;
-    }
-
-    .reassurance-editorial__video-panel {
-      display: none;
     }
 
     .reassurance-editorial__copy {
@@ -390,33 +332,6 @@
           "type": "image_picker",
           "id": "image",
           "label": "Image"
-        },
-        {
-          "type": "video",
-          "id": "video",
-          "label": "Video en haut a gauche"
-        },
-        {
-          "type": "text",
-          "id": "video_asset",
-          "label": "Video transparente (fichier assets/)",
-          "info": "Nom d'un .webm alpha placé dans les fichiers du theme (ex: rea-01.webm). Prioritaire sur le champ Video ci-dessus. A ajouter via Edition du code > Assets — l'upload de fichiers Shopify supprime la transparence."
-        },
-        {
-          "type": "text",
-          "id": "video_asset_poster",
-          "label": "Image poster de la video transparente (fichier assets/)",
-          "info": "Optionnel. Nom d'une image dans assets/ affichee avant le chargement de la video."
-        },
-        {
-          "type": "range",
-          "id": "video_width",
-          "label": "Largeur de la video",
-          "min": 10,
-          "max": 80,
-          "step": 5,
-          "unit": "%",
-          "default": 10
         },
         {
           "type": "text",
