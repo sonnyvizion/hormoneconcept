@@ -12643,7 +12643,18 @@ body.template-search .site-footer.site-footer--showcase {
 
   .product-view__desktop-info {
     left: clamp(10px, 1.2vw, 20px);
+    display: flex;
+    flex-direction: column;
     gap: 0;
+    height: calc(100% - clamp(44px, 6vh, 84px));
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .product-view__desktop-info-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
     padding: clamp(22px, 2vw, 34px);
     overflow: auto;
     scrollbar-width: thin;
@@ -12749,12 +12760,10 @@ body.template-search .site-footer.site-footer--showcase {
     overflow: auto;
   }
 
-  .product-view__desktop-info:has(.product-accordion[open]) {
-    overflow: hidden;
-  }
-
   .product-view__desktop-info .product-view__reassurance {
-    margin: 0 calc(clamp(22px, 2vw, 34px) * -1) calc(clamp(22px, 2vw, 34px) * -1);
+    flex: 0 0 auto;
+    margin: 0;
+    padding: clamp(14px, 1.8vw, 22px) clamp(22px, 2vw, 34px);
     border-width: 1px 0 0;
     background: transparent;
   }

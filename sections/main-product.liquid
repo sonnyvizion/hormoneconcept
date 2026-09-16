@@ -252,11 +252,13 @@
             >
 
             <div class="product-view__desktop-info" data-product-desktop-info>
-              {% if product_description_first != blank %}
-                <div class="rte product-view__desktop-description" data-product-desktop-description>
-                  {{ product_description_first }}
-                </div>
-              {% endif %}
+              <div class="product-view__desktop-info-stage" data-product-desktop-info-stage>
+                {% if product_description_first != blank %}
+                  <div class="rte product-view__desktop-description" data-product-desktop-description>
+                    {{ product_description_first }}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="product-view__desktop-buy" data-product-desktop-buy></div>
 

@@ -3959,9 +3959,10 @@
 
     const galleryEl = productViewEl.querySelector('[data-product-desktop-gallery]');
     const infoDockEl = productViewEl.querySelector('[data-product-desktop-info]');
+    const infoStageEl = infoDockEl?.querySelector('[data-product-desktop-info-stage]');
     const buyDockEl = productViewEl.querySelector('[data-product-desktop-buy]');
     const formEl = productViewEl.querySelector('[data-product-form]');
-    if (!galleryEl || !infoDockEl || !buyDockEl || !formEl) return;
+    if (!galleryEl || !infoDockEl || !infoStageEl || !buyDockEl || !formEl) return;
 
     productViewEl.dataset.desktopProductGalleryInit = 'true';
 
@@ -3973,6 +3974,9 @@
     const descriptionEl = infoDockEl.querySelector('[data-product-desktop-description]');
     const mediaCount = Number.parseInt(galleryEl.dataset.mediaCount || '0', 10);
     const moveEls = Array.from(productViewEl.querySelectorAll('[data-product-desktop-move]'));
+    const accordionEl = moveEls.find((element) => element.matches('.product-accordion'));
+    const accordionSummaryEl = accordionEl?.querySelector('.product-accordion__summary') || null;
+    const accordionBodyEl = accordionEl?.querySelector('.product-accordion__body') || null;
     const origins = new Map();
     let activeIndex = 0;
     let isAnimating = false;
@@ -3998,15 +4002,94 @@
       const infoEls = moveEls.filter((element) => element.dataset.productDesktopMove === 'info');
       const buyEls = moveEls.filter((element) => element.dataset.productDesktopMove === 'buy');
       const infoHeadEls = infoEls.filter((element) => !element.matches('.product-accordion, .product-view__reassurance'));
-      const accordionEl = infoEls.find((element) => element.matches('.product-accordion'));
       const reassuranceEl = infoEls.find((element) => element.matches('.product-view__reassurance'));
 
-      infoHeadEls.forEach((element) => infoDockEl.appendChild(element));
-      if (descriptionEl) infoDockEl.appendChild(descriptionEl);
-      if (accordionEl) infoDockEl.appendChild(accordionEl);
+      infoHeadEls.forEach((element) => infoStageEl.appendChild(element));
+      if (descriptionEl) infoStageEl.appendChild(descriptionEl);
+      if (accordionEl) infoStageEl.appendChild(accordionEl);
       if (reassuranceEl) infoDockEl.appendChild(reassuranceEl);
       buyEls.forEach((element) => buyDockEl.appendChild(element));
     };
+
+    let accordionAnimating = false;
+
+    const animateAccordionOpen = () => {
+      const firstTop = accordionSummaryEl.getBoundingClientRect().top;
+
+      accordionEl.setAttribute('open', '');
+      accordionBodyEl.style.transition = 'none';
+      accordionBodyEl.style.maxHeight = '0px';
+
+      const deltaY = firstTop - accordionSummaryEl.getBoundingClientRect().top;
+      if (deltaY) {
+        accordionSummaryEl.style.transition = 'none';
+        accordionSummaryEl.style.transform = `translateY(${deltaY}px)`;
+      }
+
+      window.requestAnimationFrame(() => {
+        accordionSummaryEl.style.transition = 'transform .38s cubic-bezier(.22, 1, .36, 1)';
+        accordionSummaryEl.style.transform = '';
+        accordionBodyEl.style.transition = 'max-height .38s cubic-bezier(.22, 1, .36, 1) .08s';
+        accordionBodyEl.style.maxHeight = `${accordionBodyEl.scrollHeight}px`;
+      });
+
+      window.setTimeout(() => {
+        accordionSummaryEl.style.transition = '';
+        accordionBodyEl.style.transition = '';
+        accordionBodyEl.style.maxHeight = '';
+        accordionAnimating = false;
+      }, 480);
+    };
+
+    const animateAccordionClose = () => {
+      const firstTop = accordionSummaryEl.getBoundingClientRect().top;
+
+      accordionBodyEl.style.transition = 'none';
+      accordionBodyEl.style.maxHeight = `${accordionBodyEl.scrollHeight}px`;
+      accordionBodyEl.getBoundingClientRect();
+      accordionBodyEl.style.transition = 'max-height .3s ease';
+      accordionBodyEl.style.maxHeight = '0px';
+
+      window.setTimeout(() => {
+        accordionEl.removeAttribute('open');
+        accordionBodyEl.style.transition = '';
+        accordionBodyEl.style.maxHeight = '';
+
+        const deltaY = firstTop - accordionSummaryEl.getBoundingClientRect().top;
+        if (deltaY) {
+          accordionSummaryEl.style.transition = 'none';
+          accordionSummaryEl.style.transform = `translateY(${deltaY}px)`;
+          accordionSummaryEl.getBoundingClientRect();
+          accordionSummaryEl.style.transition = 'transform .32s cubic-bezier(.22, 1, .36, 1)';
+          accordionSummaryEl.style.transform = '';
+        }
+
+        window.setTimeout(() => {
+          accordionSummaryEl.style.transition = '';
+          accordionAnimating = false;
+        }, 340);
+      }, 300);
+    };
+
+    if (accordionEl && accordionSummaryEl && accordionBodyEl) {
+      accordionSummaryEl.addEventListener('click', (event) => {
+        if (!desktopQuery.matches) return;
+        event.preventDefault();
+        if (accordionAnimating) return;
+
+        if (prefersReducedMotion.matches) {
+          accordionEl.toggleAttribute('open');
+          return;
+        }
+
+        accordionAnimating = true;
+        if (accordionEl.hasAttribute('open')) {
+          animateAccordionClose();
+        } else {
+          animateAccordionOpen();
+        }
+      });
+    }
 
     const getSlideHeight = () => {
       const slideEl = tracks[1]?.querySelector('[data-product-desktop-slide]') || tracks[0]?.querySelector('[data-product-desktop-slide]');
