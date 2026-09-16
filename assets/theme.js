@@ -4018,6 +4018,7 @@
 
       accordionEl.setAttribute('open', '');
       accordionBodyEl.style.transition = 'none';
+      accordionBodyEl.style.overflow = 'hidden';
       accordionBodyEl.style.maxHeight = '0px';
 
       const deltaY = firstTop - accordionSummaryEl.getBoundingClientRect().top;
@@ -4037,6 +4038,7 @@
         accordionSummaryEl.style.transition = '';
         accordionBodyEl.style.transition = '';
         accordionBodyEl.style.maxHeight = '';
+        accordionBodyEl.style.overflow = '';
         accordionAnimating = false;
       }, 480);
     };
@@ -4045,6 +4047,7 @@
       const firstTop = accordionSummaryEl.getBoundingClientRect().top;
 
       accordionBodyEl.style.transition = 'none';
+      accordionBodyEl.style.overflow = 'hidden';
       accordionBodyEl.style.maxHeight = `${accordionBodyEl.scrollHeight}px`;
       accordionBodyEl.getBoundingClientRect();
       accordionBodyEl.style.transition = 'max-height .3s ease';
@@ -4054,6 +4057,7 @@
         accordionEl.removeAttribute('open');
         accordionBodyEl.style.transition = '';
         accordionBodyEl.style.maxHeight = '';
+        accordionBodyEl.style.overflow = '';
 
         const deltaY = firstTop - accordionSummaryEl.getBoundingClientRect().top;
         if (deltaY) {
