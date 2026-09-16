@@ -12760,6 +12760,11 @@ body.template-search .site-footer.site-footer--showcase {
     scrollbar-width: thin;
   }
 
+  .product-view__desktop-info:has(.product-accordion[open]) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .product-view__desktop-info .product-view__reassurance {
     flex: 0 0 auto;
     margin: 0;

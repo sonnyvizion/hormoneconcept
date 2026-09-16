@@ -4210,7 +4210,7 @@
     const lockInfoHeight = () => {
       if (!desktopQuery.matches || accordionEl?.hasAttribute('open')) return;
       infoDockEl.style.height = '';
-      const naturalHeight = infoDockEl.getBoundingClientRect().height;
+      const naturalHeight = Math.ceil(infoDockEl.getBoundingClientRect().height);
       infoDockEl.style.height = naturalHeight ? `${naturalHeight}px` : '';
     };
 
