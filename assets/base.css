@@ -12520,6 +12520,7 @@ body.template-search .site-footer.site-footer--showcase {
     white-space: nowrap;
     text-overflow: ellipsis;
     background: rgba(242, 245, 247, .94);
+    border: 0;
   }
 
   .site-page-shell--product .product-view {
