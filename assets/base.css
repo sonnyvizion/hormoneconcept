@@ -12507,7 +12507,13 @@ body.template-search .site-footer.site-footer--showcase {
   .site-page-shell--product .product-breadcrumb {
     position: relative;
     z-index: 12;
-    margin: 0 0 -1px 10px;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 -1px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .site-page-shell--product .product-view {
