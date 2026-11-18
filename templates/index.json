@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "video_hero": {
@@ -6,85 +15,618 @@
         "pair_1": {
           "type": "pair",
           "settings": {
-            "title": "Air Force 1",
-            "subtitle": "Silhouette iconique, ligne propre, usage quotidien.",
-            "cta_label": "Voir Air Force 1",
-            "cta_link": "/collections/all"
+            "title": "Yeezy 700",
+            "subtitle": "YEEZY 700 TEPHRA",
+            "cta_label": "Voir YEEZY 700 x TEPHRA",
+            "cta_link": "/collections/all",
+            "right_title": "TEPHRA",
+            "right_subtitle": "DISPONIBLE",
+            "image_desktop": "shopify://shop_images/yeezy-to-marni-_0-00-00-00.webp",
+            "transition_desktop": "shopify://files/videos/transition_1.mp4"
           }
         },
         "pair_2": {
           "type": "pair",
           "settings": {
-            "title": "Yeezy",
-            "subtitle": "Volume contemporain, confort haut niveau.",
-            "cta_label": "Voir Yeezy",
-            "cta_link": "/collections/all"
+            "title": "HOKA",
+            "subtitle": "HOKA X MARNI",
+            "cta_label": "Voir HOKA X MARNI",
+            "cta_link": "/collections/all",
+            "right_title": "MARNI",
+            "right_subtitle": "DISPONIBLE",
+            "image_desktop": "shopify://shop_images/yeezy-to-marni-2x.jpg",
+            "transition_desktop": "shopify://files/videos/transition_2.mp4",
+            "transition_prev_desktop": "shopify://files/videos/transtion_1_back_v2.mp4"
           }
         },
         "pair_3": {
           "type": "pair",
           "settings": {
-            "title": "Hoka x Marni",
-            "subtitle": "Design expressif et performance.",
-            "cta_label": "Voir Hoka x Marni",
-            "cta_link": "/collections/all"
+            "title": "AIR FORCE 1",
+            "subtitle": "AIR FORCE 1 X LV",
+            "cta_label": "Voir AIR FORCE 1 X LV",
+            "cta_link": "/collections/all",
+            "right_title": "LOUIS VUITTON",
+            "right_subtitle": "DISPONIBLE",
+            "image_desktop": "shopify://shop_images/yeezy-to-marni-_3.webp",
+            "transition_prev_desktop": "shopify://files/videos/transition_2_back.mp4"
           }
         }
       },
-      "block_order": ["pair_1", "pair_2", "pair_3"],
+      "block_order": [
+        "pair_1",
+        "pair_2",
+        "pair_3"
+      ],
+      "disabled": true,
       "settings": {
-        "mobile_breakpoint": 768
+        "mobile_breakpoint": 768,
+        "next_label": "PRODUIT SUIVANT",
+        "prev_label": "PRODUIT PRECEDENT"
       }
     },
-    "category_sticky_1": {
-      "type": "category-sticky-showcase",
-      "blocks": {},
-      "block_order": [],
-      "settings": {}
-    },
-    "collections_duo": {
-      "type": "collections-duo-showcase",
+    "image_hero_slider_7KHQND": {
+      "type": "image-hero-slider",
       "blocks": {
-        "tile_1": {
-          "type": "collection_tile",
+        "slide_dA46xt": {
+          "type": "slide",
           "settings": {
-            "title": "COLLECTION A",
-            "subtitle": "DISPONIBLE",
-            "cta_label": "VOIR"
+            "title": "Nike Air Max Plus",
+            "subtitle": "Nike",
+            "cta_label": "DÉCOUVRIR",
+            "cta_link": "https://hormoneconcept.com/products/nike-air-max-plus-one-piece-ope-ope-1?_pos=1&_psq=ope+ope&_psid=f7bb7db74&_ss=e",
+            "right_title": "One Piece Ope Ope",
+            "right_subtitle": "",
+            "image_desktop": "shopify://shop_images/ChatGPT_Image_24_sept._2026_21_22_37.png",
+            "image_mobile": "shopify://shop_images/ChatGPT_Image_26_sept._2026_15_25_06.png"
           }
         },
-        "tile_2": {
-          "type": "collection_tile",
+        "slide_gEM7XE": {
+          "type": "slide",
           "settings": {
-            "title": "COLLECTION B",
-            "subtitle": "DISPONIBLE",
-            "cta_label": "VOIR"
+            "title": "Satoshi Nakamoto",
+            "subtitle": "Porte-bonheur rond",
+            "cta_label": "DÉCOUVRIR",
+            "cta_link": "https://hormoneconcept.com/products/vans-otw-era-95-satoshi-nakamoto-round-lucky-charm?_pos=1&_psq=SATOS&_psid=a0032d956&_ss=e",
+            "right_title": "Vans OTW Era 95",
+            "right_subtitle": "DISPONIBLE",
+            "image_desktop": "shopify://shop_images/satasho_desktop2.webp",
+            "image_mobile": "shopify://shop_images/satoshi_mobile.webp"
+          }
+        },
+        "slide_WTmKP7": {
+          "type": "slide",
+          "settings": {
+            "title": "On K-Tech 2",
+            "subtitle": "sneakers",
+            "cta_label": "DÉCOUVRIR",
+            "cta_link": "https://hormoneconcept.com/products/on-cloudswhift-k-tech-2?_pos=1&_psq=on+k+t&_psid=3a170951a&_ss=e",
+            "right_title": "X Kith",
+            "right_subtitle": "green / beige",
+            "image_desktop": "shopify://shop_images/Sneaker_Kith_aux_accents_rouges.png",
+            "image_mobile": "shopify://shop_images/Baskets_KITH_vert_foret_en_studio.png"
           }
         }
       },
-      "block_order": ["tile_1", "tile_2"],
-      "settings": {}
-    },
-    "category_sticky_2": {
-      "type": "category-sticky-showcase",
-      "blocks": {},
-      "block_order": [],
-      "settings": {}
-    },
-    "featured_collection": {
-      "type": "featured-collection",
+      "block_order": [
+        "slide_dA46xt",
+        "slide_gEM7XE",
+        "slide_WTmKP7"
+      ],
+      "name": "Image hero slider",
       "settings": {
-        "title": "Nouveautes",
-        "collection": "",
-        "products_to_show": 8
+        "mobile_breakpoint": 768,
+        "autoplay": true,
+        "autoplay_delay": 5000,
+        "next_label": "SUIVANT",
+        "prev_label": "PRECEDENT"
+      },
+      "disabled": true
+    },
+    "collection_slider_qqkbLQ": {
+      "type": "collection-slider",
+      "blocks": {
+        "collection_row_kAJ4dD": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "nouveaux-vetements",
+            "row_label": "Nouveautés vêtements",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        },
+        "collection_row_GkgdBr": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "nouveautes-sneakers",
+            "row_label": "Nouveauté sneakers",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_row_kAJ4dD",
+        "collection_row_GkgdBr"
+      ],
+      "name": "Collection slider",
+      "settings": {
+        "bg_color": "#d8dbdd",
+        "cell_bg_color": "#e2e4e5",
+        "ticker_bg_color": "#eff0f0",
+        "meta_bg_color": "#eff0f0",
+        "card_separator_color": "#eff0f0",
+        "row_height": 380,
+        "card_width": 260,
+        "products_per_row": 8,
+        "ticker_duration": 34
+      }
+    },
+    "category_sticky_showcase_UMr9LA": {
+      "type": "category-sticky-showcase",
+      "blocks": {
+        "category_QLxBjF": {
+          "type": "category",
+          "settings": {
+            "text": "Collection capsule",
+            "cta_label": "MODE HOMME",
+            "cta_link": "shopify://collections/adidas-gazelle-1",
+            "image_desktop": "shopify://shop_images/hf_20260330_093746_f14fa62d-61a5-4730-aa4e-fae082927169.png"
+          }
+        },
+        "category_3UwwmH": {
+          "type": "category",
+          "settings": {
+            "text": "Collection signature",
+            "cta_label": "MODE FEMME",
+            "cta_link": "shopify://collections/adidas",
+            "image_desktop": "shopify://shop_images/hf_20260330_094830_e64bc67e-04ee-4dc1-9910-0e5c8cad97e0.webp"
+          }
+        }
+      },
+      "block_order": [
+        "category_QLxBjF",
+        "category_3UwwmH"
+      ],
+      "disabled": true,
+      "name": "Category sticky showcase",
+      "settings": {
+        "scroll_span": 42,
+        "overlay_opacity": 12
+      }
+    },
+    "collections_duo_showcase_qKpqDe": {
+      "type": "collections-duo-showcase",
+      "blocks": {
+        "collection_tile_ackBfb": {
+          "type": "collection_tile",
+          "settings": {
+            "collection": "",
+            "title": "VETEMENTS",
+            "subtitle": "MODE HOMME",
+            "cta_label": "VETEMENTS",
+            "cta_link": "shopify://collections/luxe-maisons",
+            "image_desktop": "shopify://shop_images/Capture_d_ecran_2026-07-09_a_16.18.26.png",
+            "image_focus": "50% 50%"
+          }
+        },
+        "collection_tile_LxVbrC": {
+          "type": "collection_tile",
+          "settings": {
+            "collection": "",
+            "title": "SNEAKERS",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "SNEAKERS",
+            "cta_link": "shopify://collections/sneakers",
+            "image_desktop": "shopify://shop_images/Capture_Sans_Titre13785.jpg",
+            "image_focus": "50% 50%"
+          }
+        }
+      },
+      "block_order": [
+        "collection_tile_ackBfb",
+        "collection_tile_LxVbrC"
+      ],
+      "name": "Collections duo showcase",
+      "settings": {
+        "desktop_height": 84,
+        "overlay_opacity": 24,
+        "grid_gap": 1,
+        "line_color": "#e4edf5",
+        "card_bg": "#121a25"
+      }
+    },
+    "collection_slider_yFE3Lb": {
+      "type": "collection-slider",
+      "blocks": {
+        "collection_row_kp6EAF": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "chrome-hearts",
+            "row_label": "Chrome hearts",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        },
+        "collection_row_xfdJGK": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "supreme",
+            "row_label": "Supreme",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_row_kp6EAF",
+        "collection_row_xfdJGK"
+      ],
+      "name": "Collection slider",
+      "settings": {
+        "bg_color": "#d8dbdd",
+        "cell_bg_color": "#e2e4e5",
+        "ticker_bg_color": "#eff0f0",
+        "meta_bg_color": "#eff0f0",
+        "card_separator_color": "#eff0f0",
+        "row_height": 380,
+        "card_width": 260,
+        "products_per_row": 8,
+        "ticker_duration": 34
+      }
+    },
+    "sneaker_cleaning_compare_HmJAfM": {
+      "type": "sneaker-cleaning-compare",
+      "name": "Sneaker cleaning compare",
+      "settings": {
+        "kicker": "NETTOYAGE SNEAKERS",
+        "title": "AVANT / APRES NETTOYAGE",
+        "text": "",
+        "before_image": "shopify://shop_images/propre_desktop.webp",
+        "after_image": "shopify://shop_images/sale_desktop_copie2.webp",
+        "before_mobile_image": "shopify://shop_images/propre_mobile.webp",
+        "after_mobile_image": "shopify://shop_images/sale_mobile_copie.webp",
+        "before_video_asset": "",
+        "after_video_asset": "",
+        "before_alt": "Sneaker sale avant nettoyage",
+        "after_alt": "Sneaker nettoyee apres prestation",
+        "before_label": "APRES",
+        "after_label": "AVANT",
+        "initial_reveal": 50,
+        "cta_label": "DÉCOUVRIR",
+        "cta_link": "shopify://pages/nettoyage"
+      }
+    },
+    "collection_slider_3gXAdX": {
+      "type": "collection-slider",
+      "blocks": {
+        "collection_row_H6Eg3C": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "travis-scott-x-air-jordan",
+            "row_label": "Travis scott",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_row_H6Eg3C"
+      ],
+      "name": "Collection slider",
+      "settings": {
+        "bg_color": "#d8dbdd",
+        "cell_bg_color": "#e2e4e5",
+        "ticker_bg_color": "#eff0f0",
+        "meta_bg_color": "#eff0f0",
+        "card_separator_color": "#eff0f0",
+        "row_height": 380,
+        "card_width": 260,
+        "products_per_row": 8,
+        "ticker_duration": 34
+      }
+    },
+    "collections_trio_showcase_rtHV9F": {
+      "type": "collections-trio-showcase",
+      "blocks": {
+        "collection_tile_R7JWjy": {
+          "type": "collection_tile",
+          "settings": {
+            "collection": "last-chance",
+            "title": "Last Chance",
+            "subtitle": "MODE HOMME",
+            "cta_label": "Last Chance",
+            "cta_link": "shopify://collections/last-chance",
+            "show_ticker": true,
+            "ticker_text": "VOIR LES COLLECTIONS",
+            "image_desktop": "shopify://shop_images/Capture_d_ecran_2026-07-09_a_17.22.09.png",
+            "image_focus": "50% 50%"
+          }
+        },
+        "collection_tile_tULKy9": {
+          "type": "collection_tile",
+          "settings": {
+            "collection": "",
+            "title": "ACCESSOIRES",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "ACCESSOIRES",
+            "cta_link": "shopify://collections/accessoire",
+            "show_ticker": true,
+            "ticker_text": "VOIR LES COLLECTIONS",
+            "image_desktop": "shopify://shop_images/Capture_d_ecran_2026-07-07_a_22.35.16.png",
+            "image_focus": "50% 50%"
+          }
+        },
+        "collection_tile_qRCFqV": {
+          "type": "collection_tile",
+          "settings": {
+            "collection": "",
+            "title": "SNEAKERS",
+            "subtitle": "DISPONIBLE",
+            "cta_label": "SNEAKERS",
+            "cta_link": "shopify://collections/sneakers",
+            "show_ticker": true,
+            "ticker_text": "VOIR LES COLLECTIONS",
+            "image_desktop": "shopify://shop_images/Capture_d_ecran_2026-07-07_a_22.40.17.png",
+            "image_focus": "50% 50%"
+          }
+        }
+      },
+      "block_order": [
+        "collection_tile_R7JWjy",
+        "collection_tile_tULKy9",
+        "collection_tile_qRCFqV"
+      ],
+      "name": "Collections trio showcase",
+      "settings": {
+        "desktop_height": 84,
+        "overlay_opacity": 24,
+        "grid_gap": 1,
+        "ticker_duration": 42,
+        "line_color": "#e4edf5",
+        "card_bg": "#121a25",
+        "ticker_bg": "#e8edf1",
+        "ticker_color": "#66707a"
+      }
+    },
+    "collection_slider_HjmQT4": {
+      "type": "collection-slider",
+      "blocks": {
+        "collection_row_ckzBQH": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "essentials",
+            "row_label": "Essentials",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        },
+        "collection_row_Lyxmdh": {
+          "type": "collection_row",
+          "settings": {
+            "collection": "accessoire",
+            "row_label": "Nouveauté accesoires",
+            "view_all_label": "",
+            "view_all_url": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_row_ckzBQH",
+        "collection_row_Lyxmdh"
+      ],
+      "name": "Collection slider",
+      "settings": {
+        "bg_color": "#d8dbdd",
+        "cell_bg_color": "#e2e4e5",
+        "ticker_bg_color": "#eff0f0",
+        "meta_bg_color": "#eff0f0",
+        "card_separator_color": "#eff0f0",
+        "row_height": 380,
+        "card_width": 260,
+        "products_per_row": 8,
+        "ticker_duration": 34
+      }
+    },
+    "store_showcase_cmDttB": {
+      "type": "store-showcase",
+      "blocks": {
+        "hours_row_g8wL7h": {
+          "type": "hours_row",
+          "settings": {
+            "day": "LUNDI",
+            "hours": "12:00 - 19:30"
+          }
+        },
+        "hours_row_xwiLKt": {
+          "type": "hours_row",
+          "settings": {
+            "day": "MARDI",
+            "hours": "12:00 - 19:30"
+          }
+        },
+        "hours_row_r6YBra": {
+          "type": "hours_row",
+          "settings": {
+            "day": "MERCREDI",
+            "hours": "12:00 - 19:30"
+          }
+        },
+        "hours_row_fJV7dU": {
+          "type": "hours_row",
+          "settings": {
+            "day": "JEUDI",
+            "hours": "12:00 - 19:30"
+          }
+        },
+        "hours_row_cLQMib": {
+          "type": "hours_row",
+          "settings": {
+            "day": "VENDREDI",
+            "hours": "12:00 - 19:30"
+          }
+        },
+        "hours_row_gCw4Wi": {
+          "type": "hours_row",
+          "settings": {
+            "day": "SAMEDI",
+            "hours": "12:00 - 19:30"
+          }
+        },
+        "hours_row_zPw7nV": {
+          "type": "hours_row",
+          "settings": {
+            "day": "DIMANCHE",
+            "hours": "12:00 - 19:30"
+          }
+        }
+      },
+      "block_order": [
+        "hours_row_g8wL7h",
+        "hours_row_xwiLKt",
+        "hours_row_r6YBra",
+        "hours_row_fJV7dU",
+        "hours_row_cLQMib",
+        "hours_row_gCw4Wi",
+        "hours_row_zPw7nV"
+      ],
+      "name": "Store showcase",
+      "settings": {
+        "image_desktop": "shopify://shop_images/WhatsApp_Image_2026-09-10_at_21.08.55.jpg",
+        "image_alt": "Boutique Hormone Concept",
+        "image_height": 66,
+        "frame_color": "#ffffff",
+        "frame_opacity": 62,
+        "info_bg": "#ffffff",
+        "text_color": "#151b22",
+        "title": "LA BOUTIQUE",
+        "store_name": "HORMONE CONCEPT",
+        "address_line_1": "102 RUE DE LONGCHAMP",
+        "address_line_2": "PARIS, 75016",
+        "phone": "01 73 74 88 18"
+      }
+    },
+    "reassurance_editorial_grid_K7hQPW": {
+      "type": "reassurance-editorial-grid",
+      "blocks": {
+        "image_card_ECmPWe": {
+          "type": "image_card",
+          "settings": {
+            "image": "shopify://shop_images/rea_01_copie.webp",
+            "eyebrow": "AUTHENTICITÉ",
+            "title": "PRODUITS VERIFIES",
+            "link": "",
+            "overlay_color": "#000000",
+            "overlay_opacity": 25,
+            "text_color": "#ffffff"
+          }
+        },
+        "image_card_c6ApQm": {
+          "type": "image_card",
+          "settings": {
+            "image": "shopify://shop_images/rea_02_copie.webp",
+            "eyebrow": "PAIMENT SECURISÉ",
+            "title": "Acheter en toute sécurité",
+            "link": "",
+            "overlay_color": "#000000",
+            "overlay_opacity": 25,
+            "text_color": "#ffffff"
+          }
+        },
+        "image_card_X76bUN": {
+          "type": "image_card",
+          "settings": {
+            "image": "shopify://shop_images/rea_03.webp",
+            "eyebrow": "RETRAIT",
+            "title": "PICK & COLLECT DISPO",
+            "link": "",
+            "overlay_color": "#000000",
+            "overlay_opacity": 40,
+            "text_color": "#ffffff"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_ECmPWe",
+        "image_card_c6ApQm",
+        "image_card_X76bUN"
+      ],
+      "name": "Reassurance editoriale",
+      "settings": {
+        "hide_on_home": false,
+        "heading": "NOS ENGAGEMENTS",
+        "description": "<p>Une selection exigeante et des services pensés pour vous accompagner.</p>",
+        "background_color": "#f4f5f7",
+        "text_color": "#111824",
+        "line_color": "#d8dde5",
+        "desktop_height": 560
+      }
+    },
+    "image_hero_left": {
+      "type": "image-hero-left",
+      "blocks": {
+        "slide_dA46xt": {
+          "type": "slide",
+          "settings": {
+            "title": "Nike Air Max Plus",
+            "subtitle": "Nike",
+            "cta_label": "DÉCOUVRIR",
+            "cta_link": "https://hormoneconcept.com/products/nike-air-max-plus-one-piece-ope-ope-1?_pos=1&_psq=ope+ope&_psid=f7bb7db74&_ss=e",
+            "image_desktop": "shopify://shop_images/ChatGPT_Image_24_sept._2026_21_22_37.png",
+            "image_mobile": "shopify://shop_images/ChatGPT_Image_26_sept._2026_15_25_06.png"
+          }
+        },
+        "slide_gEM7XE": {
+          "type": "slide",
+          "settings": {
+            "title": "Satoshi Nakamoto",
+            "subtitle": "Porte-bonheur rond",
+            "cta_label": "DÉCOUVRIR",
+            "cta_link": "https://hormoneconcept.com/products/vans-otw-era-95-satoshi-nakamoto-round-lucky-charm?_pos=1&_psq=SATOS&_psid=a0032d956&_ss=e",
+            "image_desktop": "shopify://shop_images/satasho_desktop2.webp",
+            "image_mobile": "shopify://shop_images/satoshi_mobile.webp"
+          }
+        },
+        "slide_WTmKP7": {
+          "type": "slide",
+          "settings": {
+            "title": "On K-Tech 2",
+            "subtitle": "sneakers",
+            "cta_label": "DÉCOUVRIR",
+            "cta_link": "https://hormoneconcept.com/products/on-cloudswhift-k-tech-2?_pos=1&_psq=on+k+t&_psid=3a170951a&_ss=e",
+            "image_desktop": "shopify://shop_images/Sneaker_Kith_aux_accents_rouges.png",
+            "image_mobile": "shopify://shop_images/Baskets_KITH_vert_foret_en_studio.png"
+          }
+        }
+      },
+      "block_order": [
+        "slide_dA46xt",
+        "slide_gEM7XE",
+        "slide_WTmKP7"
+      ],
+      "name": "Image hero texte gauche",
+      "settings": {
+        "mobile_breakpoint": 768,
+        "autoplay": true,
+        "autoplay_delay": 5000,
+        "next_label": "SUIVANT",
+        "prev_label": "PRECEDENT"
       }
     }
   },
   "order": [
     "video_hero",
-    "category_sticky_1",
-    "collections_duo",
-    "category_sticky_2",
-    "featured_collection"
+    "image_hero_slider_7KHQND",
+    "image_hero_left",
+    "collection_slider_qqkbLQ",
+    "category_sticky_showcase_UMr9LA",
+    "collections_duo_showcase_qKpqDe",
+    "collection_slider_yFE3Lb",
+    "sneaker_cleaning_compare_HmJAfM",
+    "collection_slider_3gXAdX",
+    "collections_trio_showcase_rtHV9F",
+    "collection_slider_HjmQT4",
+    "store_showcase_cmDttB",
+    "reassurance_editorial_grid_K7hQPW"
   ]
 }
